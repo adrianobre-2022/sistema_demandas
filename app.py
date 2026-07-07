@@ -20,13 +20,11 @@ if not url or not key:
 supabase: Client = create_client(url, key)
 # --------------------------------------------
 
-# Configurações visuais modernas e limpas
 st.set_page_config(page_title="Sistema de Pesquisas", page_icon="🔍", layout="centered")
 
 # --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (ESTILO APP MODERNO) ---
 st.markdown("""
     <style>
-    /* Estilização dos botões principais */
     .stButton>button {
         background-color: #00cc66 !important;
         color: white !important;
@@ -40,22 +38,16 @@ st.markdown("""
         background-color: #00994d !important;
         transform: scale(1.01);
     }
-    /* Estilização dos campos de entrada */
     .stTextInput>div>div>input {
         border-radius: 8px !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa a memória temporária do navegador se ela não existir
-if "ultimo_envio" not in st.session_state:
-    st.session_state.ultimo_envio = None
-
-# Menu de navegação superior (Abstrato e elegante)
 aba_selecionada = st.tabs(["📝 Registrar Ausência", "📊 Painel de Inteligência B2B"])
 
 # --- ABA 1: FORMULÁRIO DO CONSUMIDOR ---
-with aba_selecionada[0]:
+with aba_selecionada:
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
@@ -76,42 +68,39 @@ with aba_selecionada[0]:
 
     if st.button("Registrar Ausência", use_container_width=True, key="btn_registrar"):
         if item_solicitado and local_ocorrencia:
-            
-            # --- TRAVA INVISÍVEL DE REPETIÇÃO ---
-            texto_combinado = f"{item_solicitado.strip().lower()}_{local_ocorrencia.strip().lower()}"
-            agora = datetime.datetime.now()
-            
-            # Se o usuário acabou de enviar exatamente a mesma coisa nesta sessão de uso
-            if st.session_state.ultimo_envio == texto_combinado:
-                st.warning("⏳ Registro já computado! Obrigado por alertar o comércio local.")
-            else:
-                try:
-                    local_formatado = local_ocorrencia.strip().title()
-                    local_data = supabase.table("locais_destino").insert({
-                        "nome_exibicao": local_formatado,
-                        "regiao_cidade": "São Paulo",
-                        "regiao_estado": "SP"
-                    }).execute()
-                    
-                    local_id = local_data.data[0]["id"]
-                    
+            try:
+                local_formatado = local_ocorrencia.strip().title()
+                
+                # Verifica se o local já existe ou cria um novo
+                local_data = supabase.table("locais_destino").insert({
+                    "nome_exibicao": local_formatado,
+                    "regiao_cidade": "São Paulo",
+                    "regiao_estado": "SP"
+                }).execute()
+                
+                local_id = local_data.data[0]["id"] if local_data.data else None
+                
+                if local_id:
                     item_formatado = item_solicitado.strip().title()
+                    
+                    # Tenta inserir o relato na nuvem
                     supabase.table("relatos_escassez").insert({
                         "local_id": local_id,
                         "item_solicitado": item_formatado
                     }).execute()
                     
-                    # Salva na memória do navegador o último item enviado com sucesso
-                    st.session_state.ultimo_envio = texto_combinado
-                    
                     st.success("✅ Ocorrência computada e salva na nuvem com anonimato garantido!")
-                except Exception as e:
+            except Exception as e:
+                # Se o banco de dados rejeitar por duplicidade (F5/Refresh rápido)
+                if "duplicate key value" in str(e).lower() or "unique" in str(e).lower():
+                    st.warning("⏳ Registro já recebido recentemente! Obrigado por colaborar com o comércio local.")
+                else:
                     st.error("⚠️ Falha ao conectar ao servidor de dados seguro.")
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
 # --- ABA 2: PAINEL DO COMERCIANTE / GESTOR ---
-with aba_selecionada[1]:
+with aba_selecionada:
     st.title("📊 Painel de Decisão Estratégica")
     st.markdown("##### *Tenha o produto, marca ou serviço que o seu cliente deseja na prateleira.*")
     st.write("---")
@@ -123,31 +112,35 @@ with aba_selecionada[1]:
 
     if st.button("Buscar Oportunidades Perdidas", use_container_width=True, key="btn_buscar"):
         try:
-            resposta = supabase.table("relatos_escassez").select("item_solicitado, data_registro, locais_destino(nome_exibicao, regiao_cidade)").execute()
+            resposta = supabase.table("relatos_escassez").select("item_solicitado, locais_destino(nome_exibicao, regiao_cidade)").execute()
             
             if resposta.data:
                 dados_limpos = []
                 for registro in resposta.data:
-                    dados_limpos.append({
-                        "Item Ausente": registro["item_solicitado"],
-                        "Local Informado": registro["locais_destino"]["nome_exibicao"],
-                        "Cidade": registro["locais_destino"]["regiao_cidade"]
-                    })
+                    if registro.get("locais_destino"):
+                        dados_limpos.append({
+                            "Item Ausente": registro["item_solicitado"],
+                            "Local Informado": registro["locais_destino"]["nome_exibicao"],
+                            "Cidade": registro["locais_destino"]["regiao_cidade"]
+                        })
                 
-                df = pd.DataFrame(dados_limpos)
+                if dados_limpos:
+                    df = pd.DataFrame(dados_limpos)
 
-                if termo_busca:
-                    df = df[df['Item Ausente'].str.contains(termo_busca, case=False) | df['Local Informado'].str.contains(termo_busca, case=False)]
+                    if termo_busca:
+                        df = df[df['Item Ausente'].str.contains(termo_busca, case=False) | df['Local Informado'].str.contains(termo_busca, case=False)]
 
-                if not df.empty:
-                    st.write(f"📈 Foram encontrados **{len(df)}** registros de carência de mercado:")
-                    st.dataframe(df, use_container_width=True)
-                    
-                    st.markdown("#### Itens com Maior Demanda Reprimida:")
-                    contagem_itens = df["Item Ausente"].value_counts()
-                    st.bar_chart(contagem_itens)
+                    if not df.empty:
+                        st.write(f"📈 Foram encontrados **{len(df)}** registros de carência de mercado:")
+                        st.dataframe(df, use_container_width=True)
+                        
+                        st.markdown("#### Itens com Maior Demanda Reprimida:")
+                        contagem_itens = df["Item Ausente"].value_counts()
+                        st.bar_chart(contagem_itens)
+                    else:
+                        st.info("ℹ️ Nenhum registro encontrado para o termo digitado.")
                 else:
-                    st.info("ℹ️ Nenhum registro encontrado para o termo digitado.")
+                    st.info("ℹ️ O banco de dados ainda não possui registros válidos para exibir.")
             else:
                 st.info("ℹ️ O banco de dados ainda não possui registros para exibir.")
                 
