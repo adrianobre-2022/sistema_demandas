@@ -78,22 +78,25 @@ with aba_formulario:
                     "regiao_estado": "SP"
                 }).execute()
                 
-                local_id = local_data.data["id"] if local_data.data else None
+                # CORREÇÃO DA BIBLIOTECA: Acessa o primeiro item da lista retornada
+                local_id = None
+                if local_data.data and len(local_data.data) > 0:
+                    local_id = local_data.data[0]["id"]
                 
                 if local_id:
                     item_formatado = item_solicitado.strip().title()
                     
-                    # Insere o relato na nuvem
+                    # Insere o relato na nuvem atrelado ao local correto
                     supabase.table("relatos_escassez").insert({
                         "local_id": local_id,
                         "item_solicitado": item_formatado
                     }).execute()
                     
-                    # Exibe o sucesso na tela de forma limpa e segura
                     st.success("✅ Ocorrência computada e salva na nuvem com anonimato garantido!")
+                else:
+                    st.error("⚠️ Não foi possível gerar o identificador do local.")
                     
             except Exception as e:
-                # Mudança temporária de diagnóstico para ler o erro real na tela
                 st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
@@ -144,4 +147,4 @@ with aba_painel:
                 st.info("ℹ️ O banco de dados ainda não possui registros para exibir.")
                 
         except Exception as e:
-            st.error("⚠️ Erro ao consultar o banco de dados na nuvem.")
+            st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
