@@ -43,26 +43,27 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Desmembra as abas com os slogans comerciais validados
+# Cria as duas abas principais do sistema
 aba_formulario, aba_painel = st.tabs([
     "📝 Deixe saber o que você deseja", 
     "📊 Tenha o que o seu cliente deseja"
 ])
 
-# --- ABA 1: FORMULÁRIO DO CONSUMIDOR (UNIVERSAL) ---
+# --- ABA 1: FORMULÁRIO DO CONSUMIDOR (TOTALMENTE ISOLADO) ---
 with aba_formulario:
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
 
-    # Múltiplas frentes: Filtro de seleção para categorizar a carência
+    # Filtro de seleção para categorizar a carência
     tipo_selecionado = st.radio(
         label="Que tipo de ausência você quer registrar?",
         options=["Produto / Marca", "Serviço Local / Novo Estabelecimento", "Serviço Público / Infraestrutura"],
-        horizontal=True
+        horizontal=True,
+        key="radio_tipo_carencia"
     )
 
-    # Textos dinâmicos baseados na escolha do usuário para manter o Atrito Zero
+    # Textos dinâmicos baseados na escolha do usuário
     if tipo_selecionado == "Produto / Marca":
         label_item = "Qual produto ou marca você buscou e não encontrou?"
         placeholder_item = "Ex: Nome do produto, marca específica, ração do pet..."
@@ -118,7 +119,7 @@ with aba_formulario:
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
-# --- ABA 2: PAINEL DO COMERCIANTE / GESTOR (MULTIFRENTES) ---
+# --- ABA 2: PAINEL DO COMERCIANTE / GESTOR (TOTALMENTE ISOLADO) ---
 with aba_painel:
     st.title("📊 Painel de Decisão Estratégica")
     st.markdown("##### *Tenha o produto, marca ou serviço que o seu cliente deseja na prateleira ou região.*")
@@ -127,12 +128,14 @@ with aba_painel:
     # Filtro estratégico para o tomador de decisão pesquisar por frentes
     filtro_frente = st.selectbox(
         label="Selecione a Frente de Inteligência que deseja analisar:",
-        options=["Todas as Carências", "Apenas Produtos/Marcas (Varejo)", "Oportunidades de Novos Negócios (Serviços)", "Infraestrutura Urbana (Setor Público)"]
+        options=["Todas as Carências", "Apenas Produtos/Marcas (Varejo)", "Oportunidades de Novos Negócios (Serviços)", "Infraestrutura Urbana (Setor Público)"],
+        key="selectbox_frente"
     )
 
     termo_busca = st.text_input(
         label="Filtrar por palavra-chave (Localidade ou Nome):",
-        placeholder="Digite para refinar a busca..."
+        placeholder="Digite para refinar a busca...",
+        key="input_busca_painel"
     )
 
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
