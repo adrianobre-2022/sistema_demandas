@@ -43,7 +43,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Desmembra as abas da lista para evitar o erro de tipo (TypeError)
+# Desmembra as abas
 aba_formulario, aba_painel = st.tabs(["📝 Registrar Ausência", "📊 Painel de Inteligência B2B"])
 
 # --- ABA 1: FORMULÁRIO DO CONSUMIDOR ---
@@ -78,24 +78,25 @@ with aba_formulario:
                     "regiao_estado": "SP"
                 }).execute()
                 
-                local_id = local_data.data[0]["id"] if local_data.data else None
+                local_id = local_data.data["id"] if local_data.data else None
                 
                 if local_id:
                     item_formatado = item_solicitado.strip().title()
                     
-                    # Insere o relato atrelado ao ID do local
+                    # Insere o relato na nuvem
                     supabase.table("relatos_escassez").insert({
                         "local_id": local_id,
                         "item_solicitado": item_formatado
                     }).execute()
                     
+                    # Exibe o sucesso na tela de forma limpa
                     st.success("✅ Ocorrência computada e salva na nuvem com anonimato garantido!")
+                    
+                    # Truque de Mestre: Força o Streamlit a limpar os campos após o envio, 
+                    # matando a memória do clique e impedindo o reenvio por F5 do navegador.
+                    st.rerun()
             except Exception as e:
-                # Captura a trava do SQL e trata como aviso amigável na tela
-                if "duplicate key" in str(e).lower() or "unique" in str(e).lower():
-                    st.warning("⏳ Registro já recebido recentemente! Obrigado por colaborar com o comércio local.")
-                else:
-                    st.error("⚠️ Falha ao conectar ao servidor de dados seguro.")
+                st.error("⚠️ Falha ao conectar ao servidor de dados seguro.")
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
