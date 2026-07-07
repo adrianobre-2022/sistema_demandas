@@ -93,7 +93,8 @@ with aba_formulario:
                     st.success("✅ Ocorrência computada e salva na nuvem com anonimato garantido!")
                     
             except Exception as e:
-                st.error("⚠️ Falha ao conectar ao servidor de dados seguro.")
+                # Mudança temporária de diagnóstico para ler o erro real na tela
+                st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
