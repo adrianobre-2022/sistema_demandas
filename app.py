@@ -49,13 +49,12 @@ aba_formulario, aba_painel = st.tabs([
     "📊 Tenha o que o seu cliente deseja"
 ])
 
-# --- ABA 1: FORMULÁRIO DO CONSUMIDOR (TOTALMENTE ISOLADO) ---
+# --- ABA 1: FORMULÁRIO DO CONSUMIDOR ---
 with aba_formulario:
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
 
-    # Filtro de seleção para categorizar a carência
     tipo_selecionado = st.radio(
         label="Que tipo de ausência você quer registrar?",
         options=["Produto / Marca", "Serviço Local / Novo Estabelecimento", "Serviço Público / Infraestrutura"],
@@ -63,7 +62,6 @@ with aba_formulario:
         key="radio_tipo_carencia"
     )
 
-    # Textos dinâmicos baseados na escolha do usuário
     if tipo_selecionado == "Produto / Marca":
         label_item = "Qual produto ou marca você buscou e não encontrou?"
         placeholder_item = "Ex: Nome do produto, marca específica, ração do pet..."
@@ -96,6 +94,7 @@ with aba_formulario:
                     "regiao_estado": "SP"
                 }).execute()
                 
+                # SINTAXE CORRIGIDA: Acessa o ID lendo o primeiro elemento da lista com segurança
                 local_id = None
                 if local_data.data and len(local_data.data) > 0:
                     local_id = local_data.data[0]["id"]
@@ -103,7 +102,6 @@ with aba_formulario:
                 if local_id:
                     item_formatado = item_solicitado.strip().title()
                     
-                    # Salva incluindo o novo campo 'tipo_carencia'
                     supabase.table("relatos_escassez").insert({
                         "local_id": local_id,
                         "item_solicitado": item_formatado,
@@ -112,20 +110,19 @@ with aba_formulario:
                     
                     st.success("✅ Registro computado e salvo na nuvem com anonimato garantido!")
                 else:
-                    st.error("⚠️ Não foi possível gerar o identificador do local.")
+                    st.error("⚠️ Não foi possível extrair o identificador correto do local.")
                     
             except Exception as e:
                 st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
-# --- ABA 2: PAINEL DO COMERCIANTE / GESTOR (TOTALMENTE ISOLADO) ---
+# --- ABA 2: PAINEL DO COMERCIANTE / GESTOR ---
 with aba_painel:
     st.title("📊 Painel de Decisão Estratégica")
     st.markdown("##### *Tenha o produto, marca ou serviço que o seu cliente deseja na prateleira ou região.*")
     st.write("---")
 
-    # Filtro estratégico para o tomador de decisão pesquisar por frentes
     filtro_frente = st.selectbox(
         label="Selecione a Frente de Inteligência que deseja analisar:",
         options=["Todas as Carências", "Apenas Produtos/Marcas (Varejo)", "Oportunidades de Novos Negócios (Serviços)", "Infraestrutura Urbana (Setor Público)"],
@@ -140,7 +137,6 @@ with aba_painel:
 
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         try:
-            # Puxa os dados incluindo a nova coluna de categoria
             resposta = supabase.table("relatos_escassez").select("item_solicitado, tipo_carencia, locais_destino(nome_exibicao, regiao_cidade)").execute()
             
             if resposta.data:
@@ -157,7 +153,6 @@ with aba_painel:
                 if dados_limpos:
                     df = pd.DataFrame(dados_limpos)
 
-                    # Aplica a filtragem baseada na Frente de Negócio selecionada
                     if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                         df = df[df['Categoria'] == "Produto / Marca"]
                     elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
@@ -165,7 +160,6 @@ with aba_painel:
                     elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
                         df = df[df['Categoria'] == "Serviço Público / Infraestrutura"]
 
-                    # Aplica o filtro de palavra-chave
                     if termo_busca:
                         df = df[df['O que Falta'].str.contains(termo_busca, case=False) | df['Local/Referência'].str.contains(termo_busca, case=False)]
 
@@ -173,7 +167,6 @@ with aba_painel:
                         st.write(f"📈 Foram encontrados **{len(df)}** registros mapeados:")
                         st.dataframe(df, use_container_width=True)
                         
-                        # Gráfico analítico moderno de demandas reprimidas
                         st.markdown("#### Distribuição de Demandas Reprimidas Encontradas:")
                         contagem_itens = df["O que Falta"].value_counts()
                         st.bar_chart(contagem_itens)
