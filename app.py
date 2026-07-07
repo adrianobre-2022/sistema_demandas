@@ -4,19 +4,25 @@ import pandas as pd
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# 1. Carrega as senhas secretas do arquivo .env de forma segura
+# --- CONEXÃO INTELIGENTE (LOCAL E NUVEM) ---
+# 1. Tenta carregar do arquivo local .env (para quando rodar no seu PC)
 caminho_atual = os.path.dirname(os.path.abspath(__file__))
 caminho_env = os.path.join(caminho_atual, ".env")
 load_dotenv(caminho_env)
 
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+# 2. Busca as chaves tanto do arquivo local quanto dos Secrets do Streamlit Cloud
+url = os.environ.get("SUPABASE_URL") or st.secrets.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY") or st.secrets.get("SUPABASE_KEY")
 
+# Verifica se os dados foram encontrados em algum dos dois lugares
 if not url or not key:
-    st.error("⚠️ O arquivo de credenciais '.env' não foi encontrado ou está vazio.")
+    st.error(
+        "⚠️ As credenciais de conexão com o banco de dados não foram encontradas.")
     st.stop()
 
+# Inicializa o conector seguro com a nuvem do Supabase
 supabase: Client = create_client(url, key)
+# --------------------------------------------
 
 # 2. Configurações visuais modernas e limpas
 st.set_page_config(page_title="Sistema de Pesquisas",
