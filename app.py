@@ -43,20 +43,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- NAVEGAÇÃO PROFISSIONAL POR PERFIL (BARRA LATERAL) ---
-with st.sidebar:
-    st.image("https://flaticon.com", width=50)
-    st.title("Navegação")
-    
-    # Define o perfil de acesso cortando qualquer chance de mistura de telas
-    perfil_acesso = st.radio(
-        label="Escolha o seu perfil de acesso:",
-        options=["📝 Consumidor (Registrar)", "📊 Comerciante / Gestor (Painel)"],
-        key="navegacao_perfil"
-    )
+# Cria as duas abas nativas no topo - Perfeito para Celular (Atrito Zero)
+aba_formulario, aba_painel = st.tabs([
+    "📝 Deixe saber o que você deseja", 
+    "📊 Tenha o que o seu cliente deseja"
+])
 
-# --- TELA 1: EXCLUSIVA DO CONSUMIDOR ---
-if perfil_acesso == "📝 Consumidor (Registrar)":
+# --- ABA 1: FORMULÁRIO DO CONSUMIDOR ---
+with aba_formulario:
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
@@ -122,8 +116,8 @@ if perfil_acesso == "📝 Consumidor (Registrar)":
         else:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
-# --- TELA 2: EXCLUSIVA DO COMERCIANTE (CONEXÃO DIRETA SEM INVASÃO) ---
-elif perfil_acesso == "📊 Comerciante / Gestor (Painel)":
+# --- ABA 2: PAINEL DO COMERCIANTE / GESTOR (CONSULTA ISOLADA) ---
+with aba_painel:
     st.title("📊 Painel de Decisão Estratégica")
     st.markdown("##### *Tenha o produto, marca ou serviço que o seu cliente deseja na prateleira ou região.*")
     st.write("---")
@@ -140,7 +134,15 @@ elif perfil_acesso == "📊 Comerciante / Gestor (Painel)":
         key="input_busca_painel"
     )
 
+    # Inicializa a memória do clique para evitar a reexecução global fantasma
+    if "clicou_buscar" not in st.session_state:
+        st.session_state.clicou_buscar = False
+
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
+        st.session_state.clicou_buscar = True
+
+    # O conteúdo da busca só roda protegido dentro desta trava de estado
+    if st.session_state.clicou_buscar:
         try:
             resposta = supabase.table("relatos_escassez").select("item_solicitado, tipo_carencia, locais_destino(nome_exibicao, regiao_cidade)").execute()
             
