@@ -89,12 +89,9 @@ with aba_formulario:
                         "item_solicitado": item_formatado
                     }).execute()
                     
-                    # Exibe o sucesso na tela de forma limpa
+                    # Exibe o sucesso na tela de forma limpa e segura
                     st.success("✅ Ocorrência computada e salva na nuvem com anonimato garantido!")
                     
-                    # Truque de Mestre: Força o Streamlit a limpar os campos após o envio, 
-                    # matando a memória do clique e impedindo o reenvio por F5 do navegador.
-                    st.rerun()
             except Exception as e:
                 st.error("⚠️ Falha ao conectar ao servidor de dados seguro.")
         else:
