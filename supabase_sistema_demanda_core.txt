@@ -8,3 +8,6 @@ https://uidsiilkhkwpxpiiqstx.supabase.co/rest/v1/
 API KEY
 sb_publishable_tYETlLLF6p2eJxnP5cigfQ_vF6QhI2n
 
+
+SUPABASE_URL="https://uidsiilkhkwpxpiiqstx.supabase.co"
+SUPABASE_KEY="sb_publishable_tYETlLLF6p2eJxnP5cigfQ_vF6QhI2n"
