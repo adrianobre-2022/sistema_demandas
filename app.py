@@ -45,7 +45,7 @@ st.markdown("""
         border-radius: 8px !important;
     }
     </style>
-""", unsafe_gradient=True)
+""", unsafe_allow_html=True)
 
 # Inicializa a memória temporária do navegador se ela não existir
 if "ultimo_envio" not in st.session_state:
