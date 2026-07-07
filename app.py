@@ -27,7 +27,7 @@ st.set_page_config(page_title="Sistema de Pesquisas",
 st.markdown("""
     <style>
     /* Estilo padrão para todos os botões do aplicativo */
-    .stButton>button {
+    .stButton>button, .stFormSubmitButton>button {
         background-color: #00cc66 !important;
         color: white !important;
         font-weight: bold !important;
@@ -38,8 +38,8 @@ st.markdown("""
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     }
-    /* Efeito de mouse over (Passar o mouse / toque no celular) */
-    .stButton>button:hover {
+    /* Efeito de mouse over / toque */
+    .stButton>button:hover, .stFormSubmitButton>button:hover {
         background-color: #00994d !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.1) !important;
@@ -48,7 +48,11 @@ st.markdown("""
     .stTextInput>div>div>input {
         border-radius: 8px !important;
     }
-    /* Remove decorações nativas e menus que poluem a tela no celular */
+    /* Remove a borda padrão cinza que o st.form cria na tela */
+    [data-testid="stForm"] {
+        border: none !important;
+        padding: 0px !important;
+    }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -56,11 +60,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- CONTROLE INTELIGENTE DE FLUXO (ESTADO DA TELA) ---
-# Inicializa a variável na memória do navegador para saber qual tela exibir
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 
-# --- TELA: HOME (RECEPÇÃO COM OS BOTÕES PREMIUM ESTILO UBER/IFOOD) ---
+# --- TELA: HOME (RECEPÇÃO) ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *O termômetro de carências da nossa região.*")
@@ -68,7 +71,6 @@ if st.session_state.tela_atual == "home":
     st.write("Selecione o seu perfil de acesso para continuar:")
     st.write("")
 
-    # Cria duas colunas paralelas para os botões ficarem lindos lado a lado
     col1, col2 = st.columns(2)
 
     with col1:
@@ -81,9 +83,8 @@ if st.session_state.tela_atual == "home":
             st.session_state.tela_atual = "comerciante"
             st.rerun()
 
-# --- TELA: FORMULÁRIO DO CONSUMIDOR (ISOLAMENTO ABSOLUTO) ---
+# --- TELA: FORMULÁRIO DO CONSUMIDOR (MÚLTIPLAS FRENTES COM LIMPEZA AUTOMÁTICA) ---
 elif st.session_state.tela_atual == "consumidor":
-    # Botão minimalista no topo para voltar à tela inicial
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_cons"):
         st.session_state.tela_atual = "home"
         st.rerun()
@@ -116,14 +117,21 @@ elif st.session_state.tela_atual == "consumidor":
         label_local = "Qual o ponto de referência ou localidade exata?"
         placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
 
-    item_solicitado = st.text_input(
-        label=label_item, placeholder=placeholder_item, key="input_item")
-    local_ocorrencia = st.text_input(
-        label=label_local, placeholder=placeholder_local, key="input_local")
+    # ENCAPSULAMENTO EM FORMULÁRIO DE LIMPEZA AUTOMÁTICA (clear_on_submit=True)
+    with st.form(key="formulario_demandas", clear_on_submit=True):
+        item_solicitado = st.text_input(
+            label=label_item, placeholder=placeholder_item, key="input_item")
+        local_ocorrencia = st.text_input(
+            label=label_local, placeholder=placeholder_local, key="input_local")
 
-    st.write("")
+        st.write("")
 
-    if st.button("Registrar Ocorrência", use_container_width=True, key="btn_registrar"):
+        # Botão especial de envio do formulário
+        botao_enviar = st.form_submit_button(
+            "Registrar Ocorrência", use_container_width=True)
+
+    # Processamento lógico fora do escopo visual do form para evitar travamentos
+    if botao_enviar:
         if item_solicitado and local_ocorrencia:
             try:
                 local_formatado = local_ocorrencia.strip().title()
@@ -135,6 +143,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_id = None
                 if local_data.data and len(local_data.data) > 0:
+                    # Garante a leitura correta do primeiro índice da lista do Supabase
                     local_id = local_data.data[0]["id"]
 
                 if local_id:
@@ -145,13 +154,14 @@ elif st.session_state.tela_atual == "consumidor":
                         "tipo_carencia": tipo_selecionado
                     }).execute()
                     st.success(
-                        "✅ Registro computado e salva na nuvem com anonimato garantido!")
+                        "✅ Registro computado e salvo na nuvem com anonimato garantido!")
             except Exception as e:
                 st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
         else:
-            st.warning("⚠️ Por favor, preencha ambos os campos.")
+            st.warning(
+                "⚠️ Por favor, preencha ambos os campos antes de enviar.")
 
-# --- TELA: PAINEL DO COMERCIANTE / GESTOR (ISOLAMENTO ABSOLUTO) ---
+# --- TELA: PAINEL DO COMERCIANTE / GESTOR ---
 elif st.session_state.tela_atual == "comerciante":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_com"):
         st.session_state.tela_atual = "home"
@@ -223,5 +233,3 @@ elif st.session_state.tela_atual == "comerciante":
                         "ℹ️ O banco de dados ainda não possui registros válidos.")
             else:
                 st.info("ℹ️ O banco de dados está vazio.")
-        except Exception as e:
-            st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
