@@ -1,6 +1,6 @@
-import streamlit st
+import streamlit as st
 import os
-import pandas pd
+import pandas as pd
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
