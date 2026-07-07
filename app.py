@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import pandas as pd
-import datetime
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -44,10 +43,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-aba_selecionada = st.tabs(["📝 Registrar Ausência", "📊 Painel de Inteligência B2B"])
+# Desmembra as abas da lista para evitar o erro de tipo (TypeError)
+aba_formulario, aba_painel = st.tabs(["📝 Registrar Ausência", "📊 Painel de Inteligência B2B"])
 
 # --- ABA 1: FORMULÁRIO DO CONSUMIDOR ---
-with aba_selecionada:
+with aba_formulario:
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
@@ -71,7 +71,7 @@ with aba_selecionada:
             try:
                 local_formatado = local_ocorrencia.strip().title()
                 
-                # Verifica se o local já existe ou cria um novo
+                # Insere o local no banco
                 local_data = supabase.table("locais_destino").insert({
                     "nome_exibicao": local_formatado,
                     "regiao_cidade": "São Paulo",
@@ -83,7 +83,7 @@ with aba_selecionada:
                 if local_id:
                     item_formatado = item_solicitado.strip().title()
                     
-                    # Tenta inserir o relato na nuvem
+                    # Insere o relato atrelado ao ID do local
                     supabase.table("relatos_escassez").insert({
                         "local_id": local_id,
                         "item_solicitado": item_formatado
@@ -91,8 +91,8 @@ with aba_selecionada:
                     
                     st.success("✅ Ocorrência computada e salva na nuvem com anonimato garantido!")
             except Exception as e:
-                # Se o banco de dados rejeitar por duplicidade (F5/Refresh rápido)
-                if "duplicate key value" in str(e).lower() or "unique" in str(e).lower():
+                # Captura a trava do SQL e trata como aviso amigável na tela
+                if "duplicate key" in str(e).lower() or "unique" in str(e).lower():
                     st.warning("⏳ Registro já recebido recentemente! Obrigado por colaborar com o comércio local.")
                 else:
                     st.error("⚠️ Falha ao conectar ao servidor de dados seguro.")
@@ -100,7 +100,7 @@ with aba_selecionada:
             st.warning("⚠️ Por favor, preencha ambos os campos.")
 
 # --- ABA 2: PAINEL DO COMERCIANTE / GESTOR ---
-with aba_selecionada:
+with aba_painel:
     st.title("📊 Painel de Decisão Estratégica")
     st.markdown("##### *Tenha o produto, marca ou serviço que o seu cliente deseja na prateleira.*")
     st.write("---")
