@@ -1,6 +1,6 @@
-import streamlit as st
+import streamlit st
 import os
-import pandas as pd
+import pandas pd
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -83,7 +83,7 @@ if st.session_state.tela_atual == "home":
             st.session_state.tela_atual = "comerciante"
             st.rerun()
 
-# --- TELA: FORMULÁRIO DO CONSUMIDOR (MÚLTIPLAS FRENTES COM LIMPEZA AUTOMÁTICA) ---
+# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_cons"):
         st.session_state.tela_atual = "home"
@@ -117,7 +117,7 @@ elif st.session_state.tela_atual == "consumidor":
         label_local = "Qual o ponto de referência ou localidade exata?"
         placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
 
-    # ENCAPSULAMENTO EM FORMULÁRIO DE LIMPEZA AUTOMÁTICA (clear_on_submit=True)
+    # ENCAPSULAMENTO EM FORMULÁRIO DE LIMPEZA AUTOMÁTICA
     with st.form(key="formulario_demandas", clear_on_submit=True):
         item_solicitado = st.text_input(
             label=label_item, placeholder=placeholder_item, key="input_item")
@@ -125,12 +125,9 @@ elif st.session_state.tela_atual == "consumidor":
             label=label_local, placeholder=placeholder_local, key="input_local")
 
         st.write("")
-
-        # Botão especial de envio do formulário
         botao_enviar = st.form_submit_button(
             "Registrar Ocorrência", use_container_width=True)
 
-    # Processamento lógico fora do escopo visual do form para evitar travamentos
     if botao_enviar:
         if item_solicitado and local_ocorrencia:
             try:
@@ -143,7 +140,6 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_id = None
                 if local_data.data and len(local_data.data) > 0:
-                    # Garante a leitura correta do primeiro índice da lista do Supabase
                     local_id = local_data.data[0]["id"]
 
                 if local_id:
@@ -233,3 +229,5 @@ elif st.session_state.tela_atual == "comerciante":
                         "ℹ️ O banco de dados ainda não possui registros válidos.")
             else:
                 st.info("ℹ️ O banco de dados está vazio.")
+        except Exception as e:
+            st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
