@@ -24,6 +24,7 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
 
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM ---
 st.markdown("""
     <style>
     .stButton>button, .stFormSubmitButton>button {
@@ -152,14 +153,15 @@ elif st.session_state.tela_atual == "consumidor":
 
                     local_id = None
                     if local_data.data and len(local_data.data) > 0:
-                        local_id = local_data.data["id"]
+                        local_id = local_data.data[0]["id"]
 
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
                         supabase.table("relatos_escassez").insert({
                             "local_id": local_id,
                             "item_solicitado": item_formatado,
-                            "tipo_carencia": tipo_selecionado
+                            "tipo_carencia": tipo_selecionado,
+                            "status": "Pendente"
                         }).execute()
                         st.success(
                             "✅ Registro computado e salvo na nuvem com anonimato garantido!")
@@ -168,6 +170,26 @@ elif st.session_state.tela_atual == "consumidor":
         else:
             st.warning(
                 "⚠️ Por favor, preencha ambos os campos antes de enviar.")
+
+    # --- LOOP DE FEEDBACK AUTOMÁTICO (DEMANDAS RESOLVIDAS) ---
+    st.write("")
+    st.markdown("### 🏆 Impactos Recentes no Bairro")
+    st.markdown(
+        "##### *Veja o que foi resolvido recentemente na região através da sua voz:*")
+
+    try:
+        resolvidos = supabase.table("relatos_escassez").select(
+            "item_solicitado, locais_destino(nome_exibicao)").eq("status", "Atendido").limit(3).execute()
+        if resolvidos.data and len(resolvidos.data) > 0:
+            for item in resolvidos.data:
+                if item.get("locais_destino"):
+                    st.info(
+                        f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque ou atendeu à demanda de: **{item['item_solicitado']}**!")
+        else:
+            st.write(
+                "ℹ️ Nenhuma benfeitoria registrada nos últimos dias. Continue cobrando!")
+    except:
+        pass
 
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
@@ -204,7 +226,7 @@ elif st.session_state.tela_atual == "autenticacao":
         else:
             st.error(
                 "❌ Token inválido ou expirado. Entre em contato com o administrador.")
-            # --- TELA: PAINEL DO COMERCIANTE / GESTOR ---
+# --- TELA: PAINEL DO COMERCIANTE / GESTOR ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
         st.session_state.tela_atual = "home"
@@ -234,43 +256,30 @@ elif st.session_state.tela_atual == "comerciante":
     st.write("---")
 
     filtro_frente = st.selectbox(
-        label="Selecione a Frente de Inteligência que deseja analisar:",
-        options=opcoes_filtro,
-        key="selectbox_frente"
-    )
-
-    termo_busca = st.text_input(
-        label="Filtrar por palavra-chave (Localidade ou Nome):",
-        placeholder="Digite para refinar a busca...",
-        key="input_busca_painel"
-    )
+        label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
+    termo_busca = st.text_input(label="Filtrar por palavra-chave:",
+                                placeholder="Digite para refinar...", key="input_busca_painel")
 
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         try:
             resposta = supabase.table("relatos_escassez").select(
-                "item_solicitado, tipo_carencia, data_registro, locais_destino(nome_exibicao, regiao_cidade)").execute()
+                "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
 
             if resposta.data:
                 dados_limpos = []
-                # Garante que o horário atual use explicitamente o fuso UTC do Python
                 agora = datetime.datetime.now(datetime.timezone.utc)
 
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
                         data_str = registro.get("data_registro")
-
                         if data_str:
-                            # Conversão universal: remove o 'Z' se houver e força o fuso UTC no Python
                             data_limpa = data_str.replace("Z", "+00:00")
                             data_reg = datetime.datetime.fromisoformat(
                                 data_limpa)
-
-                            # TRUQUE DE MESTRE: Se a data do banco veio sem fuso por falha de texto, injeta o UTC na marra
                             if data_reg.tzinfo is None:
                                 data_reg = data_reg.replace(
                                     tzinfo=datetime.timezone.utc)
 
-                            # Agora a matemática de subtração está 100% protegida contra falhas
                             idade_dias = (agora - data_reg).days
                             categoria = registro.get(
                                 "tipo_carencia", "Produto / Marca")
@@ -285,11 +294,11 @@ elif st.session_state.tela_atual == "comerciante":
 
                             if manter_registro:
                                 dados_limpos.append({
+                                    "ID": registro["id"],
                                     "O que Falta": registro["item_solicitado"],
                                     "Categoria": categoria,
                                     "Local/Referência": registro["locais_destino"]["nome_exibicao"],
-                                    "Cidade": registro["locais_destino"]["regiao_cidade"],
-                                    "Idade (Dias)": idade_dias
+                                    "Cidade": registro["locais_destino"]["regiao_cidade"]
                                 })
 
                 if dados_limpos:
@@ -310,12 +319,24 @@ elif st.session_state.tela_atual == "comerciante":
 
                     if not df.empty:
                         st.write(
-                            f"📈 Foram encontrados **{len(df)}** registros quentes e válidos para análise:")
-                        st.dataframe(df, use_container_width=True)
+                            f"📈 Foram encontrados **{len(df)}** registros de demandas reprimidas pendentes:")
+                        st.dataframe(
+                            df.drop(columns=["ID"]), use_container_width=True)
+
+                        # --- INTERFACE DE BAIXA AUTOMÁTICA POR PRODUTO ---
                         st.markdown(
-                            "#### Distribuição de Demandas Reprimidas Encontradas:")
-                        contagem_itens = df["O que Falta"].value_counts()
-                        st.bar_chart(contagem_itens)
+                            "### 📦 Dar Baixa / Informar Reposição de Estoque")
+                        id_para_baixa = st.selectbox(
+                            "Selecione o item que você acabou de repor/resolver para dar baixa:", options=df["O que Falta"].unique())
+
+                        if st.button("Informar Reposição / Solução", use_container_width=True, key="btn_dar_baixa"):
+                            id_real = int(
+                                df[df["O que Falta"] == id_para_baixa]["ID"].values[0])
+                            supabase.table("relatos_escassez").update(
+                                {"status": "Atendido"}).eq("id", id_real).execute()
+                            st.success(
+                                f"✅ Baixa computada! O item '{id_para_baixa}' foi movido para o painel de conquistas do bairro.")
+                            st.rerun()
                     else:
                         st.info(
                             "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
@@ -323,6 +344,6 @@ elif st.session_state.tela_atual == "comerciante":
                     st.info(
                         "ℹ️ Os registros existentes já expiraram por tempo de mercado.")
             else:
-                st.info("ℹ️ O banco de dados está vazio.")
+                st.info("ℹ️ O banco de dados está limpo e sem demandas pendentes!")
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
