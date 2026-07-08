@@ -56,12 +56,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Inicializa as variáveis de controle na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
     st.session_state.token_valido = False
 if "perfil_cliente" not in st.session_state:
     st.session_state.perfil_cliente = None
+if "busca_ativa" not in st.session_state:
+    st.session_state.busca_ativa = False
 
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
@@ -127,19 +130,19 @@ elif st.session_state.tela_atual == "consumidor":
     if botao_enviar:
         if item_solicitado and local_ocorrencia:
             texto_usuario = item_solicitado.strip().lower()
-
             palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
                               "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
             palavras_produto = ["leite", "fralda", "ração", "refrigerante",
                                 "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
 
             erro_detectado = False
-
             if tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
-                st.error("⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Por favor, altere a opção marcada no topo para 'Serviço Público / Infraestrutura' antes de enviar.")
+                st.error(
+                    "⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Por favor, altere a opção marcada no topo.")
                 erro_detectado = True
             elif tipo_selecionado == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
-                st.error("⚠️ Ops! Parece que você está relatando a falta de um produto de gôndola. Por favor, altere a opção marcada no topo para 'Produto / Marca' antes de enviar.")
+                st.error(
+                    "⚠️ Ops! Parece que você está relatando a falta de um produto de gôndola. Por favor, altere a opção marcada no topo.")
                 erro_detectado = True
 
             if not erro_detectado:
@@ -153,7 +156,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                     local_id = None
                     if local_data.data and len(local_data.data) > 0:
-                        local_id = local_data.data[0]["id"]
+                        local_id = local_data.data["id"]
 
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
@@ -171,7 +174,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.warning(
                 "⚠️ Por favor, preencha ambos os campos antes de enviar.")
 
-    # --- LOOP DE FEEDBACK AUTOMÁTICO (DEMANDAS RESOLVIDAS) ---
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     st.markdown(
@@ -236,6 +238,7 @@ elif st.session_state.tela_atual == "comerciante":
         st.session_state.tela_atual = "home"
         st.session_state.token_valido = False
         st.session_state.perfil_cliente = None
+        st.session_state.busca_ativa = False
         st.rerun()
 
     st.title("📊 Painel de Decisão Estratégica")
@@ -260,7 +263,12 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
                                 placeholder="Digite para refinar...", key="input_busca_painel")
 
+    # Ativa o estado de persistência da busca assim que o botão principal for clicado
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
+        st.session_state.busca_ativa = True
+
+    # Se a busca estiver ligada na memória da sessão, a tela permanece travada e aberta
+    if st.session_state.busca_ativa:
         try:
             resposta = supabase.table("relatos_escassez").select(
                 "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
@@ -323,20 +331,32 @@ elif st.session_state.tela_atual == "comerciante":
                         st.dataframe(
                             df.drop(columns=["ID"]), use_container_width=True)
 
-                        # --- INTERFACE DE BAIXA AUTOMÁTICA POR PRODUTO ---
+                        # --- INTERFACE DE BAIXA AUTOMÁTICA BLINDADA ---
                         st.markdown(
                             "### 📦 Dar Baixa / Informar Reposição de Estoque")
-                        id_para_baixa = st.selectbox(
-                            "Selecione o item que você acabou de repor/resolver para dar baixa:", options=df["O que Falta"].unique())
 
-                        if st.button("Informar Reposição / Solução", use_container_width=True, key="btn_dar_baixa"):
-                            id_real = int(
-                                df[df["O que Falta"] == id_para_baixa]["ID"].values[0])
-                            supabase.table("relatos_escassez").update(
-                                {"status": "Atendido"}).eq("id", id_real).execute()
-                            st.success(
-                                f"✅ Baixa computada! O item '{id_para_baixa}' foi movido para o painel de conquistas do bairro.")
-                            st.rerun()
+                        # TRUQUE DE SEGURANÇA: Injeta uma opção neutra no topo da lista
+                        lista_opcoes = [
+                            "-- Selecione o Item para Resolver --"] + list(df["O que Falta"].unique())
+                        id_para_baixa = st.selectbox(
+                            "Escolha o item correspondente para dar baixa de forma consciente:", options=lista_opcoes, key="sb_baixa_segura")
+
+                        # O botão de dar baixa só fica ativo se o usuário tirar da opção neutra
+                        if id_para_baixa != "-- Selecione o Item para Resolver --":
+                            if st.button("Confirmar Reposição / Solução do Item", use_container_width=True, key="btn_dar_baixa"):
+                                id_real = int(
+                                    df[df["O que Falta"] == id_para_baixa]["ID"].values[0])
+                                supabase.table("relatos_escassez").update(
+                                    {"status": "Atendido"}).eq("id", id_real).execute()
+                                st.success(
+                                    f"✅ Sucesso! O item '{id_para_baixa}' foi dado baixa e arquivado.")
+                                # Limpa o estado de busca após a baixa para forçar uma nova consulta limpa
+                                st.session_state.busca_ativa = False
+                                st.rerun()
+                        else:
+                            # Se estiver na opção neutra, exibe um aviso cinza de orientação
+                            st.info(
+                                "ℹ️ Por favor, abra o menu suspenso acima e selecione o produto real para liberar o botão de confirmação.")
                     else:
                         st.info(
                             "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
