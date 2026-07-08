@@ -24,9 +24,13 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
 
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE DESIGN DARK RESPONSIVO) ---
 st.markdown("""
     <style>
+    .stApp {
+        background-color: #121212 !important;
+        color: #FFFFFF !important;
+    }
     .stButton>button, .stFormSubmitButton>button {
         background-color: #00cc66 !important;
         color: white !important;
@@ -36,15 +40,37 @@ st.markdown("""
         padding: 0.8rem 1rem !important;
         font-size: 16px !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
+        width: 100% !important;
     }
     .stButton>button:hover, .stFormSubmitButton>button:hover {
         background-color: #00994d !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
     }
-    .stTextInput>div>div>input {
-        border-radius: 8px !important;
+    .stTextInput>div>div>input, .stSelectbox>div>div>div {
+        border-radius: 10px !important;
+        background-color: #1E1E1E !important;
+        color: white !important;
+        border: 1px solid #333333 !important;
+    }
+    .card-movel {
+        background-color: #1E1E1E;
+        border-left: 5px solid #00cc66;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 0.8rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .card-titulo {
+        font-size: 18px;
+        font-weight: bold;
+        color: #00cc66;
+        margin-bottom: 0.2rem;
+    }
+    .card-sub {
+        font-size: 14px;
+        color: #AAAAAA;
     }
     [data-testid="stForm"] {
         border: none !important;
@@ -56,7 +82,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa as variáveis de controle na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -65,7 +90,6 @@ if "perfil_cliente" not in st.session_state:
     st.session_state.perfil_cliente = None
 if "busca_ativa" not in st.session_state:
     st.session_state.busca_ativa = False
-
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
@@ -104,19 +128,19 @@ elif st.session_state.tela_atual == "consumidor":
 
     if tipo_selecionado == "Produto / Marca":
         label_item = "Qual produto ou marca você buscou e não encontrou?"
-        placeholder_item = "Ex: Nome do produto, marca específica, ração do pet..."
+        placeholder_item = "Ex: Nome do produto, marca específica..."
         label_local = "Em qual estabelecimento isso ocorreu?"
-        placeholder_local = "Ex: Nome do mercadinho, farmácia, petshop..."
+        placeholder_local = "Ex: Nome do mercadinho, farmácia..."
     elif tipo_selecionado == "Serviço Local / Novo Estabelecimento":
         label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
-        placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
+        placeholder_item = "Ex: Sapataria, lavanderia, costureira..."
         label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
-        placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
+        placeholder_local = "Ex: Bairro Centro, Avenida X..."
     else:
         label_item = "Qual carência de infraestrutura/manutenção você identificou?"
-        placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
+        placeholder_item = "Ex: Falha na iluminação, falta de médicos..."
         label_local = "Qual o ponto de referência ou localidade exata?"
-        placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
+        placeholder_local = "Ex: Posto de saúde do bairro Y..."
 
     with st.form(key="formulario_demandas", clear_on_submit=True):
         item_solicitado = st.text_input(
@@ -130,19 +154,19 @@ elif st.session_state.tela_atual == "consumidor":
     if botao_enviar:
         if item_solicitado and local_ocorrencia:
             texto_usuario = item_solicitado.strip().lower()
-            palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
-                              "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
+            palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto",
+                              "médico", "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia"]
             palavras_produto = ["leite", "fralda", "ração", "refrigerante",
-                                "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
+                                "cerveja", "sabão", "remédio", "arroz", "feijão"]
 
             erro_detectado = False
             if tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
                 st.error(
-                    "⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Por favor, altere a opção marcada no topo.")
+                    "⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Altere a opção no topo.")
                 erro_detectado = True
             elif tipo_selecionado == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
                 st.error(
-                    "⚠️ Ops! Parece que você está relatando a falta de um produto de gôndola. Por favor, altere a opção marcada no topo.")
+                    "⚠️ Ops! Parece que você está relatando a falta de um produto. Altere a opção no topo.")
                 erro_detectado = True
 
             if not erro_detectado:
@@ -176,9 +200,6 @@ elif st.session_state.tela_atual == "consumidor":
 
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
-    st.markdown(
-        "##### *Veja o que foi resolvido recentemente na região através da sua voz:*")
-
     try:
         resolvidos = supabase.table("relatos_escassez").select(
             "item_solicitado, locais_destino(nome_exibicao)").eq("status", "Atendido").limit(3).execute()
@@ -186,13 +207,11 @@ elif st.session_state.tela_atual == "consumidor":
             for item in resolvidos.data:
                 if item.get("locais_destino"):
                     st.info(
-                        f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque ou atendeu à demanda de: **{item['item_solicitado']}**!")
+                        f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque ou atendeu: **{item['item_solicitado']}**!")
         else:
-            st.write(
-                "ℹ️ Nenhuma benfeitoria registrada nos últimos dias. Continue cobrando!")
+            st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -226,8 +245,8 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         else:
-            st.error(
-                "❌ Token inválido ou expirado. Entre em contato com o administrador.")
+            st.error("❌ Token inválido ou expirado.")
+
 # --- TELA: PAINEL DO COMERCIANTE / GESTOR ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -263,11 +282,9 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
                                 placeholder="Digite para refinar...", key="input_busca_painel")
 
-    # Ativa o estado de persistência da busca assim que o botão principal for clicado
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
 
-    # Se a busca estiver ligada na memória da sessão, a tela permanece travada e aberta
     if st.session_state.busca_ativa:
         try:
             resposta = supabase.table("relatos_escassez").select(
@@ -306,7 +323,8 @@ elif st.session_state.tela_atual == "comerciante":
                                     "O que Falta": registro["item_solicitado"],
                                     "Categoria": categoria,
                                     "Local/Referência": registro["locais_destino"]["nome_exibicao"],
-                                    "Cidade": registro["locais_destino"]["regiao_cidade"]
+                                    "Cidade": registro["locais_destino"]["regiao_cidade"],
+                                    "Prazo": f"{idade_dias} dias atrás"
                                 })
 
                 if dados_limpos:
@@ -327,43 +345,47 @@ elif st.session_state.tela_atual == "comerciante":
 
                     if not df.empty:
                         st.write(
-                            f"📈 Foram encontrados **{len(df)}** registros de demandas reprimidas pendentes:")
-                        st.dataframe(
-                            df.drop(columns=["ID"]), use_container_width=True)
+                            f"📈 Foram encontrados **{len(df)}** carências ativas:")
 
-                        # --- INTERFACE DE BAIXA AUTOMÁTICA BLINDADA ---
-                        st.markdown(
-                            "### 📦 Dar Baixa / Informar Reposição de Estoque")
+                        # --- CARDS EMPILHADOS RESPONSIVOS ---
+                        for _, linha in df.iterrows():
+                            st.markdown(f"""
+                                <div class="card-movel">
+                                    <div class="card-titulo">❌ Faltando: {linha['O que Falta']}</div>
+                                    <div class="card-sub">📍 Local: {linha['Local/Referência']} ({linha['Cidade']})</div>
+                                    <div class="card-sub">⏱️ Registrado há: {linha['Prazo']}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
 
-                        # TRUQUE DE SEGURANÇA: Injeta uma opção neutra no topo da lista
+                        st.markdown("#### Distribuição de Demandas na Região:")
+                        contagem_itens = df["O que Falta"].value_counts()
+                        st.bar_chart(contagem_itens)
+
+                        st.markdown("### 📦 Dar Baixa / Informar Solução")
                         lista_opcoes = [
                             "-- Selecione o Item para Resolver --"] + list(df["O que Falta"].unique())
                         id_para_baixa = st.selectbox(
                             "Escolha o item correspondente para dar baixa de forma consciente:", options=lista_opcoes, key="sb_baixa_segura")
 
-                        # O botão de dar baixa só fica ativo se o usuário tirar da opção neutra
                         if id_para_baixa != "-- Selecione o Item para Resolver --":
                             if st.button("Confirmar Reposição / Solução do Item", use_container_width=True, key="btn_dar_baixa"):
                                 id_real = int(
-                                    df[df["O que Falta"] == id_para_baixa]["ID"].values[0])
+                                    df[df["O que Falta"] == id_para_baixa]["ID"].values)
                                 supabase.table("relatos_escassez").update(
                                     {"status": "Atendido"}).eq("id", id_real).execute()
                                 st.success(
                                     f"✅ Sucesso! O item '{id_para_baixa}' foi dado baixa e arquivado.")
-                                # Limpa o estado de busca após a baixa para forçar uma nova consulta limpa
                                 st.session_state.busca_ativa = False
                                 st.rerun()
                         else:
-                            # Se estiver na opção neutra, exibe um aviso cinza de orientação
                             st.info(
-                                "ℹ️ Por favor, abra o menu suspenso acima e selecione o produto real para liberar o botão de confirmação.")
+                                "ℹ️ Selecione o item acima para liberar o botão de baixa no caixa.")
                     else:
-                        st.info(
-                            "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
+                        st.info("ℹ️ Nenhum registro ativo encontrado.")
                 else:
                     st.info(
                         "ℹ️ Os registros existentes já expiraram por tempo de mercado.")
             else:
-                st.info("ℹ️ O banco de dados está limpo e sem demandas pendentes!")
+                st.info("ℹ️ O banco de dados está limpo!")
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
