@@ -191,7 +191,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                     local_id = None
                     if local_data.data and len(local_data.data) > 0:
-                        local_id = local_data.data[0]["id"]
+                        local_id = local_data.data["id"]
 
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
@@ -271,6 +271,7 @@ elif st.session_state.tela_atual == "comerciante":
         st.session_state.token_valido = False
         st.session_state.perfil_cliente = None
         st.session_state.busca_ativa = False
+        st.session_state.dados_grafico = None
         st.rerun()
 
     st.title("📊 Painel de Decisão Estratégica")
@@ -297,11 +298,9 @@ elif st.session_state.tela_atual == "comerciante":
 
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
-
-    if st.session_state.busca_ativa:
         try:
             resposta = supabase.table("relatos_escassez").select(
-                "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(id, nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
+                "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
 
             if resposta.data:
                 dados_limpos = []
@@ -341,64 +340,83 @@ elif st.session_state.tela_atual == "comerciante":
                                 })
 
                 if dados_limpos:
-                    df = pd.DataFrame(dados_limpos)
+                    st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
+                else:
+                    st.session_state.dados_grafico = pd.DataFrame()
+            else:
+                st.session_state.dados_grafico = pd.DataFrame()
+        except Exception as e:
+            st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
+    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
+        df = st.session_state.dados_grafico
 
-                    if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
-                        df = df[df['Categoria'] == "Produto / Marca"]
-                    elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                        df = df[df['Categoria'] ==
-                                "Serviço Local / Novo Estabelecimento"]
-                    elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                        df = df[df['Categoria'] ==
-                                "Serviço Público / Infraestrutura"]
+        if not df.empty:
+            df_filtrado = df
+            if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
+                df_filtrado = df[df['Categoria'] == "Produto / Marca"]
+            elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
+                df_filtrado = df[df['Categoria'] ==
+                                 "Serviço Local / Novo Estabelecimento"]
+            elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
+                df_filtrado = df[df['Categoria'] ==
+                                 "Serviço Público / Infraestrutura"]
 
-                    if termo_busca:
-                        df = df[df['O que Falta'].str.contains(
-                            termo_busca, case=False) | df['Local/Referência'].str.contains(termo_busca, case=False)]
+            if termo_busca:
+                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
+                    termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
-                    if not df.empty:
-                        df_agrupado = df.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade"]).agg(
-                            Volume_Pedidos=("ID", "count"),
-                            Menor_Idade=("Dias", "min")
-                        ).reset_index()
+            if not df_filtrado.empty:
+                df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade"]).agg(
+                    Volume_Pedidos=("ID", "count"),
+                    Menor_Idade=("Dias", "min")
+                ).reset_index()
 
-                        # --- INVERSÃO DE LAYOUT: GRÁFICO NO TOPO ---
-                        st.markdown(
-                            "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
-                        contagem_itens = df["O que Falta"].value_counts()
-                        st.bar_chart(contagem_itens)
+                st.markdown(
+                    "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
+                contagem_itens = df_filtrado["O que Falta"].value_counts()
+                st.bar_chart(contagem_itens, horizontal=True)
 
-                        st.write("---")
+                st.write("---")
+                st.write(
+                    f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+
+                for indice, linha in df_agrupado.iterrows():
+                    titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
+
+                    with st.expander(titulo_card):
                         st.write(
-                            f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+                            f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
                         st.write(
-                            "##### *Toque em cima do item correspondente para abrir o botão de baixa no caixa.*")
+                            f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
+                        st.write("")
 
-                        for indice, linha in df_agrupado.iterrows():
-                            titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
+                        chave_confirmacao = f"confirma_baixa_{indice}"
+                        if key_confirmacao not in st.session_state:
+                            st.session_state[chave_confirmacao] = False
 
-                            with st.expander(titulo_card):
-                                st.write(
-                                    f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
-                                st.write(
-                                    f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
-                                st.write("")
-
-                                chave_botao = f"btn_baixa_direta_{indice}"
-                                if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=chave_botao):
-                                    # Corrige a baixa unificada alterando as linhas correspondentes por texto
+                        if not st.session_state[chave_confirmacao]:
+                            if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=f"btn_pre_{indice}"):
+                                st.session_state[chave_confirmacao] = True
+                                st.rerun()
+                        else:
+                            st.warning(
+                                "⚠️ Atenção: Esta ação dará baixa em todas as solicitações deste item simultaneamente.")
+                            col_b1, col_b2 = st.columns(2)
+                            with col_b1:
+                                if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{indice}"):
                                     supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
                                         "item_solicitado", linha['O que Falta']).execute()
                                     st.success(
-                                        f"🎉 Sucesso! O item '{linha['O que Falta']}' foi dado baixa coletiva.")
+                                        f"🎉 Sucesso! O item foi atualizado.")
+                                    st.session_state[chave_confirmacao] = False
                                     st.session_state.busca_ativa = False
                                     st.rerun()
-                    else:
-                        st.info("ℹ️ Nenhum registro ativo encontrado.")
-                else:
-                    st.info(
-                        "ℹ️ Os registros existentes já expiraram por tempo de mercado.")
+                            with col_b2:
+                                if st.button("❌ Cancelar", key=f"btn_cancelar_{indice}"):
+                                    st.session_state[chave_confirmacao] = False
+                                    st.rerun()
             else:
-                st.info("ℹ️ O banco de dados está limpo!")
-        except Exception as e:
-            st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
+                st.info(
+                    "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
+        else:
+            st.info("ℹ️ O banco de dados está limpo e sem demandas pendentes!")
