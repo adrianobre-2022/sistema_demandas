@@ -26,7 +26,6 @@ st.set_page_config(page_title="Sistema de Pesquisas",
 # --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (ESTILO APP MODERNO E RESPONSIVO) ---
 st.markdown("""
     <style>
-    /* Estilo padrão para todos os botões do aplicativo */
     .stButton>button, .stFormSubmitButton>button {
         background-color: #00cc66 !important;
         color: white !important;
@@ -38,17 +37,14 @@ st.markdown("""
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     }
-    /* Efeito de mouse over / toque */
     .stButton>button:hover, .stFormSubmitButton>button:hover {
         background-color: #00994d !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.1) !important;
     }
-    /* Arredondamento moderno nos campos de texto */
     .stTextInput>div>div>input {
         border-radius: 8px !important;
     }
-    /* Remove a borda padrão cinza que o st.form cria na tela */
     [data-testid="stForm"] {
         border: none !important;
         padding: 0px !important;
@@ -117,7 +113,6 @@ elif st.session_state.tela_atual == "consumidor":
         label_local = "Qual o ponto de referência ou localidade exata?"
         placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
 
-    # ENCAPSULAMENTO EM FORMULÁRIO DE LIMPEZA AUTOMÁTICA
     with st.form(key="formulario_demandas", clear_on_submit=True):
         item_solicitado = st.text_input(
             label=label_item, placeholder=placeholder_item, key="input_item")
@@ -140,6 +135,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_id = None
                 if local_data.data and len(local_data.data) > 0:
+                    # CORREÇÃO EXTRA: Acessa explicitamente a primeira linha retornada do banco
                     local_id = local_data.data[0]["id"]
 
                 if local_id:
