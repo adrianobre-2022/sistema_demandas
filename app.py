@@ -27,13 +27,16 @@ st.set_page_config(page_title="Sistema de Pesquisas",
 # --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE DESIGN DARK COM ALTO CONTRASTE) ---
 st.markdown("""
     <style>
+    /* Força o fundo escuro moderno estilo Uber/iFood */
     .stApp {
         background-color: #121212 !important;
         color: #FFFFFF !important;
     }
+    /* Força todas as etiquetas e parágrafos a ficarem brancos brilhantes no celular */
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
+    /* Estilização dos botões verdes premium arredondados */
     .stButton>button, .stFormSubmitButton>button {
         background-color: #00cc66 !important;
         color: white !important;
@@ -51,12 +54,14 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
     }
+    /* Customização dos campos de entrada de texto escuros */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px !important;
         background-color: #1E1E1E !important;
         color: white !important;
         border: 1px solid #444444 !important;
     }
+    /* Estilo dos Cards Sanfona com borda neon */
     .stExpander {
         background-color: #1E1E1E !important;
         border-left: 5px solid #00cc66 !important;
@@ -74,6 +79,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Inicializa as variáveis na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -140,7 +146,6 @@ elif st.session_state.tela_atual == "consumidor":
         local_ocorrencia = st.text_input(
             label=label_local, placeholder=placeholder_local, key="input_local")
 
-        # --- MELHORIA SESSÃO 5: CAPTURA OPCIONAL DE CONTATO (LOOP DE RETORNO) ---
         contato_usuario = st.text_input(
             label="Quer ser avisado quando o estoque for reposto ou o serviço aberto? (Opcional)",
             placeholder="Ex: Seu e-mail ou WhatsApp... (Mantemos total anonimato)",
@@ -156,11 +161,8 @@ elif st.session_state.tela_atual == "consumidor":
             texto_usuario = item_solicitado.strip().lower()
             local_usuario = local_ocorrencia.strip().lower()
 
-            # --- MELHORIA SESSÃO 5: FILTRO DE OFENSAS E PALAVRÕES AUTOMÁTICO ---
             palavras_ofensivas = ["porra", "caralho", "puta", "merda", "lixo", "bosta",
                                   "caralhos", "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
-
-            # --- FISCAL DE QUALIDADE AUTOMÁTICO DE CATEGORIAS ---
             palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
                               "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
             palavras_produto = ["leite", "fralda", "ração", "refrigerante",
@@ -168,11 +170,9 @@ elif st.session_state.tela_atual == "consumidor":
 
             erro_detectado = False
 
-            # Executa primeiro a barreira de proteção de linguagem do anonimato
             if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas):
-                st.error("⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva seu relato focando apenas no nome do item, marca ou carência estrutural de forma construtiva.")
+                st.error("⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva seu relato focando apenas no nome do item de forma construtiva.")
                 erro_detectado = True
-            # Executa a barreira de erros de preenchimento
             elif tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
                 st.error("⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Por favor, altere a opção marcada no topo para 'Serviço Público / Infraestrutura' antes de enviar.")
                 erro_detectado = True
@@ -191,12 +191,11 @@ elif st.session_state.tela_atual == "consumidor":
 
                     local_id = None
                     if local_data.data and len(local_data.data) > 0:
-                        local_id = local_data.data["id"]
+                        local_id = local_data.data[0]["id"]
 
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
 
-                        # Salva na nuvem incluindo os metadados de contato para avisos futuros
                         supabase.table("relatos_escassez").insert({
                             "local_id": local_id,
                             "item_solicitado": item_formatado,
@@ -223,8 +222,7 @@ elif st.session_state.tela_atual == "consumidor":
                     st.info(
                         f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque ou atendeu: **{item['item_solicitado']}**!")
         else:
-            st.write(
-                "ℹ Broadcaster: Nenhuma benfeitoria registrada nos últimos dias.")
+            st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
@@ -234,13 +232,15 @@ elif st.session_state.tela_atual == "autenticacao":
         st.session_state.token_valido = False
         st.session_state.perfil_cliente = None
         st.rerun()
-        
+
     st.title("🔒 Área Restrita de Inteligência")
-    st.markdown("##### *Insira a sua chave de acesso corporativa para liberar os relatórios.*")
+    st.markdown(
+        "##### *Insira a sua chave de acesso corporativa para liberar os relatórios.*")
     st.write("---")
-    
-    token_inserido = st.text_input(label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
-    
+
+    token_inserido = st.text_input(
+        label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
+
     if st.button("Validar Credenciais", use_container_width=True):
         if token_inserido == "COMERCIO10":
             st.session_state.token_valido = True
@@ -272,47 +272,56 @@ elif st.session_state.tela_atual == "comerciante":
         st.session_state.perfil_cliente = None
         st.session_state.busca_ativa = False
         st.rerun()
-        
+
     st.title("📊 Painel de Decisão Estratégica")
-    
+
     if st.session_state.perfil_cliente == "comerciante":
-        st.markdown("##### 🏪 *Nível de Acesso: Varejo Local (Foco em Gôndolas e Marcas)*")
+        st.markdown(
+            "##### 🏪 *Nível de Acesso: Varejo Local (Foco em Gôndolas e Marcas)*")
         opcoes_filtro = ["Apenas Produtos/Marcas (Varejo)"]
     elif st.session_state.perfil_cliente == "investidor":
-        st.markdown("##### 💼 *Nível de Acesso: Investidor e Expansão (Foco em Serviços do Bairro)*")
+        st.markdown(
+            "##### 💼 *Nível de Acesso: Investidor e Expansão (Foco em Serviços do Bairro)*")
         opcoes_filtro = ["Oportunidades de Novos Negócios (Serviços)"]
     else:
-        st.markdown("##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura Urbana)*")
+        st.markdown(
+            "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura Urbana)*")
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
-        
+
     st.write("---")
 
-    filtro_frente = st.selectbox(label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
-    termo_busca = st.text_input(label="Filtrar por palavra-chave:", placeholder="Digite para refinar...", key="input_busca_painel")
+    filtro_frente = st.selectbox(
+        label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
+    termo_busca = st.text_input(label="Filtrar por palavra-chave:",
+                                placeholder="Digite para refinar...", key="input_busca_painel")
 
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
 
     if st.session_state.busca_ativa:
         try:
-            resposta = supabase.table("relatos_escassez").select("id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
-            
+            resposta = supabase.table("relatos_escassez").select(
+                "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(id, nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
+
             if resposta.data:
                 dados_limpos = []
                 agora = datetime.datetime.now(datetime.timezone.utc)
-                
+
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
                         data_str = registro.get("data_registro")
                         if data_str:
                             data_limpa = data_str.replace("Z", "+00:00")
-                            data_reg = datetime.datetime.fromisoformat(data_limpa)
+                            data_reg = datetime.datetime.fromisoformat(
+                                data_limpa)
                             if data_reg.tzinfo is None:
-                                data_reg = data_reg.replace(tzinfo=datetime.timezone.utc)
-                            
+                                data_reg = data_reg.replace(
+                                    tzinfo=datetime.timezone.utc)
+
                             idade_dias = (agora - data_reg).days
-                            categoria = registro.get("tipo_carencia", "Produto / Marca")
-                            
+                            categoria = registro.get(
+                                "tipo_carencia", "Produto / Marca")
+
                             manter_registro = False
                             if categoria == "Produto / Marca" and idade_dias <= 30:
                                 manter_registro = True
@@ -320,7 +329,7 @@ elif st.session_state.tela_atual == "comerciante":
                                 manter_registro = True
                             elif categoria == "Serviço Público / Infraestrutura" and idade_dias <= 180:
                                 manter_registro = True
-                                
+
                             if manter_registro:
                                 dados_limpos.append({
                                     "ID": registro["id"],
@@ -330,19 +339,22 @@ elif st.session_state.tela_atual == "comerciante":
                                     "Cidade": registro["locais_destino"]["regiao_cidade"],
                                     "Dias": idade_dias
                                 })
-                
+
                 if dados_limpos:
                     df = pd.DataFrame(dados_limpos)
 
                     if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                         df = df[df['Categoria'] == "Produto / Marca"]
                     elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                        df = df[df['Categoria'] == "Serviço Local / Novo Estabelecimento"]
+                        df = df[df['Categoria'] ==
+                                "Serviço Local / Novo Estabelecimento"]
                     elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                        df = df[df['Categoria'] == "Serviço Público / Infraestrutura"]
+                        df = df[df['Categoria'] ==
+                                "Serviço Público / Infraestrutura"]
 
                     if termo_busca:
-                        df = df[df['O que Falta'].str.contains(termo_busca, case=False) | df['Local/Referência'].str.contains(termo_busca, case=False)]
+                        df = df[df['O que Falta'].str.contains(
+                            termo_busca, case=False) | df['Local/Referência'].str.contains(termo_busca, case=False)]
 
                     if not df.empty:
                         df_agrupado = df.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade"]).agg(
@@ -351,32 +363,41 @@ elif st.session_state.tela_atual == "comerciante":
                         ).reset_index()
 
                         # --- INVERSÃO DE LAYOUT: GRÁFICO NO TOPO ---
-                        st.markdown("#### 📊 Distribuição de Demandas na Região (Visão Geral)")
+                        st.markdown(
+                            "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
                         contagem_itens = df["O que Falta"].value_counts()
                         st.bar_chart(contagem_itens)
-                        
+
                         st.write("---")
-                        st.write(f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
-                        st.write("##### *Toque em cima do item correspondente para abrir o botão de baixa no caixa.*")
-                        
+                        st.write(
+                            f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+                        st.write(
+                            "##### *Toque em cima do item correspondente para abrir o botão de baixa no caixa.*")
+
                         for indice, linha in df_agrupado.iterrows():
                             titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
-                            
+
                             with st.expander(titulo_card):
-                                st.write(f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
-                                st.write(f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
+                                st.write(
+                                    f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
+                                st.write(
+                                    f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
                                 st.write("")
-                                
+
                                 chave_botao = f"btn_baixa_direta_{indice}"
                                 if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=chave_botao):
-                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq("item_solicitado", linha['O que Falta']).execute()
-                                    st.success(f"🎉 Sucesso! O item '{linha['O que Falta']}' foi dado baixa coletiva.")
+                                    # Corrige a baixa unificada alterando as linhas correspondentes por texto
+                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
+                                        "item_solicitado", linha['O que Falta']).execute()
+                                    st.success(
+                                        f"🎉 Sucesso! O item '{linha['O que Falta']}' foi dado baixa coletiva.")
                                     st.session_state.busca_ativa = False
                                     st.rerun()
                     else:
                         st.info("ℹ️ Nenhum registro ativo encontrado.")
                 else:
-                    st.info("ℹ️ Os registros existentes já expiraram por tempo de mercado.")
+                    st.info(
+                        "ℹ️ Os registros existentes já expiraram por tempo de mercado.")
             else:
                 st.info("ℹ️ O banco de dados está limpo!")
         except Exception as e:
