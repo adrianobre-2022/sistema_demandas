@@ -419,6 +419,7 @@ elif st.session_state.tela_atual == "comerciante":
                 ).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
 
                 # --- EXIBIÇÃO: RANKING DE CALOR NO TOPO ---
+                # --- EXIBIÇÃO: RANKING DE CALOR NO TOPO ---
                 st.markdown(
                     "#### 🔥 Termômetro de Demandas Reprimidas (Ranking)")
                 st.write(
@@ -445,30 +446,74 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.write("---")
 
-                # --- NOVO ENGENHARIA BI: EXPORTADOR DE EXCEL REAL (.XLSX) TOTALMENTE TABULADO ---
+                # --- NOVO ENGENHARIA BI: GERADOR DE PDF REAL E TABULADO COM DIRETRIZES IMPOSTAS ---
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
                 st.write(
-                    "##### *Gere o documento impresso oficial tabulado em linhas e colunas para o seu negócio:*")
+                    "##### *Gere o documento impresso oficial blindado com linhas e colunas para qualquer celular:*")
 
                 df_exportar = df_agrupado.copy()
                 df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
                                        "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
 
-                # Cria a planilha em formato binário Excel real na memória da máquina de forma invisível
+                # Monta a estrutura do PDF de forma invisível na memória do servidor
                 import io
-                buffer_excel = io.BytesIO()
-                with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
-                    df_exportar.to_excel(
-                        writer, index=False, sheet_name='Demandas Reprimidas')
-                dados_excel = buffer_excel.getvalue()
+                from reportlab.lib.pagesizes import letter
+                from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                from reportlab.lib import colors
 
-                # Botão de download entregando o arquivo oficial do Excel (.xlsx)
+                buffer_pdf = io.BytesIO()
+                doc = SimpleDocTemplate(
+                    buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                elementos_pdf = []
+
+                # Configura os títulos e cabeçalhos do documento impresso
+                estilos = getSampleStyleSheet()
+                estilo_titulo = ParagraphStyle(
+                    'TituloPDF', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00B359'), spaceAfter=15)
+                estilo_texto = ParagraphStyle(
+                    'TextoPDF', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
+
+                elementos_pdf.append(Paragraph(
+                    f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
+                elementos_pdf.append(Paragraph(
+                    f"Frente de Análise extraída em tempo real: {st.session_state.perfil_cliente.upper()}<br/>Data de emissão: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", estilo_texto))
+                elementos_pdf.append(Spacer(1, 10))
+
+                # Transforma os dados do DataFrame em uma tabela estruturada para o ReportLab
+                dados_tabela = [df_exportar.columns.tolist()] + \
+                    df_exportar.values.tolist()
+
+                # Define a largura das colunas de forma harmônica para não estourar a folha
+                tabela_pdf = Table(dados_tabela, colWidths=[
+                                   120, 80, 150, 70, 60, 70])
+
+                # Injeta o estilo visual: linhas de grade cinzas, cabeçalho verde e zebrado sutil
+                tabela_pdf.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00B359')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD')),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1),
+                     [colors.white, colors.HexColor('#F9F9F9')])
+                ]))
+
+                elementos_pdf.append(tabela_pdf)
+                doc.build(elementos_pdf)
+                dados_pdf_final = buffer_pdf.getvalue()
+
+                # Botão definitivo entregando o arquivo PDF Universal
                 st.download_button(
-                    label="📥 Baixar Relatório Gerencial Impresso (Formato Excel .xlsx)",
-                    data=dados_excel,
-                    file_name=f"relatorio_tabular_{st.session_state.perfil_cliente}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    key="btn_download_excel_real"
+                    label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)",
+                    data=dados_pdf_final,
+                    file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf",
+                    mime="application/pdf",
+                    key="btn_download_pdf_universal"
                 )
 
                 st.write("---")
