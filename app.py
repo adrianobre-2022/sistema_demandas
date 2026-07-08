@@ -23,20 +23,20 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
 
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE IDENTIDADE VISUAL E ACESSIBILIDADE COMPLETA) ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (IDENTIDADE VISUAL E ACESSIBILIDADE WCAG) ---
 st.markdown("""
     <style>
-    /* Força o fundo escuro de alta absorção de luz para evitar fadiga ocular */
+    /* Força o fundo escuro de alta absorção de luz */
     .stApp {
         background-color: #121212 !important;
         color: #FFFFFF !important;
     }
-    /* Força subtextos e labels a ficarem brancos puros para contraste na tela preta */
+    /* Força subtextos e labels a ficarem brancos puros para contraste */
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
-    /* CORREÇÃO DE ACESSIBILIDADE WCAG: Verde esmeralda com texto preto em negrito */
-    .stButton>button, .stFormSubmitButton>button {
+    /* CORREÇÃO DE ACESSIBILIDADE WCAG: Todos os botões (Normais, Enviar e Download) */
+    .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
         background-color: #00B359 !important;
         color: #000000 !important;
         font-weight: 900 !important; /* Negrito ultra destacado */
@@ -48,7 +48,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
         width: 100% !important;
     }
-    .stButton>button:hover, .stFormSubmitButton>button:hover {
+    .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover {
         background-color: #00803b !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
@@ -117,6 +117,8 @@ if "busca_ativa" not in st.session_state:
     st.session_state.busca_ativa = False
 if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
+
+
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
