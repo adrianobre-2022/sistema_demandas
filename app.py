@@ -252,35 +252,42 @@ elif st.session_state.tela_atual == "comerciante":
 
             if resposta.data:
                 dados_limpos = []
+                # CORREÇÃO: Define o fuso horário UTC explicitamente para bater com o Supabase
                 agora = datetime.datetime.now(datetime.timezone.utc)
 
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
                         data_str = registro.get("data_registro")
-                        data_limpa = data_str.split(
-                            ".")[0].replace("Z", "+00:00")
-                        data_reg = datetime.datetime.fromisoformat(data_limpa)
 
-                        idade_dias = (agora - data_reg).days
-                        categoria = registro.get(
-                            "tipo_carencia", "Produto / Marca")
+                        # Converte a data do texto do banco para formato de data real do Python
+                        if data_str:
+                            # Remove milissegundos se houver e garante o sufixo de fuso +00:00
+                            data_limpa = data_str.split(
+                                ".")[0].replace("Z", "+00:00")
+                            data_reg = datetime.datetime.fromisoformat(
+                                data_limpa)
 
-                        manter_registro = False
-                        if categoria == "Produto / Marca" and idade_dias <= 30:
-                            manter_registro = True
-                        elif categoria == "Serviço Local / Novo Estabelecimento" and idade_dias <= 365:
-                            manter_registro = True
-                        elif categoria == "Serviço Público / Infraestrutura" and idade_dias <= 180:
-                            manter_registro = True
+                            # Agora a matemática de subtração funciona perfeitamente
+                            idade_dias = (agora - data_reg).days
+                            categoria = registro.get(
+                                "tipo_carencia", "Produto / Marca")
 
-                        if manter_registro:
-                            dados_limpos.append({
-                                "O que Falta": registro["item_solicitado"],
-                                "Categoria": categoria,
-                                "Local/Referência": registro["locais_destino"]["nome_exibicao"],
-                                "Cidade": registro["locais_destino"]["regiao_cidade"],
-                                "Idade (Dias)": idade_dias
-                            })
+                            manter_registro = False
+                            if categoria == "Produto / Marca" and idade_dias <= 30:
+                                manter_registro = True
+                            elif categoria == "Serviço Local / Novo Estabelecimento" and idade_dias <= 365:
+                                manter_registro = True
+                            elif categoria == "Serviço Público / Infraestrutura" and idade_dias <= 180:
+                                manter_registro = True
+
+                            if manter_registro:
+                                dados_limpos.append({
+                                    "O que Falta": registro["item_solicitado"],
+                                    "Categoria": categoria,
+                                    "Local/Referência": registro["locais_destino"]["nome_exibicao"],
+                                    "Cidade": registro["locais_destino"]["regiao_cidade"],
+                                    "Idade (Dias)": idade_dias
+                                })
 
                 if dados_limpos:
                     df = pd.DataFrame(dados_limpos)
