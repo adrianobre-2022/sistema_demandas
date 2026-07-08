@@ -27,16 +27,13 @@ st.set_page_config(page_title="Sistema de Pesquisas",
 # --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE DESIGN DARK COM ALTO CONTRASTE) ---
 st.markdown("""
     <style>
-    /* Força o fundo escuro moderno */
     .stApp {
         background-color: #121212 !important;
         color: #FFFFFF !important;
     }
-    /* CORREÇÃO DE CONTRASTE: Força todas as etiquetas, textos e subtextos a ficarem brancos */
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
-    /* Estilização dos botões verdes premium */
     .stButton>button, .stFormSubmitButton>button {
         background-color: #00cc66 !important;
         color: white !important;
@@ -54,7 +51,6 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
     }
-    /* Customização dos campos de texto escuros com borda de realce */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px !important;
         background-color: #1E1E1E !important;
@@ -124,25 +120,33 @@ elif st.session_state.tela_atual == "consumidor":
 
     if tipo_selecionado == "Produto / Marca":
         label_item = "Qual produto ou marca você buscou e não encontrou?"
-        placeholder_item = "Ex: Nome do produto, marca específica..."
+        placeholder_item = "Ex: Nome do produto, marca específica, ração do pet..."
         label_local = "Em qual estabelecimento isso ocorreu?"
-        placeholder_local = "Ex: Nome do mercadinho, farmácia..."
+        placeholder_local = "Ex: Nome do mercadinho, farmácia, petshop..."
     elif tipo_selecionado == "Serviço Local / Novo Estabelecimento":
         label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
-        placeholder_item = "Ex: Sapataria, lavanderia, costureira..."
+        placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
         label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
-        placeholder_local = "Ex: Bairro Centro, Avenida X..."
+        placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
     else:
         label_item = "Qual carência de infraestrutura/manutenção você identificou?"
-        placeholder_item = "Ex: Falha na iluminação, falta de médicos..."
+        placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
         label_local = "Qual o ponto de referência ou localidade exata?"
-        placeholder_local = "Ex: Posto de saúde do bairro Y..."
+        placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
 
     with st.form(key="formulario_demandas", clear_on_submit=True):
         item_solicitado = st.text_input(
             label=label_item, placeholder=placeholder_item, key="input_item")
         local_ocorrencia = st.text_input(
             label=label_local, placeholder=placeholder_local, key="input_local")
+
+        # --- MELHORIA SESSÃO 5: CAPTURA OPCIONAL DE CONTATO (LOOP DE RETORNO) ---
+        contato_usuario = st.text_input(
+            label="Quer ser avisado quando o estoque for reposto ou o serviço aberto? (Opcional)",
+            placeholder="Ex: Seu e-mail ou WhatsApp... (Mantemos total anonimato)",
+            key="input_contato"
+        )
+
         st.write("")
         botao_enviar = st.form_submit_button(
             "Registrar Ocorrência", use_container_width=True)
@@ -150,19 +154,30 @@ elif st.session_state.tela_atual == "consumidor":
     if botao_enviar:
         if item_solicitado and local_ocorrencia:
             texto_usuario = item_solicitado.strip().lower()
-            palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto",
-                              "médico", "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia"]
+            local_usuario = local_ocorrencia.strip().lower()
+
+            # --- MELHORIA SESSÃO 5: FILTRO DE OFENSAS E PALAVRÕES AUTOMÁTICO ---
+            palavras_ofensivas = ["porra", "caralho", "puta", "merda", "lixo", "bosta",
+                                  "caralhos", "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
+
+            # --- FISCAL DE QUALIDADE AUTOMÁTICO DE CATEGORIAS ---
+            palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
+                              "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
             palavras_produto = ["leite", "fralda", "ração", "refrigerante",
-                                "cerveja", "sabão", "remédio", "arroz", "feijão"]
+                                "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
 
             erro_detectado = False
-            if tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
-                st.error(
-                    "⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Altere a opção no topo.")
+
+            # Executa primeiro a barreira de proteção de linguagem do anonimato
+            if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas):
+                st.error("⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva seu relato focando apenas no nome do item, marca ou carência estrutural de forma construtiva.")
+                erro_detectado = True
+            # Executa a barreira de erros de preenchimento
+            elif tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
+                st.error("⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Por favor, altere a opção marcada no topo para 'Serviço Público / Infraestrutura' antes de enviar.")
                 erro_detectado = True
             elif tipo_selecionado == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
-                st.error(
-                    "⚠️ Ops! Parece que você está relatando a falta de um produto. Altere a opção no topo.")
+                st.error("⚠️ Ops! Parece que você está relatando a falta de um produto de gôndola. Por favor, altere a opção marcada no topo para 'Produto / Marca' antes de enviar.")
                 erro_detectado = True
 
             if not erro_detectado:
@@ -180,11 +195,14 @@ elif st.session_state.tela_atual == "consumidor":
 
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
+
+                        # Salva na nuvem incluindo os metadados de contato para avisos futuros
                         supabase.table("relatos_escassez").insert({
                             "local_id": local_id,
                             "item_solicitado": item_formatado,
                             "tipo_carencia": tipo_selecionado,
-                            "status": "Pendente"
+                            "status": "Pendente",
+                            "contato_aviso": contato_usuario.strip() if contato_usuario else None
                         }).execute()
                         st.success(
                             "✅ Registro computado e salvo na nuvem com anonimato garantido!")
@@ -205,7 +223,8 @@ elif st.session_state.tela_atual == "consumidor":
                     st.info(
                         f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque ou atendeu: **{item['item_solicitado']}**!")
         else:
-            st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
+            st.write(
+                "ℹ Broadcaster: Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
@@ -306,11 +325,11 @@ elif st.session_state.tela_atual == "comerciante":
                                 "tipo_carencia", "Produto / Marca")
 
                             manter_registro = False
-                            if category == "Produto / Marca" and idade_dias <= 30:
+                            if categoria == "Produto / Marca" and idade_dias <= 30:
                                 manter_registro = True
-                            elif category == "Serviço Local / Novo Estabelecimento" and idade_dias <= 365:
+                            elif categoria == "Serviço Local / Novo Estabelecimento" and idade_dias <= 365:
                                 manter_registro = True
-                            elif category == "Serviço Público / Infraestrutura" and idade_dias <= 180:
+                            elif categoria == "Serviço Público / Infraestrutura" and idade_dias <= 180:
                                 manter_registro = True
 
                             if manter_registro:
@@ -345,6 +364,7 @@ elif st.session_state.tela_atual == "comerciante":
                             Menor_Idade=("Dias", "min")
                         ).reset_index()
 
+                        # --- INVERSÃO DE LAYOUT: GRÁFICO NO TOPO ---
                         st.markdown(
                             "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
                         contagem_itens = df["O que Falta"].value_counts()
@@ -353,6 +373,8 @@ elif st.session_state.tela_atual == "comerciante":
                         st.write("---")
                         st.write(
                             f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+                        st.write(
+                            "##### *Toque em cima do item correspondente para abrir o botão de baixa no caixa.*")
 
                         for indice, linha in df_agrupado.iterrows():
                             titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
