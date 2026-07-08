@@ -23,20 +23,23 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
 
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (ACESSIBILIDADE FIXA) ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE IDENTIDADE VISUAL E ACESSIBILIDADE COMPLETA) ---
 st.markdown("""
     <style>
+    /* Força o fundo escuro de alta absorção de luz para evitar fadiga ocular */
     .stApp {
         background-color: #121212 !important;
         color: #FFFFFF !important;
     }
+    /* Força subtextos e labels a ficarem brancos puros para contraste na tela preta */
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
+    /* CORREÇÃO DE ACESSIBILIDADE WCAG: Verde esmeralda com texto preto em negrito */
     .stButton>button, .stFormSubmitButton>button {
         background-color: #00B359 !important;
         color: #000000 !important;
-        font-weight: 900 !important;
+        font-weight: 900 !important; /* Negrito ultra destacado */
         border-radius: 12px !important;
         border: none !important;
         padding: 0.8rem 1rem !important;
@@ -50,12 +53,14 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
     }
+    /* Customização dos campos de digitação */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px !important;
         background-color: #1E1E1E !important;
         color: white !important;
         border: 1px solid #444444 !important;
     }
+    /* Cards Sanfona integrados ao tema escuro sem quebras */
     .stExpander {
         background-color: #1E1E1E !important;
         border-left: 5px solid #00B359 !important;
@@ -63,6 +68,7 @@ st.markdown("""
         margin-bottom: 0.8rem !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
     }
+    /* Estilo exclusivo das Tags de Calor Dinâmicas para o Celular */
     .tag-calor-alta {
         background-color: #ff3333;
         color: white;
@@ -100,6 +106,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Inicializa as variáveis na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -186,20 +193,15 @@ elif st.session_state.tela_atual == "consumidor":
             # --- PROTEÇÃO CONTRA OFENSAS E TRATAMENTO DE FALSOS POSITIVOS ---
             palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
                                   "caralhos", "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
-
-            # Lista Branca: Se o texto contiver uma dessas frases, o termo "lixo" é liberado comercialmente
             excecoes_contexto = ["saco de lixo", "sacos de lixo",
                                  "lixeira", "pá de lixo", "pa de lixo", "coleta de lixo"]
 
             contem_ofensa = False
 
-            # Verifica palavrões gerais primeiro
             if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas):
                 contem_ofensa = True
 
-            # Validação inteligente do termo "lixo"
             if "lixo" in texto_usuario or "lixo" in local_usuario:
-                # Se NÃO estiver nas exceções comerciais, vira um bloqueio por ofensa
                 if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
                     contem_ofensa = True
 
@@ -414,6 +416,7 @@ elif st.session_state.tela_atual == "comerciante":
                     Menor_Idade=("Dias", "min")
                 ).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
 
+                # --- EXIBIÇÃO: RANKING DE CALOR NO TOPO ---
                 st.markdown(
                     "#### 🔥 Termômetro de Demandas Reprimidas (Ranking)")
                 st.write(
@@ -421,7 +424,6 @@ elif st.session_state.tela_atual == "comerciante":
 
                 for _, linha_rank in df_agrupado.iterrows():
                     volume = linha_rank['Volume_Pedidos']
-
                     if volume >= 7:
                         classe_tag = "tag-calor-alta"
                         label_tag = f"CRÍTICA • {volume} Pedidos"
@@ -438,6 +440,23 @@ elif st.session_state.tela_atual == "comerciante":
                             <b style="color: #FFFFFF; font-size: 15px;">📦 {linha_rank['O que Falta']}</b>
                         </div>
                     """, unsafe_allow_html=True)
+
+                st.write("---")
+
+                # --- NOVO RECURSO BUSINESS: EXPORTADOR DE RELATÓRIOS CORPORATIVOS ---
+                st.markdown("#### 📥 Exportar Inteligência de Mercado")
+                df_exportar = df_agrupado.copy()
+                df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
+                                       "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
+                csv_dados = df_exportar.to_csv(index=False).encode('utf-8-sig')
+
+                st.download_button(
+                    label="📥 Baixar Relatório Gerencial (Formato Excel / CSV)",
+                    data=csv_dados,
+                    file_name=f"relatorio_demandas_{st.session_state.perfil_cliente}.csv",
+                    mime="text/csv",
+                    key="btn_download_excel"
+                )
 
                 st.write("---")
                 st.write(
