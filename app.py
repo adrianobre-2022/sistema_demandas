@@ -232,15 +232,13 @@ elif st.session_state.tela_atual == "autenticacao":
         st.session_state.token_valido = False
         st.session_state.perfil_cliente = None
         st.rerun()
-
+        
     st.title("🔒 Área Restrita de Inteligência")
-    st.markdown(
-        "##### *Insira a sua chave de acesso corporativa para liberar os relatórios.*")
+    st.markdown("##### *Insira a sua chave de acesso corporativa para liberar os relatórios.*")
     st.write("---")
-
-    token_inserido = st.text_input(
-        label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
-
+    
+    token_inserido = st.text_input(label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
+    
     if st.button("Validar Credenciais", use_container_width=True):
         if token_inserido == "COMERCIO10":
             st.session_state.token_valido = True
@@ -273,54 +271,45 @@ elif st.session_state.tela_atual == "comerciante":
         st.session_state.busca_ativa = False
         st.session_state.dados_grafico = None
         st.rerun()
-
+        
     st.title("📊 Painel de Decisão Estratégica")
-
+    
     if st.session_state.perfil_cliente == "comerciante":
-        st.markdown(
-            "##### 🏪 *Nível de Acesso: Varejo Local (Foco em Gôndolas e Marcas)*")
+        st.markdown("##### 🏪 *Nível de Acesso: Varejo Local (Foco em Gôndolas e Marcas)*")
         opcoes_filtro = ["Apenas Produtos/Marcas (Varejo)"]
     elif st.session_state.perfil_cliente == "investidor":
-        st.markdown(
-            "##### 💼 *Nível de Acesso: Investidor e Expansão (Foco em Serviços do Bairro)*")
+        st.markdown("##### 💼 *Nível de Acesso: Investidor e Expansão (Foco em Serviços do Bairro)*")
         opcoes_filtro = ["Oportunidades de Novos Negócios (Serviços)"]
     else:
-        st.markdown(
-            "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura Urbana)*")
+        st.markdown("##### *Nível de Acesso: Gestão Pública (Foco em Infraestrutura Urbana)*")
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
-
+        
     st.write("---")
 
-    filtro_frente = st.selectbox(
-        label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
-    termo_busca = st.text_input(label="Filtrar por palavra-chave:",
-                                placeholder="Digite para refinar...", key="input_busca_painel")
+    filtro_frente = st.selectbox(label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
+    termo_busca = st.text_input(label="Filtrar por palavra-chave:", placeholder="Digite para refinar...", key="input_busca_painel")
 
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
         try:
-            resposta = supabase.table("relatos_escassez").select(
-                "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
-
+            resposta = supabase.table("relatos_escassez").select("id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
+            
             if resposta.data:
                 dados_limpos = []
                 agora = datetime.datetime.now(datetime.timezone.utc)
-
+                
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
                         data_str = registro.get("data_registro")
                         if data_str:
                             data_limpa = data_str.replace("Z", "+00:00")
-                            data_reg = datetime.datetime.fromisoformat(
-                                data_limpa)
+                            data_reg = datetime.datetime.fromisoformat(data_limpa)
                             if data_reg.tzinfo is None:
-                                data_reg = data_reg.replace(
-                                    tzinfo=datetime.timezone.utc)
-
+                                data_reg = data_reg.replace(tzinfo=datetime.timezone.utc)
+                            
                             idade_dias = (agora - data_reg).days
-                            categoria = registro.get(
-                                "tipo_carencia", "Produto / Marca")
-
+                            categoria = registro.get("tipo_carencia", "Produto / Marca")
+                            
                             manter_registro = False
                             if categoria == "Produto / Marca" and idade_dias <= 30:
                                 manter_registro = True
@@ -328,7 +317,7 @@ elif st.session_state.tela_atual == "comerciante":
                                 manter_registro = True
                             elif categoria == "Serviço Público / Infraestrutura" and idade_dias <= 180:
                                 manter_registro = True
-
+                                
                             if manter_registro:
                                 dados_limpos.append({
                                     "ID": registro["id"],
@@ -338,7 +327,7 @@ elif st.session_state.tela_atual == "comerciante":
                                     "Cidade": registro["locais_destino"]["regiao_cidade"],
                                     "Dias": idade_dias
                                 })
-
+                
                 if dados_limpos:
                     st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
                 else:
@@ -349,21 +338,18 @@ elif st.session_state.tela_atual == "comerciante":
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
     if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
-
+        
         if not df.empty:
             df_filtrado = df
             if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                 df_filtrado = df[df['Categoria'] == "Produto / Marca"]
             elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Local / Novo Estabelecimento"]
+                df_filtrado = df[df['Categoria'] == "Serviço Local / Novo Estabelecimento"]
             elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Público / Infraestrutura"]
+                df_filtrado = df[df['Categoria'] == "Serviço Público / Infraestrutura"]
 
             if termo_busca:
-                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
-                    termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
+                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
                 df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade"]).agg(
@@ -371,43 +357,37 @@ elif st.session_state.tela_atual == "comerciante":
                     Menor_Idade=("Dias", "min")
                 ).reset_index()
 
-                st.markdown(
-                    "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
+                st.markdown("#### 📊 Distribuição de Demandas na Região (Visão Geral)")
                 contagem_itens = df_filtrado["O que Falta"].value_counts()
                 st.bar_chart(contagem_itens, horizontal=True)
-
+                
                 st.write("---")
-                st.write(
-                    f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
-
+                st.write(f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+                
                 for indice, linha in df_agrupado.iterrows():
                     titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
-
+                    
                     with st.expander(titulo_card):
-                        st.write(
-                            f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
-                        st.write(
-                            f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
+                        st.write(f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
+                        st.write(f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
                         st.write("")
-
+                        
+                        # CORREÇÃO DEFINITIVA DA VARIÁVEL DE INTERFACE
                         chave_confirmacao = f"confirma_baixa_{indice}"
-                        if key_confirmacao not in st.session_state:
+                        if chave_confirmacao not in st.session_state:
                             st.session_state[chave_confirmacao] = False
-
+                            
                         if not st.session_state[chave_confirmacao]:
                             if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=f"btn_pre_{indice}"):
                                 st.session_state[chave_confirmacao] = True
                                 st.rerun()
                         else:
-                            st.warning(
-                                "⚠️ Atenção: Esta ação dará baixa em todas as solicitações deste item simultaneamente.")
+                            st.warning("⚠️ Atenção: Esta ação dará baixa em todas as solicitações deste item simultaneamente.")
                             col_b1, col_b2 = st.columns(2)
                             with col_b1:
                                 if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{indice}"):
-                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
-                                        "item_solicitado", linha['O que Falta']).execute()
-                                    st.success(
-                                        f"🎉 Sucesso! O item foi atualizado.")
+                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq("item_solicitado", linha['O que Falta']).execute()
+                                    st.success(f"🎉 Sucesso! O item foi atualizado.")
                                     st.session_state[chave_confirmacao] = False
                                     st.session_state.busca_ativa = False
                                     st.rerun()
@@ -416,7 +396,7 @@ elif st.session_state.tela_atual == "comerciante":
                                     st.session_state[chave_confirmacao] = False
                                     st.rerun()
             else:
-                st.info(
-                    "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
+                st.info("ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
         else:
             st.info("ℹ️ O banco de dados está limpo e sem demandas pendentes!")
+
