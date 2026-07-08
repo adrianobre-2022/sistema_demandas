@@ -445,14 +445,22 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.write("---")
 
-                # --- RECURSO BI CORRIGIDO: EXPORTADOR EM COLUNAS TABULARES PARA EXCEL ---
-                st.markdown("#### 📥 Exportar Inteligência de Mercado")
-                df_exportar = df_agrupado.copy()
-                df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
-                                       "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
+                # --- NOVO RECURSO BUSINESS: PLANILHA VISUAL NATIVA NA TELA DO CELULAR ---
+                st.markdown("#### 📋 Relatório Gerencial (Visão em Tabela)")
+                st.write(
+                    "##### *Consulte os dados organizados em colunas diretamente na tela:*")
 
-                # CORREÇÃO CRUCIAL: sep=';' força o Excel a quebrar o texto em colunas tabulares perfeitas
-                csv_tabular = df_exportar.to_csv(
+                df_visual = df_agrupado.copy()
+                df_visual.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
+                                     "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
+
+                # Renderiza a tabela viva na tela de forma responsiva e bonita
+                st.dataframe(df_visual, use_container_width=True,
+                             hide_index=True)
+
+                st.write("")
+                st.markdown("#### 📥 Exportar Inteligência de Mercado")
+                csv_tabular = df_visual.to_csv(
                     index=False, sep=';').encode('utf-8-sig')
 
                 st.download_button(
