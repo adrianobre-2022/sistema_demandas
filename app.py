@@ -24,13 +24,19 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
 
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE DESIGN DARK RESPONSIVO) ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA DE DESIGN DARK COM ALTO CONTRASTE) ---
 st.markdown("""
     <style>
+    /* Força o fundo escuro moderno */
     .stApp {
         background-color: #121212 !important;
         color: #FFFFFF !important;
     }
+    /* CORREÇÃO DE CONTRASTE: Força todas as etiquetas, textos e subtextos a ficarem brancos */
+    .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
+        color: #FFFFFF !important;
+    }
+    /* Estilização dos botões verdes premium */
     .stButton>button, .stFormSubmitButton>button {
         background-color: #00cc66 !important;
         color: white !important;
@@ -48,11 +54,12 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
     }
+    /* Customização dos campos de texto escuros com borda de realce */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {
         border-radius: 10px !important;
         background-color: #1E1E1E !important;
         color: white !important;
-        border: 1px solid #333333 !important;
+        border: 1px solid #444444 !important;
     }
     .stExpander {
         background-color: #1E1E1E !important;
@@ -299,11 +306,11 @@ elif st.session_state.tela_atual == "comerciante":
                                 "tipo_carencia", "Produto / Marca")
 
                             manter_registro = False
-                            if categoria == "Produto / Marca" and idade_dias <= 30:
+                            if category == "Produto / Marca" and idade_dias <= 30:
                                 manter_registro = True
-                            elif categoria == "Serviço Local / Novo Estabelecimento" and idade_dias <= 365:
+                            elif category == "Serviço Local / Novo Estabelecimento" and idade_dias <= 365:
                                 manter_registro = True
-                            elif categoria == "Serviço Público / Infraestrutura" and idade_dias <= 180:
+                            elif category == "Serviço Público / Infraestrutura" and idade_dias <= 180:
                                 manter_registro = True
 
                             if manter_registro:
@@ -338,7 +345,6 @@ elif st.session_state.tela_atual == "comerciante":
                             Menor_Idade=("Dias", "min")
                         ).reset_index()
 
-                        # --- ENGENHARIA DE INVERSÃO DE LAYOUT: GRÁFICO NO TOPO ---
                         st.markdown(
                             "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
                         contagem_itens = df["O que Falta"].value_counts()
@@ -347,10 +353,7 @@ elif st.session_state.tela_atual == "comerciante":
                         st.write("---")
                         st.write(
                             f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
-                        st.write(
-                            "##### *Toque em cima do item correspondente para abrir o botão de baixa no caixa.*")
 
-                        # Os Cards Sanfona agora ficam na base de forma organizada
                         for indice, linha in df_agrupado.iterrows():
                             titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
 
