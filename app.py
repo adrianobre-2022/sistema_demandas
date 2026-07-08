@@ -54,23 +54,12 @@ st.markdown("""
         color: white !important;
         border: 1px solid #333333 !important;
     }
-    .card-movel {
-        background-color: #1E1E1E;
-        border-left: 5px solid #00cc66;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 0.8rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-    }
-    .card-titulo {
-        font-size: 18px;
-        font-weight: bold;
-        color: #00cc66;
-        margin-bottom: 0.2rem;
-    }
-    .card-sub {
-        font-size: 14px;
-        color: #AAAAAA;
+    .stExpander {
+        background-color: #1E1E1E !important;
+        border-left: 5px solid #00cc66 !important;
+        border-radius: 10px !important;
+        margin-bottom: 0.8rem !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15) !important;
     }
     [data-testid="stForm"] {
         border: none !important;
@@ -324,7 +313,7 @@ elif st.session_state.tela_atual == "comerciante":
                                     "Categoria": categoria,
                                     "Local/Referência": registro["locais_destino"]["nome_exibicao"],
                                     "Cidade": registro["locais_destino"]["regiao_cidade"],
-                                    "Prazo": f"{idade_dias} dias atrás"
+                                    "Dias": idade_dias
                                 })
 
                 if dados_limpos:
@@ -344,42 +333,42 @@ elif st.session_state.tela_atual == "comerciante":
                             termo_busca, case=False) | df['Local/Referência'].str.contains(termo_busca, case=False)]
 
                     if not df.empty:
-                        st.write(
-                            f"📈 Foram encontrados **{len(df)}** carências ativas:")
+                        df_agrupado = df.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade"]).agg(
+                            Volume_Pedidos=("ID", "count"),
+                            Menor_Idade=("Dias", "min")
+                        ).reset_index()
 
-                        # --- CARDS EMPILHADOS RESPONSIVOS ---
-                        for _, linha in df.iterrows():
-                            st.markdown(f"""
-                                <div class="card-movel">
-                                    <div class="card-titulo">❌ Faltando: {linha['O que Falta']}</div>
-                                    <div class="card-sub">📍 Local: {linha['Local/Referência']} ({linha['Cidade']})</div>
-                                    <div class="card-sub">⏱️ Registrado há: {linha['Prazo']}</div>
-                                </div>
-                            """, unsafe_allow_html=True)
-
-                        st.markdown("#### Distribuição de Demandas na Região:")
+                        # --- ENGENHARIA DE INVERSÃO DE LAYOUT: GRÁFICO NO TOPO ---
+                        st.markdown(
+                            "#### 📊 Distribuição de Demandas na Região (Visão Geral)")
                         contagem_itens = df["O que Falta"].value_counts()
                         st.bar_chart(contagem_itens)
 
-                        st.markdown("### 📦 Dar Baixa / Informar Solução")
-                        lista_opcoes = [
-                            "-- Selecione o Item para Resolver --"] + list(df["O que Falta"].unique())
-                        id_para_baixa = st.selectbox(
-                            "Escolha o item correspondente para dar baixa de forma consciente:", options=lista_opcoes, key="sb_baixa_segura")
+                        st.write("---")
+                        st.write(
+                            f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+                        st.write(
+                            "##### *Toque em cima do item correspondente para abrir o botão de baixa no caixa.*")
 
-                        if id_para_baixa != "-- Selecione o Item para Resolver --":
-                            if st.button("Confirmar Reposição / Solução do Item", use_container_width=True, key="btn_dar_baixa"):
-                                id_real = int(
-                                    df[df["O que Falta"] == id_para_baixa]["ID"].values)
-                                supabase.table("relatos_escassez").update(
-                                    {"status": "Atendido"}).eq("id", id_real).execute()
-                                st.success(
-                                    f"✅ Sucesso! O item '{id_para_baixa}' foi dado baixa e arquivado.")
-                                st.session_state.busca_ativa = False
-                                st.rerun()
-                        else:
-                            st.info(
-                                "ℹ️ Selecione o item acima para liberar o botão de baixa no caixa.")
+                        # Os Cards Sanfona agora ficam na base de forma organizada
+                        for indice, linha in df_agrupado.iterrows():
+                            titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
+
+                            with st.expander(titulo_card):
+                                st.write(
+                                    f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
+                                st.write(
+                                    f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
+                                st.write("")
+
+                                chave_botao = f"btn_baixa_direta_{indice}"
+                                if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=chave_botao):
+                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
+                                        "item_solicitado", linha['O que Falta']).execute()
+                                    st.success(
+                                        f"🎉 Sucesso! O item '{linha['O que Falta']}' foi dado baixa coletiva.")
+                                    st.session_state.busca_ativa = False
+                                    st.rerun()
                     else:
                         st.info("ℹ️ Nenhum registro ativo encontrado.")
                 else:
