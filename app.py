@@ -445,16 +445,19 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.write("---")
 
-                # --- NOVO RECURSO BUSINESS: EXPORTADOR DE RELATÓRIOS CORPORATIVOS ---
+                # --- RECURSO BI CORRIGIDO: EXPORTADOR EM COLUNAS TABULARES PARA EXCEL ---
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
                 df_exportar = df_agrupado.copy()
                 df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
                                        "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
-                csv_dados = df_exportar.to_csv(index=False).encode('utf-8-sig')
+
+                # CORREÇÃO CRUCIAL: sep=';' força o Excel a quebrar o texto em colunas tabulares perfeitas
+                csv_tabular = df_exportar.to_csv(
+                    index=False, sep=';').encode('utf-8-sig')
 
                 st.download_button(
-                    label="📥 Baixar Relatório Gerencial (Formato Excel / CSV)",
-                    data=csv_dados,
+                    label="📥 Baixar Relatório Gerencial Tabular (Excel)",
+                    data=csv_tabular,
                     file_name=f"relatorio_demandas_{st.session_state.perfil_cliente}.csv",
                     mime="text/csv",
                     key="btn_download_excel"
