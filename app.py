@@ -445,30 +445,30 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.write("---")
 
-                # --- NOVO RECURSO BUSINESS: PLANILHA VISUAL NATIVA NA TELA DO CELULAR ---
-                st.markdown("#### 📋 Relatório Gerencial (Visão em Tabela)")
-                st.write(
-                    "##### *Consulte os dados organizados em colunas diretamente na tela:*")
-
-                df_visual = df_agrupado.copy()
-                df_visual.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
-                                     "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
-
-                # Renderiza a tabela viva na tela de forma responsiva e bonita
-                st.dataframe(df_visual, use_container_width=True,
-                             hide_index=True)
-
-                st.write("")
+                # --- NOVO ENGENHARIA BI: EXPORTADOR DE EXCEL REAL (.XLSX) TOTALMENTE TABULADO ---
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
-                csv_tabular = df_visual.to_csv(
-                    index=False, sep=';').encode('utf-8-sig')
+                st.write(
+                    "##### *Gere o documento impresso oficial tabulado em linhas e colunas para o seu negócio:*")
 
+                df_exportar = df_agrupado.copy()
+                df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
+                                       "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
+
+                # Cria a planilha em formato binário Excel real na memória da máquina de forma invisível
+                import io
+                buffer_excel = io.BytesIO()
+                with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
+                    df_exportar.to_excel(
+                        writer, index=False, sheet_name='Demandas Reprimidas')
+                dados_excel = buffer_excel.getvalue()
+
+                # Botão de download entregando o arquivo oficial do Excel (.xlsx)
                 st.download_button(
-                    label="📥 Baixar Relatório Gerencial Tabular (Excel)",
-                    data=csv_tabular,
-                    file_name=f"relatorio_demandas_{st.session_state.perfil_cliente}.csv",
-                    mime="text/csv",
-                    key="btn_download_excel"
+                    label="📥 Baixar Relatório Gerencial Impresso (Formato Excel .xlsx)",
+                    data=dados_excel,
+                    file_name=f"relatorio_tabular_{st.session_state.perfil_cliente}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="btn_download_excel_real"
                 )
 
                 st.write("---")
