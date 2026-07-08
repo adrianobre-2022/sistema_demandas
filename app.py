@@ -252,22 +252,25 @@ elif st.session_state.tela_atual == "comerciante":
 
             if resposta.data:
                 dados_limpos = []
-                # CORREÇÃO: Define o fuso horário UTC explicitamente para bater com o Supabase
+                # Garante que o horário atual use explicitamente o fuso UTC do Python
                 agora = datetime.datetime.now(datetime.timezone.utc)
 
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
                         data_str = registro.get("data_registro")
 
-                        # Converte a data do texto do banco para formato de data real do Python
                         if data_str:
-                            # Remove milissegundos se houver e garante o sufixo de fuso +00:00
-                            data_limpa = data_str.split(
-                                ".")[0].replace("Z", "+00:00")
+                            # Conversão universal: remove o 'Z' se houver e força o fuso UTC no Python
+                            data_limpa = data_str.replace("Z", "+00:00")
                             data_reg = datetime.datetime.fromisoformat(
                                 data_limpa)
 
-                            # Agora a matemática de subtração funciona perfeitamente
+                            # TRUQUE DE MESTRE: Se a data do banco veio sem fuso por falha de texto, injeta o UTC na marra
+                            if data_reg.tzinfo is None:
+                                data_reg = data_reg.replace(
+                                    tzinfo=datetime.timezone.utc)
+
+                            # Agora a matemática de subtração está 100% protegida contra falhas
                             idade_dias = (agora - data_reg).days
                             categoria = registro.get(
                                 "tipo_carencia", "Produto / Marca")
