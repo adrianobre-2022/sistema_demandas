@@ -121,16 +121,23 @@ if st.session_state.tela_atual == "home":
             st.rerun()
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- BARRA DE ATALHOS RÁPIDOS SUPERIOR (DESIGN DE ELITE SEM TEXTOS VAGOS) ---
-    col_nav1, col_nav2 = st.columns(2)
-    with col_nav1:
-        if st.button("🏠 Ir para Home", key="nav_home_direto"):
+    # --- BARRA DE NAVEGAÇÃO DINÂMICA CONTEXTUAL (SÓ MOSTRA O NECESSÁRIO LADO A LADO) ---
+    if st.session_state.aba_consumidor == "menu_triagem":
+        # Se está na triagem, exibe apenas o botão de voltar para a Home em largura total
+        if st.button("🏠 Ir para Home", key="nav_home_sozinho", use_container_width=True):
             st.session_state.tela_atual = "home"
             st.rerun()
-    with col_nav2:
-        if st.button("🗂️ Mudar de Categoria", key="nav_categoria_direto"):
-            st.session_state.aba_consumidor = "menu_triagem"
-            st.rerun()
+    else:
+        # Se um formulário está aberto, exibe os dois botões colados lado a lado no topo
+        col_nav1, col_nav2 = st.columns(2)
+        with col_nav1:
+            if st.button("🏠 Ir para Home", key="nav_home_par"):
+                st.session_state.tela_atual = "home"
+                st.rerun()
+        with col_nav2:
+            if st.button("🗂️ Mudar de Categoria", key="nav_categoria_par"):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
 
     st.title("🔍 Central de Demandas Ocultas")
     st.write("---")
@@ -182,6 +189,7 @@ elif st.session_state.tela_atual == "consumidor":
             tipo_envio = "Serviço Público / Infraestrutura"
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
+
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
             local_ocorrencia = st.text_input(
