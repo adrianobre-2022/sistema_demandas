@@ -119,53 +119,34 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
-
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- BARRA DE NAVEGAÇÃO SUPERIOR COM SIMETRIA PREMIUM ---
-    if st.session_state.aba_consumidor == "menu_triagem":
-        # Na triagem, usamos duas colunas mas deixamos a segunda vazia para o botão Home manter o tamanho original de 50%
-        col_nav1, col_nav2 = st.columns(2)
-        with col_nav1:
-            if st.button("🏠 Ir para Home", key="nav_home_sozinho_fixo"):
-                st.session_state.tela_atual = "home"
-                st.rerun()
-    else:
-        # Dentro do formulário, os dois botões dividem a tela em 50% cada, colados e idênticos
-        col_nav1, col_nav2 = st.columns(2)
-        with col_nav1:
-            if st.button("🏠 Ir para Home", key="nav_home_gemeo"):
-                st.session_state.tela_atual = "home"
-                st.rerun()
-        with col_nav2:
-            if st.button("🗂️ Mudar de Categoria", key="nav_categoria_gemeo"):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
-
-    st.title("🔍 Central de Demandas Ocultas")
-    st.write("---")
+    # --- BARRA DE NAVEGAÇÃO COM SIMETRIA PERFEITA E BOTÕES COLADOS ---
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico"):
+            st.session_state.tela_atual = "home"; st.rerun()
+            
+    with col_nav2:
+        # O botão só brota se não estiver no menu de escolha, mantendo o tamanho idêntico
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar de Categoria", key="nav_categoria_simetrico"):
+                st.session_state.aba_consumidor = "menu_triagem"; st.rerun()
+                
+    st.title("🔍 Central de Demandas Ocultas"); st.write("---")
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown(
-            "##### *Deixe saber o que você deseja e sente falta na região.*")
+        st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
+        st.write(""); st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"): st.session_state.aba_consumidor = "produto"; st.rerun()
         st.write("")
-        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"):
-            st.session_state.aba_consumidor = "produto"
-            st.rerun()
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria, costureira...)", use_container_width=True, key="triagem_serv"): st.session_state.aba_consumidor = "servico"; st.rerun()
         st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria, costureira...)", use_container_width=True, key="triagem_serv"):
-            st.session_state.aba_consumidor = "servico"
-            st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto, posto de saúde...)", use_container_width=True, key="triagem_infra"):
-            st.session_state.aba_consumidor = "infra"
-            st.rerun()
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto, posto de saúde...)", use_container_width=True, key="triagem_infra"): st.session_state.aba_consumidor = "infra"; st.rerun()
 
     else:
         if st.session_state.aba_consumidor == "produto":
-            st.markdown(
-                "### 📦 Formulário: Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
+            st.markdown("### 📦 Formulário: Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
             label_item = "Qual produto ou marca você buscou e não encontrou?"
             placeholder_item = "Ex: Leite condensado marca X, ração premium de gato..."
             label_local = "Em qual estabelecimento isso ocorreu?"
@@ -173,8 +154,7 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
             tipo_envio = "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
-            st.markdown(
-                "### 🏪 Formulário: Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+            st.markdown("### 🏪 Formulário: Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
             label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
             placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
             label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
@@ -182,8 +162,7 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
             tipo_envio = "Serviço Local / Novo Estabelecimento"
         else:
-            st.markdown(
-                "### 🏛️ Formulário: Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
+            st.markdown("### 🏛️ Formulário: Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
             label_item = "Qual carência de infraestrutura/manutenção você identificou?"
             placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
             label_local = "Qual o ponto de referência ou localidade exata?"
