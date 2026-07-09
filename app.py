@@ -123,7 +123,8 @@ if st.session_state.tela_atual == "home":
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     # --- ENGENHARIA DE USABILIDADE: BARRA DE NAVEGAÇÃO SUPERIOR INTELIGENTE ---
-    col_nav1, col_nav2 = st.columns()
+    # CORREÇÃO CRUCIAL: Injetado o número 2 para indicar a divisão física da tela
+    col_nav1, col_nav2 = st.columns(2)
 
     with col_nav1:
         if st.session_state.aba_consumidor == "menu_triagem":
@@ -131,7 +132,6 @@ elif st.session_state.tela_atual == "consumidor":
                 st.session_state.tela_atual = "home"
                 st.rerun()
         else:
-            # TEXTO DE UX CORRIGIDO: Contextualização completa para o morador
             if st.button("⬅️ Outra Categoria de Falta", key="btn_voltar_triagem_barra"):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
