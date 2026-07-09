@@ -22,6 +22,7 @@ supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
+
 # --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA TOTAL DE CONTRASTE MOBILE) ---
 st.markdown("""
     <style>
@@ -48,6 +49,11 @@ st.markdown("""
         background-color: #00803b !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
+    }
+    
+    /* ENGENHARIA DE USABILIDADE: GRUDA OS BOTÕES SUPERIORES A MEIO CENTÍMETRO (8px) NO CELULAR */
+    [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) {
+        gap: 8px !important; /* Força o espaçamento físico exato de meio centímetro */
     }
     
     /* CORREÇÃO FORÇADA DE CAIXAS ESCURAS (TEXTINPUT E TEXTAREA NO CELULAR) */
