@@ -118,7 +118,6 @@ if "busca_ativa" not in st.session_state:
 if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
 
-
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
@@ -177,9 +176,15 @@ elif st.session_state.tela_atual == "consumidor":
         local_ocorrencia = st.text_input(
             label=label_local, placeholder=placeholder_local, key="input_local")
 
+        observacao_usuario = st.text_area(
+            label="Mais detalhes ou observações sobre o problema (Opcional):",
+            placeholder="Ex: Detalhe o ocorrido de forma construtiva para ajudar a triagem...",
+            key="input_obs"
+        )
+
         contato_usuario = st.text_input(
-            label="Quer ser avisado quando o estoque for reposto ou o serviço aberto? (Opcional)",
-            placeholder="Ex: Seu e-mail ou WhatsApp... (Mantemos total anonimato)",
+            label="Quer ser avisado quando o estoque for reposto? (Opcional)",
+            placeholder="Ex: Seu e-mail ou WhatsApp...",
             key="input_contato"
         )
 
@@ -191,38 +196,53 @@ elif st.session_state.tela_atual == "consumidor":
         if item_solicitado and local_ocorrencia:
             texto_usuario = item_solicitado.strip().lower()
             local_usuario = local_ocorrencia.strip().lower()
+            obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
 
-            # --- PROTEÇÃO CONTRA OFENSAS E TRATAMENTO DE FALSOS POSITIVOS ---
-            palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
-                                  "caralhos", "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
+            # --- BLINDAGEM SESSÃO 5: FILTRO DE OFENSAS E PROTESTOS POLÍTICOS ---
+            palavras_ofensivas = ["porra", "caralho", "puta", "merda", "lixo",
+                                  "bosta", "vai tomar", "fudeu", "ladrão", "safado", "vagabundo"]
+
+            # BARREIRA ANTI-PEC: Identifica ativismo ideológico legislativo nacional
+            termos_politicos_proibidos = ["pec", "deputado", "senado", "senador", "presidente",
+                                          "governador", "partido", "impeachment", "voto", "eleição", "politica", "político"]
+
             excecoes_contexto = ["saco de lixo", "sacos de lixo",
-                                 "lixeira", "pá de lixo", "pa de lixo", "coleta de lixo"]
+                                 "lixeira", "pá de lixo", "coleta de lixo"]
 
-            contem_ofensa = False
+            contem_bloqueio = False
+            mensagem_erro = ""
 
-            if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas):
-                contem_ofensa = True
+            # Varredura de segurança contra insultos e palavrões
+            if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas) or any(p in obs_texto for p in palavras_ofensivas):
+                contem_bloqueio = True
+                mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Escreva seu relato focado no item de forma construtiva."
+
+            # Varredura de segurança contra militância ideológica nacional
+            if any(p in texto_usuario for p in termos_politicos_proibidos) or any(p in local_usuario for p in termos_politicos_proibidos) or any(p in obs_texto for p in termos_politicos_proibidos):
+                contem_bloqueio = True
+                mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais. Manifestações político-ideológicas nacionais ou legislativas (como PECs) devem ser direcionadas às ouvidorias do Senado ou Câmara."
 
             if "lixo" in texto_usuario or "lixo" in local_usuario:
                 if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
-                    contem_ofensa = True
+                    contem_bloqueio = True
+                    mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Escreva seu relato focado no item de forma construtiva."
 
-            # --- FISCAL DE QUALIDADE DE CATEGORIAS ---
             palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
                               "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
             palavras_produto = ["leite", "fralda", "ração", "refrigerante",
                                 "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
 
             erro_detectado = False
-
-            if contem_ofensa:
-                st.error("⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva seu relato focando apenas no nome do item de forma construtiva.")
+            if contem_bloqueio:
+                st.error(mensagem_erro)
                 erro_detectado = True
             elif tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
-                st.error("⚠️ Ops! Parece que você está relatando um problema de Infraestrutura Pública. Por favor, altere a opção marcada no topo para 'Serviço Público / Infraestrutura' antes de enviar.")
+                st.error(
+                    "⚠️ Ops! Parece um problema de Infraestrutura Pública. Modifique no topo.")
                 erro_detectado = True
             elif tipo_selecionado == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
-                st.error("⚠️ Ops! Parece que você está relatando a falta de um produto de gôndola. Por favor, altere a opção marcada no topo para 'Produto / Marca' antes de enviar.")
+                st.error(
+                    "⚠️ Ops! Parece a falta de um produto de mercado. Modifique no topo.")
                 erro_detectado = True
 
             if not erro_detectado:
@@ -236,17 +256,30 @@ elif st.session_state.tela_atual == "consumidor":
 
                     local_id = None
                     if local_data.data and len(local_data.data) > 0:
-                        local_id = local_data.data[0]["id"]
+                        local_id = local_data.data["id"]
 
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
+
+                        # --- CLASSIFICADOR SUB_SEGMENTO AUTOMÁTICO DO PYTHON ---
+                        segmento_detectado = "Geral"
+                        if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão"]):
+                            segmento_detectado = "Supermercado"
+                        elif any(p in texto_usuario for p in ["remédio", "xarope", "fralda", "pomada", "curativo"]):
+                            segmento_detectado = "Farmácia"
+                        elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "coleira"]):
+                            segmento_detectado = "Petshop"
+                        elif any(p in texto_usuario for p in ["pão", "bolo", "doce", "salgado", "padaria"]):
+                            segmento_detectado = "Padaria"
 
                         supabase.table("relatos_escassez").insert({
                             "local_id": local_id,
                             "item_solicitado": item_formatado,
                             "tipo_carencia": tipo_selecionado,
                             "status": "Pendente",
-                            "contato_aviso": contato_usuario.strip() if contato_usuario else None
+                            "contato_aviso": contato_usuario.strip() if contato_usuario else None,
+                            "observacao_detalhe": observacao_usuario.strip() if observacao_usuario else None,
+                            "sub_segmento": segmento_detectado
                         }).execute()
                         st.success(
                             "✅ Registro computado e salvo na nuvem com anonimato garantido!")
@@ -270,7 +303,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -346,8 +378,9 @@ elif st.session_state.tela_atual == "comerciante":
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
         try:
+            # Puxa a nova coluna observacao_detalhe da nuvem para entregar ao Gestor
             resposta = supabase.table("relatos_escassez").select(
-                "id, item_solicitado, tipo_carencia, data_registro, status, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
+                "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
 
             if resposta.data:
                 dados_limpos = []
@@ -384,7 +417,8 @@ elif st.session_state.tela_atual == "comerciante":
                                     "Categoria": categoria,
                                     "Local/Referência": registro["locais_destino"]["nome_exibicao"],
                                     "Cidade": registro["locais_destino"]["regiao_cidade"],
-                                    "Dias": idade_dias
+                                    "Dias": idade_dias,
+                                    "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
                                 })
 
                 if dados_limpos:
@@ -414,18 +448,15 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- NOVO AGRAUPAMENTO INTELIGENTE POR PERFIL B2B ---
+                # --- AGRAUPAMENTO INTELIGENTE POR PERFIL B2B ---
                 if st.session_state.perfil_cliente == "comerciante":
-                    # Mantém o detalhe geográfico por ponto comercial para o varejo local
-                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade"]).agg(
+                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade", "Observação"]).agg(
                         Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")
                     ).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
                 else:
-                    # Unifica e condensa em massa por item e cidade para Investidores e Gestores
-                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(
+                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade", "Observação"]).agg(
                         Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")
                     ).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
-                    # Injeta uma linha padrão de texto para não quebrar as variáveis de exibição de baixo
                     df_agrupado["Local/Referência"] = "Mapeamento Consolidado da Região"
 
                 # --- EXIBIÇÃO: RANKING DE CALOR NO TOPO ---
@@ -455,15 +486,15 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.write("---")
 
-                # --- EXPORTADOR EM FORMATO PDF UNIVERSAL ---
+                # --- EXPORTADOR EM FORMATO PDF UNIVERSAL TABULADO ---
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
                 df_exportar = df_agrupado.copy()
                 if st.session_state.perfil_cliente == "comerciante":
                     df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
-                                           "Cidade", "Volume de Pedidos", "Dias Desde o Alerta"]
+                                           "Cidade", "Detalhes/Contexto", "Volume de Pedidos", "Dias Desde o Alerta"]
                 else:
                     df_exportar.columns = ["Item Solicitado", "Segmento", "Cidade",
-                                           "Volume Total de Pedidos", "Dias Desde o Alerta", "Escopo"]
+                                           "Detalhes/Contexto", "Volume Total de Pedidos", "Dias Desde o Alerta", "Escopo"]
 
                 import io
                 from reportlab.lib.pagesizes import letter
@@ -531,6 +562,12 @@ elif st.session_state.tela_atual == "comerciante":
                                 f"📍 **Escopo Geográfico:** Consolidação Geral ({linha['Cidade']})")
                         st.write(
                             f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
+
+                        # --- EXIBIÇÃO DO CAMPO DE CONTEXTO EXCLUSIVO PARA O GESTOR PÚBLICO E INVESTIDOR ---
+                        if linha['Observação'] and linha['Observação'] != "Sem observações registradas.":
+                            st.info(
+                                f"📝 **Relato de Contexto da Comunidade:** {linha['Observação']}")
+
                         st.write("")
 
                         chave_confirmacao = f"confirma_baixa_{indice}"
