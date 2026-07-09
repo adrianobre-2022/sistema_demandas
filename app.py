@@ -22,24 +22,20 @@ supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
-
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (IDENTIDADE VISUAL E ACESSIBILIDADE WCAG) ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA TOTAL DE CONTRASTE MOBILE) ---
 st.markdown("""
     <style>
-    /* Força o fundo escuro de alta absorção de luz */
     .stApp {
         background-color: #121212 !important;
         color: #FFFFFF !important;
     }
-    /* Força subtextos e labels a ficarem brancos puros para contraste */
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
-    /* CORREÇÃO DE ACESSIBILIDADE WCAG: Todos os botões (Normais, Enviar e Download) */
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
         background-color: #00B359 !important;
         color: #000000 !important;
-        font-weight: 900 !important; /* Negrito ultra destacado */
+        font-weight: 900 !important;
         border-radius: 12px !important;
         border: none !important;
         padding: 0.8rem 1rem !important;
@@ -53,14 +49,18 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
     }
-    /* Customização dos campos de digitação */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div {
+    /* CORREÇÃO DE FONTE MOBILE: Garante fundo escuro e letras brancas em inputs e text_areas */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea>div>div>textarea {
         border-radius: 10px !important;
         background-color: #1E1E1E !important;
-        color: white !important;
+        color: #FFFFFF !important;
         border: 1px solid #444444 !important;
     }
-    /* Cards Sanfona integrados ao tema escuro sem quebras */
+    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
+        color: #FFFFFF !important;
+        background-color: #1E1E1E !important;
+        border-color: #00B359 !important;
+    }
     .stExpander {
         background-color: #1E1E1E !important;
         border-left: 5px solid #00B359 !important;
@@ -68,41 +68,17 @@ st.markdown("""
         margin-bottom: 0.8rem !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
     }
-    /* Estilo exclusivo das Tags de Calor Dinâmicas para o Celular */
     .tag-calor-alta {
-        background-color: #ff3333;
-        color: white;
-        padding: 0.2rem 0.6rem;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 13px;
-        float: right;
+        background-color: #ff3333; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right;
     }
     .tag-calor-media {
-        background-color: #ff9933;
-        color: black;
-        padding: 0.2rem 0.6rem;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 13px;
-        float: right;
+        background-color: #ff9933; color: black; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right;
     }
     .tag-calor-baixa {
-        background-color: #3399ff;
-        color: white;
-        padding: 0.2rem 0.6rem;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 13px;
-        float: right;
+        background-color: #3399ff; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right;
     }
-    [data-testid="stForm"] {
-        border: none !important;
-        padding: 0px !important;
-    }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    [data-testid="stForm"] { border: none !important; padding: 0px !important; }
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -117,7 +93,6 @@ if "busca_ativa" not in st.session_state:
     st.session_state.busca_ativa = False
 if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
-
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
@@ -159,17 +134,19 @@ elif st.session_state.tela_atual == "consumidor":
         placeholder_item = "Ex: Nome do produto, marca específica, ração do pet..."
         label_local = "Em qual estabelecimento isso ocorreu?"
         placeholder_local = "Ex: Nome do mercadinho, farmácia, petshop..."
+        label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
     elif tipo_selecionado == "Serviço Local / Novo Estabelecimento":
         label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
         placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
         label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
         placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
+        label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
     else:
         label_item = "Qual carência de infraestrutura/manutenção você identificou?"
         placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
         label_local = "Qual o ponto de referência ou localidade exata?"
         placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
-
+        label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
     with st.form(key="formulario_demandas", clear_on_submit=True):
         item_solicitado = st.text_input(
             label=label_item, placeholder=placeholder_item, key="input_item")
@@ -182,11 +159,9 @@ elif st.session_state.tela_atual == "consumidor":
             key="input_obs"
         )
 
+        # --- AJUSTE SEMÂNTICO DE EXPECTATIVA: "Caso seja" ---
         contato_usuario = st.text_input(
-            label="Quer ser avisado quando o estoque for reposto? (Opcional)",
-            placeholder="Ex: Seu e-mail ou WhatsApp...",
-            key="input_contato"
-        )
+            label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
 
         st.write("")
         botao_enviar = st.form_submit_button(
@@ -198,26 +173,20 @@ elif st.session_state.tela_atual == "consumidor":
             local_usuario = local_ocorrencia.strip().lower()
             obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
 
-            # --- BLINDAGEM SESSÃO 5: FILTRO DE OFENSAS E PROTESTOS POLÍTICOS ---
-            palavras_ofensivas = ["porra", "caralho", "puta", "merda", "lixo",
-                                  "bosta", "vai tomar", "fudeu", "ladrão", "safado", "vagabundo"]
-
-            # BARREIRA ANTI-PEC: Identifica ativismo ideológico legislativo nacional
+            palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
+                                  "caralhos", "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
             termos_politicos_proibidos = ["pec", "deputado", "senado", "senador", "presidente",
                                           "governador", "partido", "impeachment", "voto", "eleição", "politica", "político"]
-
             excecoes_contexto = ["saco de lixo", "sacos de lixo",
                                  "lixeira", "pá de lixo", "coleta de lixo"]
 
             contem_bloqueio = False
             mensagem_erro = ""
 
-            # Varredura de segurança contra insultos e palavrões
             if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas) or any(p in obs_texto for p in palavras_ofensivas):
                 contem_bloqueio = True
-                mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Escreva seu relato focado no item de forma construtiva."
+                mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva de forma construtiva."
 
-            # Varredura de segurança contra militância ideológica nacional
             if any(p in texto_usuario for p in termos_politicos_proibidos) or any(p in local_usuario for p in termos_politicos_proibidos) or any(p in obs_texto for p in termos_politicos_proibidos):
                 contem_bloqueio = True
                 mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais. Manifestações político-ideológicas nacionais ou legislativas (como PECs) devem ser direcionadas às ouvidorias do Senado ou Câmara."
@@ -225,7 +194,7 @@ elif st.session_state.tela_atual == "consumidor":
             if "lixo" in texto_usuario or "lixo" in local_usuario:
                 if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
                     contem_bloqueio = True
-                    mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Escreva seu relato focado no item de forma construtiva."
+                    mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva de forma construtiva."
 
             palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
                               "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
@@ -248,11 +217,8 @@ elif st.session_state.tela_atual == "consumidor":
             if not erro_detectado:
                 try:
                     local_formatado = local_ocorrencia.strip().title()
-                    local_data = supabase.table("locais_destino").insert({
-                        "nome_exibicao": local_formatado,
-                        "regiao_cidade": "São Paulo",
-                        "regiao_estado": "SP"
-                    }).execute()
+                    local_data = supabase.table("locais_destino").insert(
+                        {"nome_exibicao": local_formatado, "regiao_cidade": "São Paulo", "regiao_estado": "SP"}).execute()
 
                     local_id = None
                     if local_data.data and len(local_data.data) > 0:
@@ -261,7 +227,6 @@ elif st.session_state.tela_atual == "consumidor":
                     if local_id:
                         item_formatado = item_solicitado.strip().title()
 
-                        # --- CLASSIFICADOR SUB_SEGMENTO AUTOMÁTICO DO PYTHON ---
                         segmento_detectado = "Geral"
                         if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão"]):
                             segmento_detectado = "Supermercado"
@@ -378,7 +343,6 @@ elif st.session_state.tela_atual == "comerciante":
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
         try:
-            # Puxa a nova coluna observacao_detalhe da nuvem para entregar ao Gestor
             resposta = supabase.table("relatos_escassez").select(
                 "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
 
@@ -563,7 +527,6 @@ elif st.session_state.tela_atual == "comerciante":
                         st.write(
                             f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
 
-                        # --- EXIBIÇÃO DO CAMPO DE CONTEXTO EXCLUSIVO PARA O GESTOR PÚBLICO E INVESTIDOR ---
                         if linha['Observação'] and linha['Observação'] != "Sem observações registradas.":
                             st.info(
                                 f"📝 **Relato de Contexto da Comunidade:** {linha['Observação']}")
