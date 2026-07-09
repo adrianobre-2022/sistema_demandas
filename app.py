@@ -119,23 +119,26 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
+
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- BARRA DE NAVEGAÇÃO DINÂMICA CONTEXTUAL (SÓ MOSTRA O NECESSÁRIO LADO A LADO) ---
+    # --- BARRA DE NAVEGAÇÃO SUPERIOR COM SIMETRIA PREMIUM ---
     if st.session_state.aba_consumidor == "menu_triagem":
-        # Se está na triagem, exibe apenas o botão de voltar para a Home em largura total
-        if st.button("🏠 Ir para Home", key="nav_home_sozinho", use_container_width=True):
-            st.session_state.tela_atual = "home"
-            st.rerun()
-    else:
-        # Se um formulário está aberto, exibe os dois botões colados lado a lado no topo
+        # Na triagem, usamos duas colunas mas deixamos a segunda vazia para o botão Home manter o tamanho original de 50%
         col_nav1, col_nav2 = st.columns(2)
         with col_nav1:
-            if st.button("🏠 Ir para Home", key="nav_home_par"):
+            if st.button("🏠 Ir para Home", key="nav_home_sozinho_fixo"):
+                st.session_state.tela_atual = "home"
+                st.rerun()
+    else:
+        # Dentro do formulário, os dois botões dividem a tela em 50% cada, colados e idênticos
+        col_nav1, col_nav2 = st.columns(2)
+        with col_nav1:
+            if st.button("🏠 Ir para Home", key="nav_home_gemeo"):
                 st.session_state.tela_atual = "home"
                 st.rerun()
         with col_nav2:
-            if st.button("🗂️ Mudar de Categoria", key="nav_categoria_par"):
+            if st.button("🗂️ Mudar de Categoria", key="nav_categoria_gemeo"):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
