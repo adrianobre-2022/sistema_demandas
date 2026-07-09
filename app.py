@@ -122,60 +122,53 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- ENGENHARIA DE USABILIDADE: BARRA DE NAVEGAÇÃO SUPERIOR INTELIGENTE ---
-    # CORREÇÃO CRUCIAL: Injetado o número 2 para indicar a divisão física da tela
     col_nav1, col_nav2 = st.columns(2)
-
     with col_nav1:
+        st.markdown(
+            "<p style='margin-top: 10px; font-weight: bold;'>Voltar para:</p>", unsafe_allow_html=True)
+    with col_nav2:
         if st.session_state.aba_consumidor == "menu_triagem":
-            if st.button("⬅️ Menu Principal", key="btn_voltar_home_direto"):
+            if st.button("🏠 Menu Principal", key="btn_voltar_home_direto"):
                 st.session_state.tela_atual = "home"
                 st.rerun()
         else:
-            if st.button("⬅️ Outra Categoria de Falta", key="btn_voltar_triagem_barra"):
+            if st.button("🗂️ Outra Categoria de Falta", key="btn_voltar_triagem_barra"):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
     st.title("🔍 Central de Demandas Ocultas")
-    st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
 
-    # --- UPGRADE MOBILE DE ELITE: MENU DE TRIAGEM VERTICAL POR BOTÕES COMPACTOS ---
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        st.markdown(
+            "##### *Deixe saber o que você deseja e sente falta na região.*")
         st.write("")
-
+        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
         if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
-
         st.write("")
         if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria, costureira...)", use_container_width=True, key="triagem_serv"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
-
         st.write("")
         if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto, posto de saúde...)", use_container_width=True, key="triagem_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
-    # ROTA DINÂMICA: Exibe o formulário de acordo com o botão apertado acima
     else:
-        if st.button("🔄 Escolher Outra Categoria (Voltar)", key="btn_voltar_triagem"):
-            st.session_state.aba_consumidor = "menu_triagem"
-            st.rerun()
-
-        st.write("")
-
-        # Configura as variáveis de texto baseado no botão selecionado
         if st.session_state.aba_consumidor == "produto":
+            st.markdown(
+                "### 📦 Formulário: Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
             label_item = "Qual produto ou marca você buscou e não encontrou?"
             placeholder_item = "Ex: Leite condensado marca X, ração premium de gato..."
             label_local = "Em qual estabelecimento isso ocorreu?"
-            placeholder_local = "Ex: Mercadinho da Vila, Farmácia Central..."
+            placeholder_local = "Ex: Nome do mercado, farmácia, padaria..."
             label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
             tipo_envio = "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
+            st.markdown(
+                "### 🏪 Formulário: Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
             label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
             placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
             label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
@@ -183,24 +176,22 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
             tipo_envio = "Serviço Local / Novo Estabelecimento"
         else:
+            st.markdown(
+                "### 🏛️ Formulário: Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
             label_item = "Qual carência de infraestrutura/manutenção você identificou?"
             placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
             label_local = "Qual o ponto de referência ou localidade exata?"
             placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
             label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
             tipo_envio = "Serviço Público / Infraestrutura"
+        st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
             local_ocorrencia = st.text_input(
                 label=label_local, placeholder=placeholder_local, key="input_local")
-
-            observacao_usuario = st.text_area(
-                label="Mais detalhes ou observações sobre o problema (Opcional):",
-                placeholder="Ex: Detalhe o ocorrido de forma construtiva para ajudar a triagem...",
-                key="input_obs"
-            )
-
+            observacao_usuario = st.text_area(label="Mais detalhes ou observações sobre o problema (Opcional):",
+                                              placeholder="Ex: Detalhe o ocorrido de forma construtiva para ajudar a triagem...", key="input_obs")
             contato_usuario = st.text_input(
                 label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
             st.write("")
@@ -220,17 +211,13 @@ elif st.session_state.tela_atual == "consumidor":
                 excecoes_contexto = [
                     "saco de lixo", "sacos de lixo", "lixeira", "pá de lixo", "coleta de lixo"]
 
-                contem_bloqueio = False
-                mensagem_erro = ""
-
+                contem_bloqueio, mensagem_erro = False, ""
                 if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas) or any(p in obs_texto for p in palavras_ofensivas):
                     contem_bloqueio = True
                     mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva de forma construtiva."
-
                 if any(p in texto_usuario for p in termos_politicos_proibidos) or any(p in local_usuario for p in termos_politicos_proibidos) or any(p in obs_texto for p in termos_politicos_proibidos):
                     contem_bloqueio = True
                     mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais. Manifestações político-ideológicas nacionais (como PECs) devem ser direcionadas às ouvidorias do Senado ou Câmara."
-
                 if "lixo" in texto_usuario or "lixo" in local_usuario:
                     if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
                         contem_bloqueio = True
@@ -259,14 +246,11 @@ elif st.session_state.tela_atual == "consumidor":
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": "São Paulo", "regiao_estado": "SP"}).execute()
-
-                        local_id = None
-                        if local_data.data and len(local_data.data) > 0:
-                            local_id = local_data.data[0]["id"]
+                        local_id = local_data.data["id"] if local_data.data and len(
+                            local_data.data) > 0 else None
 
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
-
                             segmento_detectado = "Geral"
                             if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão"]):
                                 segmento_detectado = "Supermercado"
@@ -278,10 +262,7 @@ elif st.session_state.tela_atual == "consumidor":
                                 segmento_detectado = "Padaria"
 
                             supabase.table("relatos_escassez").insert({
-                                "local_id": local_id,
-                                "item_solicitado": item_formatado,
-                                "tipo_carencia": tipo_envio,
-                                "status": "Pendente",
+                                "local_id": local_id, "item_solicitado": item_formatado, "tipo_carencia": tipo_envio, "status": "Pendente",
                                 "contato_aviso": contato_usuario.strip() if contato_usuario else None,
                                 "observacao_detalhe": observacao_usuario.strip() if observacao_usuario else None,
                                 "sub_segmento": segmento_detectado
@@ -310,7 +291,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-# --- TELA: AUTENTICAÇÃO POR TOKEN ---
+
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
         st.session_state.tela_atual = "home"
