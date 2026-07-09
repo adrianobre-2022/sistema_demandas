@@ -51,26 +51,32 @@ st.markdown("""
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
     }
     
-    /* ENGENHARIA DE USABILIDADE: GRUDA OS BOTÕES SUPERIORES A MEIO CENTÍMETRO (8px) NO CELULAR */
-    [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) {
-        gap: 8px !important; /* Força o espaçamento físico exato de meio centímetro */
+    /* ENGENHARIA FLEXBOX: Força os botões a serem gêmeos idênticos na mesma linha em qualquer tela */
+    .barra-navegacao-premium {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 8px !important; /* Espaçamento físico fixo de exatos meio centímetro */
+        width: 100% !important;
+        margin-bottom: 1rem !important;
+    }
+    .bloco-botao-nav {
+        flex: 1 !important; /* Força ambos os botões a terem exatamente o mesmo tamanho */
+        max-width: 50% !important; /* Garante que ocupem no máximo metade da tela */
     }
     
-    /* CORREÇÃO FORÇADA DE CAIXAS ESCURAS (TEXTINPUT E TEXTAREA NO CELULAR) */
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
         background-color: #1E1E1E !important;
         color: #FFFFFF !important;
         border-radius: 10px !important;
         border: 1px solid #444444 !important;
     }
-    
-    /* Dicas de preenchimento em cinza suave e itálico para usabilidade de elite */
     input::placeholder, textarea::placeholder {
         color: #888888 !important;
         font-style: italic !important;
         opacity: 1 !important;
     }
-    
     .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
         color: #FFFFFF !important;
         background-color: #1E1E1E !important;
@@ -91,7 +97,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa as variáveis na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -102,14 +107,12 @@ if "busca_ativa" not in st.session_state:
     st.session_state.busca_ativa = False
 if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
-
-# --- NOVA MEMÓRIA: Controla o menu de botões de triagem do consumidor ---
 if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
+
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
-
     st.markdown("##### *O termômetro de carências da nossa região.*")
     st.write("---")
     st.write("Selecione o seu perfil de acesso para continuar:")
@@ -125,26 +128,35 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
+
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- BARRA DE NAVEGAÇÃO COM SIMETRIA PERFEITA E MEIO CENTÍMETRO DE ESPAÇAMENTO ---
-    # O parametro gap="small" reduz drasticamente a distancia entre os botoes no celular
-    col_nav1, col_nav2 = st.columns(2, gap="small")
-    with col_nav1:
-        if st.button("🏠 Ir para Home", key="nav_home_simetrico"):
+    # --- INTERFACE DE NAVEGAÇÃO INDESTRUTÍVEL COMPACTADA ---
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown(
+            '<div class="barra-navegacao-premium"><div class="bloco-botao-nav">', unsafe_allow_html=True)
+        if st.button("🏠 Ir para Home", key="nav_home_solit"):
             st.session_state.tela_atual = "home"
             st.rerun()
-
-    with col_nav2:
-        if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar de Categoria", key="nav_categoria_simetrico"):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
+        st.markdown('</div></div>', unsafe_allow_html=True)
+    else:
+        st.markdown(
+            '<div class="barra-navegacao-premium"><div class="bloco-botao-nav">', unsafe_allow_html=True)
+        if st.button("🏠 Ir para Home", key="nav_home_par_flex"):
+            st.session_state.tela_atual = "home"
+            st.rerun()
+        st.markdown('</div><div class="bloco-botao-nav">',
+                    unsafe_allow_html=True)
+        if st.button("🗂️ Mudar de Categoria", key="nav_categ_par_flex"):
+            st.session_state.aba_consumidor = "menu_triagem"
+            st.rerun()
+        st.markdown('</div></div>', unsafe_allow_html=True)
 
     st.title("🔍 Central de Demandas Ocultas")
     st.write("---")
 
     if st.session_state.aba_consumidor == "menu_triagem":
+
         st.markdown(
             "##### *Deixe saber o que você deseja e sente falta na região.*")
         st.write("")
