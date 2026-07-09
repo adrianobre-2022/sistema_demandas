@@ -22,7 +22,8 @@ supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Sistema de Pesquisas",
                    page_icon="🔍", layout="centered")
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA TOTAL DE CONTRASTE MOBILE) ---
+
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (TRAVA TOTAL DE CONTRASTE E ACESSIBILIDADE) ---
 st.markdown("""
     <style>
     .stApp {
@@ -50,25 +51,32 @@ st.markdown("""
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
     }
     
-    /* CORREÇÃO CIRÚRGICA MOBILE: Força inputs E textareas a ficarem em grafite escuro com letras brancas */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea>div>div>textarea, div[data-baseweb="textarea"]>textarea {
-        border-radius: 10px !important;
+    /* CORREÇÃO FORÇADA DE CAIXAS ESCURAS (TEXTINPUT E TEXTAREA NO CELULAR) */
+    .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
         background-color: #1E1E1E !important;
         color: #FFFFFF !important;
+        border-radius: 10px !important;
         border: 1px solid #444444 !important;
     }
     
-    /* CORREÇÃO DO PLACEHOLDER: Força as dicas de digitação a ficarem brancas-opacas (visíveis na tela escura) */
-    input::placeholder, textarea::placeholder, .stTextInput input::placeholder, .stTextArea textarea::placeholder {
-        color: #AAAAAA !important; /* Cinza claro brilhante para leitura perfeita */
+    /* SUGESTÃO DE UX APROVADA: Dicas de preenchimento em cinza suave e itálico */
+    input::placeholder, textarea::placeholder {
+        color: #888888 !important; /* Cinza suave que não confunde com texto real */
+        font-style: italic !important; /* Força o itálico para indicar instrução visual */
         opacity: 1 !important;
     }
     
-    .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-        color: #FFFFFF !important;
-        background-color: #1E1E1E !important;
-        border-color: #00B359 !important;
+    /* ESTILIZAÇÃO COMPACTA DAS NOVAS ABAS DE CELULAR (TABS) */
+    button[data-baseweb="tab"] {
+        color: #888888 !important;
+        font-weight: bold !important;
+        font-size: 14px !important;
     }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #00B359 !important; /* Destaca a aba ativa com o verde esmeralda */
+        border-bottom-color: #00B359 !important;
+    }
+    
     .stExpander {
         background-color: #1E1E1E !important;
         border-left: 5px solid #00B359 !important;
@@ -76,21 +84,14 @@ st.markdown("""
         margin-bottom: 0.8rem !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
     }
-    .tag-calor-alta {
-        background-color: #ff3333; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right;
-    }
-    .tag-calor-media {
-        background-color: #ff9933; color: black; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right;
-    }
-    .tag-calor-baixa {
-        background-color: #3399ff; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right;
-    }
+    .tag-calor-alta { background-color: #ff3333; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right; }
+    .tag-calor-media { background-color: #ff9933; color: black; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right; }
+    .tag-calor-baixa { background-color: #3399ff; color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 13px; float: right; }
     [data-testid="stForm"] { border: none !important; padding: 0px !important; }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializa as variáveis na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -130,60 +131,67 @@ elif st.session_state.tela_atual == "consumidor":
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
     st.write("---")
 
-    tipo_selecionado = st.radio(
-        label="Que tipo de ausência você quer registrar?",
-        options=["Produto / Marca", "Serviço Local / Novo Estabelecimento",
-                 "Serviço Público / Infraestrutura"],
-        horizontal=True,
-        key="radio_tipo_carencia"
-    )
+    # --- UPGRADE MOBILE DE ELITE: ABAS EM VEZ DE BOTÃO RADIO ---
+    st.write("Selecione a categoria do seu relato:")
+    tab_prod, tab_serv, tab_infra = st.tabs(
+        ["📦 Produto / Marca", "🏪 Serviço / Comércio", "🏛️ Setor Público"])
 
-    if tipo_selecionado == "Produto / Marca":
-        label_item = "Qual produto ou marca você buscou e não encontrou?"
-        placeholder_item = "Ex: Nome do produto, marca específica, ração do pet..."
-        label_local = "Em qual estabelecimento isso ocorreu?"
-        placeholder_local = "Ex: Nome do mercadinho, farmácia, petshop..."
-        label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
-    elif tipo_selecionado == "Serviço Local / Novo Estabelecimento":
-        label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
-        placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
-        label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
-        placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
-        label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
-    else:
-        label_item = "Qual carência de infraestrutura/manutenção você identificou?"
-        placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
-        label_local = "Qual o ponto de referência ou localidade exata?"
-        placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
-        label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
-    with st.form(key="formulario_demandas", clear_on_submit=True):
-        item_solicitado = st.text_input(
-            label=label_item, placeholder=placeholder_item, key="input_item")
-        local_ocorrencia = st.text_input(
-            label=label_local, placeholder=placeholder_local, key="input_local")
+    # LÓGICA INTERNA ISOLADA DA ABA 1: PRODUTO
+    with tab_prod:
+        with st.form(key="form_produto", clear_on_submit=True):
+            item = st.text_input("Qual produto ou marca você buscou e não encontrou?",
+                                 placeholder="Ex: Ração premium de gato, leite condensado da marca X...")
+            local = st.text_input("Em qual estabelecimento isso ocorreu?",
+                                  placeholder="Ex: Mercadinho da Vila, Farmácia Central...")
+            obs = st.text_area("Mais detalhes ou observações (Opcional):",
+                               placeholder="Ex: Fui em três horários diferentes e a gôndola estava zerada...")
+            contato = st.text_input(
+                "Quer ser avisado caso o estoque seja reposto? (Opcional)", placeholder="Ex: Seu e-mail ou WhatsApp...")
+            if st.form_submit_button("Registrar Ocorrência de Produto", use_container_width=True):
+                st.session_state["fluxo_envio"] = {
+                    "item": item, "local": local, "obs": obs, "contato": contato, "tipo": "Produto / Marca"}
+    # LÓGICA INTERNA ISOLADA DA ABA 2: SERVIÇO LOCAL
+    with tab_serv:
+        with st.form(key="form_servico", clear_on_submit=True):
+            item = st.text_input("Qual tipo de comércio ou serviço falta neste bairro?",
+                                 placeholder="Ex: Sapataria, lavanderia, costureira, padaria...")
+            local = st.text_input("Em qual rua, travessa ou pedaço do bairro isso faz falta?",
+                                  placeholder="Ex: Próximo à praça principal, Avenida X...")
+            obs = st.text_area("Mais detalhes ou observações (Opcional):",
+                               placeholder="Ex: Precisamos caminhar mais de 2km para achar uma costureira...")
+            contato = st.text_input(
+                "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)", placeholder="Ex: Seu e-mail ou WhatsApp...")
+            if st.form_submit_button("Registrar Ocorrência de Serviço", use_container_width=True):
+                st.session_state["fluxo_envio"] = {
+                    "item": item, "local": local, "obs": obs, "contato": contato, "tipo": "Serviço Local / Novo Estabelecimento"}
 
-        observacao_usuario = st.text_area(
-            label="Mais detalhes ou observações sobre o problema (Opcional):",
-            placeholder="Ex: Detalhe o ocorrido de forma construtiva para ajudar a triagem...",
-            key="input_obs"
-        )
+    # LÓGICA INTERNA ISOLADA DA ABA 3: INFRAESTRUTURA
+    with tab_infra:
+        with st.form(key="form_infra", clear_on_submit=True):
+            item = st.text_input("Qual carência de infraestrutura/manutenção você identificou?",
+                                 placeholder="Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim...")
+            local = st.text_input("Qual o ponto de referência ou localidade exata?",
+                                  placeholder="Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z...")
+            obs = st.text_area("Mais detalhes ou observações (Opcional):",
+                               placeholder="Ex: Poste número 4 está sem lâmpada, gerando escuridão à noite...")
+            contato = st.text_input(
+                "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", placeholder="Ex: Seu e-mail ou WhatsApp...")
+            if st.form_submit_button("Registrar Ocorrência de Infraestrutura", use_container_width=True):
+                st.session_state["fluxo_envio"] = {
+                    "item": item, "local": local, "obs": obs, "contato": contato, "tipo": "Serviço Público / Infraestrutura"}
 
-        # --- AJUSTE SEMÂNTICO DE EXPECTATIVA: "Caso seja" ---
-        contato_usuario = st.text_input(
-            label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
+    # --- MOTOR UNIFICADO DE PROCESSAMENTO E VALIDAÇÃO ---
+    if "fluxo_envio" in st.session_state and st.session_state["fluxo_envio"] is not None:
+        envio = st.session_state["fluxo_envio"]
+        st.session_state["fluxo_envio"] = None
 
-        st.write("")
-        botao_enviar = st.form_submit_button(
-            "Registrar Ocorrência", use_container_width=True)
-
-    if botao_enviar:
-        if item_solicitado and local_ocorrencia:
-            texto_usuario = item_solicitado.strip().lower()
-            local_usuario = local_ocorrencia.strip().lower()
-            obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
+        if envio["item"] and envio["local"]:
+            texto_usuario = envio["item"].strip().lower()
+            local_usuario = envio["local"].strip().lower()
+            obs_texto = envio["obs"].strip().lower() if envio["obs"] else ""
 
             palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
-                                  "caralhos", "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
+                                  "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
             termos_politicos_proibidos = ["pec", "deputado", "senado", "senador", "presidente",
                                           "governador", "partido", "impeachment", "voto", "eleição", "politica", "político"]
             excecoes_contexto = ["saco de lixo", "sacos de lixo",
@@ -214,18 +222,18 @@ elif st.session_state.tela_atual == "consumidor":
             if contem_bloqueio:
                 st.error(mensagem_erro)
                 erro_detectado = True
-            elif tipo_selecionado == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
+            elif envio["tipo"] == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
                 st.error(
                     "⚠️ Ops! Parece um problema de Infraestrutura Pública. Modifique no topo.")
                 erro_detectado = True
-            elif tipo_selecionado == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
+            elif envio["tipo"] == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
                 st.error(
                     "⚠️ Ops! Parece a falta de um produto de mercado. Modifique no topo.")
                 erro_detectado = True
 
             if not erro_detectado:
                 try:
-                    local_formatado = local_ocorrencia.strip().title()
+                    local_formatado = envio["local"].strip().title()
                     local_data = supabase.table("locais_destino").insert(
                         {"nome_exibicao": local_formatado, "regiao_cidade": "São Paulo", "regiao_estado": "SP"}).execute()
 
@@ -234,7 +242,7 @@ elif st.session_state.tela_atual == "consumidor":
                         local_id = local_data.data["id"]
 
                     if local_id:
-                        item_formatado = item_solicitado.strip().title()
+                        item_formatado = envio["item"].strip().title()
 
                         segmento_detectado = "Geral"
                         if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão"]):
@@ -249,20 +257,20 @@ elif st.session_state.tela_atual == "consumidor":
                         supabase.table("relatos_escassez").insert({
                             "local_id": local_id,
                             "item_solicitado": item_formatado,
-                            "tipo_carencia": tipo_selecionado,
+                            "tipo_carencia": envio["tipo"],
                             "status": "Pendente",
-                            "contato_aviso": contato_usuario.strip() if contato_usuario else None,
-                            "observacao_detalhe": observacao_usuario.strip() if observacao_usuario else None,
+                            "contato_aviso": envio["contato"].strip() if envio["contato"] else None,
+                            "observacao_detalhe": envio["obs"].strip() if envio["obs"] else None,
                             "sub_segmento": segmento_detectado
                         }).execute()
                         st.success(
                             "✅ Registro computado e salvo na nuvem com anonimato garantido!")
+                        st.rerun()
                 except Exception as e:
                     st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
         else:
             st.warning(
-                "⚠️ Por favor, preencha ambos os campos antes de enviar.")
-
+                "⚠️ Por favor, preencha os campos obrigatórios antes de enviar.")
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
@@ -277,6 +285,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
+
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -393,18 +402,14 @@ elif st.session_state.tela_atual == "comerciante":
                                     "Dias": idade_dias,
                                     "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
                                 })
-
-                if dados_limpos:
-                    st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
-                else:
-                    st.session_state.dados_grafico = pd.DataFrame()
+                st.session_state.dados_grafico = pd.DataFrame(
+                    dados_limpos) if dados_limpos else pd.DataFrame()
             else:
                 st.session_state.dados_grafico = pd.DataFrame()
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
     if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
-
         if not df.empty:
             df_filtrado = df
             if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
@@ -421,45 +426,29 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- AGRAUPAMENTO INTELIGENTE POR PERFIL B2B ---
+                # AGRAUPAMENTO DINÂMICO POR PERFIL B2B
                 if st.session_state.perfil_cliente == "comerciante":
                     df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade", "Observação"]).agg(
-                        Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")
-                    ).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
+                        Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
                 else:
-                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade", "Observação"]).agg(
-                        Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")
-                    ).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
+                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade", "Observação"]).agg(Volume_Pedidos=(
+                        "ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
                     df_agrupado["Local/Referência"] = "Mapeamento Consolidado da Região"
 
-                # --- EXIBIÇÃO: RANKING DE CALOR NO TOPO ---
                 st.markdown(
                     "#### 🔥 Termômetro de Demandas Reprimidas (Ranking)")
                 st.write(
                     "##### *Análise em tempo real ordenada por volume de intenção de compra:*")
-
                 for _, linha_rank in df_agrupado.iterrows():
                     volume = linha_rank['Volume_Pedidos']
-                    if volume >= 7:
-                        classe_tag = "tag-calor-alta"
-                        label_tag = f"CRÍTICA • {volume} Pedidos"
-                    elif volume >= 3:
-                        classe_tag = "tag-calor-media"
-                        label_tag = f"MODERADA • {volume} Pedidos"
-                    else:
-                        classe_tag = "tag-calor-baixa"
-                        label_tag = f"INICIAL • {volume} Pedido"
-
-                    st.markdown(f"""
-                        <div style="background-color: #1E1E1E; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid #333;">
-                            <span class="{classe_tag}">{label_tag}</span>
-                            <b style="color: #FFFFFF; font-size: 15px;">📦 {linha_rank['O que Falta']}</b>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    classe_tag = "tag-calor-alta" if volume >= 7 else (
+                        "tag-calor-media" if volume >= 3 else "tag-calor-baixa")
+                    label_tag = f"CRÍTICA • {volume} Pedidos" if volume >= 7 else (
+                        f"MODERADA • {volume} Pedidos" if volume >= 3 else f"INICIAL • {volume} Pedido")
+                    st.markdown(
+                        f'<div style="background-color: #1E1E1E; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid #333;"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 15px;">📦 {linha_rank["O que Falta"]}</b></div>', unsafe_allow_html=True)
 
                 st.write("---")
-
-                # --- EXPORTADOR EM FORMATO PDF UNIVERSAL TABULADO ---
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
                 df_exportar = df_agrupado.copy()
                 if st.session_state.perfil_cliente == "comerciante":
@@ -484,7 +473,6 @@ elif st.session_state.tela_atual == "comerciante":
                     'TituloPDF', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00B359'), spaceAfter=15)
                 estilo_texto = ParagraphStyle(
                     'TextoPDF', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
-
                 elementos_pdf.append(Paragraph(
                     f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
                 elementos_pdf.append(Paragraph(
@@ -495,13 +483,12 @@ elif st.session_state.tela_atual == "comerciante":
                     df_exportar.values.tolist()
                 tabela_pdf = Table(dados_tabela)
                 tabela_pdf.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00B359')),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD')),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00B359')
+                     ), ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), ('FONTSIZE',
+                                                                      (0, 0), (-1, 0), 10), ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('GRID',
+                                                          (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD')),
                     ('ROWBACKGROUNDS', (0, 1), (-1, -1),
                      [colors.white, colors.HexColor('#F9F9F9')])
                 ]))
@@ -509,23 +496,14 @@ elif st.session_state.tela_atual == "comerciante":
                 doc.build(elementos_pdf)
                 dados_pdf_final = buffer_pdf.getvalue()
 
-                st.download_button(
-                    label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)",
-                    data=dados_pdf_final,
-                    file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf",
-                    mime="application/pdf",
-                    key="btn_download_pdf_universal"
-                )
+                st.download_button(label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)", data=dados_pdf_final,
+                                   file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_download_pdf_universal")
 
                 st.write("---")
                 st.write(
                     f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
-                st.write(
-                    "##### *Toque em cima do item correspondente para abrir as opções.*")
-
                 for indice, linha in df_agrupado.iterrows():
                     titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
-
                     with st.expander(titulo_card):
                         if st.session_state.perfil_cliente == "comerciante":
                             st.write(
@@ -535,13 +513,11 @@ elif st.session_state.tela_atual == "comerciante":
                                 f"📍 **Escopo Geográfico:** Consolidação Geral ({linha['Cidade']})")
                         st.write(
                             f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
-
                         if linha['Observação'] and linha['Observação'] != "Sem observações registradas.":
                             st.info(
                                 f"📝 **Relato de Contexto da Comunidade:** {linha['Observação']}")
 
                         st.write("")
-
                         chave_confirmacao = f"confirma_baixa_{indice}"
                         if chave_confirmacao not in st.session_state:
                             st.session_state[chave_confirmacao] = False
