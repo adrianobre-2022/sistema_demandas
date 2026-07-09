@@ -119,22 +119,18 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
-
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
+    # --- BARRA DE ATALHOS RÁPIDOS SUPERIOR (DESIGN DE ELITE SEM TEXTOS VAGOS) ---
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
-        st.markdown(
-            "<p style='margin-top: 10px; font-weight: bold;'>Voltar para:</p>", unsafe_allow_html=True)
+        if st.button("🏠 Ir para Home", key="nav_home_direto"):
+            st.session_state.tela_atual = "home"
+            st.rerun()
     with col_nav2:
-        if st.session_state.aba_consumidor == "menu_triagem":
-            if st.button("🏠 Menu Principal", key="btn_voltar_home_direto"):
-                st.session_state.tela_atual = "home"
-                st.rerun()
-        else:
-            if st.button("🗂️ Outra Categoria de Falta", key="btn_voltar_triagem_barra"):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
+        if st.button("🗂️ Mudar de Categoria", key="nav_categoria_direto"):
+            st.session_state.aba_consumidor = "menu_triagem"
+            st.rerun()
 
     st.title("🔍 Central de Demandas Ocultas")
     st.write("---")
