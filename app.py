@@ -103,6 +103,7 @@ if "aba_consumidor" not in st.session_state:
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
+
     st.markdown("##### *O termômetro de carências da nossa região.*")
     st.write("---")
     st.write("Selecione o seu perfil de acesso para continuar:")
@@ -121,9 +122,19 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_cons"):
-        st.session_state.tela_atual = "home"
-        st.rerun()
+    # --- ENGENHARIA DE USABILIDADE: BARRA DE NAVEGAÇÃO SUPERIOR INTELIGENTE ---
+    col_nav1, col_nav2 = st.columns()
+
+    with col_nav1:
+        if st.session_state.aba_consumidor == "menu_triagem":
+            if st.button("⬅️ Menu Principal", key="btn_voltar_home_direto"):
+                st.session_state.tela_atual = "home"
+                st.rerun()
+        else:
+            # TEXTO DE UX CORRIGIDO: Contextualização completa para o morador
+            if st.button("⬅️ Outra Categoria de Falta", key="btn_voltar_triagem_barra"):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
 
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *Deixe saber o que você deseja e sente falta na região.*")
