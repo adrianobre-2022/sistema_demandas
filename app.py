@@ -49,13 +49,21 @@ st.markdown("""
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
     }
-    /* CORREÇÃO DE FONTE MOBILE: Garante fundo escuro e letras brancas em inputs e text_areas */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea>div>div>textarea {
+    
+    /* CORREÇÃO CIRÚRGICA MOBILE: Força inputs E textareas a ficarem em grafite escuro com letras brancas */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stTextArea>div>div>textarea, div[data-baseweb="textarea"]>textarea {
         border-radius: 10px !important;
         background-color: #1E1E1E !important;
         color: #FFFFFF !important;
         border: 1px solid #444444 !important;
     }
+    
+    /* CORREÇÃO DO PLACEHOLDER: Força as dicas de digitação a ficarem brancas-opacas (visíveis na tela escura) */
+    input::placeholder, textarea::placeholder, .stTextInput input::placeholder, .stTextArea textarea::placeholder {
+        color: #AAAAAA !important; /* Cinza claro brilhante para leitura perfeita */
+        opacity: 1 !important;
+    }
+    
     .stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
         color: #FFFFFF !important;
         background-color: #1E1E1E !important;
@@ -93,6 +101,7 @@ if "busca_ativa" not in st.session_state:
     st.session_state.busca_ativa = False
 if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
+
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
