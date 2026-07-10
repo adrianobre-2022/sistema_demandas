@@ -138,97 +138,66 @@ elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
         if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
-            st.session_state.tela_atual = "home"
-            st.rerun()
+            st.session_state.tela_atual = "home"; st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
             if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
+                st.session_state.aba_consumidor = "menu_triagem"; st.rerun()
+                
+    st.title("🔍 E o que falta?"); st.write("---")
 
-    st.title("🔍 E o que falta?")
-    st.write("---")
-
-    st.markdown("##### 📍 Onde você está agora?")
+    # SELETOR HÍBRIDO UNITÁRIO CORRIGIDO DE CIDADES/BAIRROS
     st.markdown("##### 📍 Onde você está agora?")
     opcoes_locais = [
-        "Carapicuíba - Centro", "Carapicuíba - Aldeia",
-        "São Paulo - Zona Oeste", "São Paulo - Zona Sul",
+        "Carapicuíba - Centro", "Carapicuíba - Aldeia", 
+        "São Paulo - Zona Oeste", "São Paulo - Zona Sul", 
         "Rio de Janeiro - Barra da Tijuca", "Rio de Janeiro - Centro",
         "✍️ Outra Região / Digite sua Cidade e Bairro"
     ]
     regiao_menu = st.selectbox(
         label="Selecione a sua Região ou Cidade:",
         options=opcoes_locais,
-        key="seletor_menu_base"
+        key="seletor_menu_base_unico"
     )
-
-    # Nova condicional atualizada com o rótulo intuitivo sugerido por você
+    
     if regiao_menu == "✍️ Outra Região / Digite sua Cidade e Bairro":
         regiao_final = st.text_input(
             label="Digite aqui a sua Cidade - Bairro (Ex: Carapicuíba - Cohab, Rio de Janeiro - Copacabana...):",
             placeholder="Escreva sua localização exata aqui...",
-            key="input_regiao_manual"
+            key="input_regiao_manual_unica"
         )
     else:
         regiao_final = regiao_menu
-
-    st.write("---")
-    regiao_menu = st.selectbox(
-        label="Selecione a sua Região ou Cidade:",
-        options=opcoes_locais,
-        key="seletor_menu_base"
-    )
-
-    # Se o usuário escolher a última opção, abre a digitação livre para ele não desistir
-    if regiao_menu == "➡️ Outra Região / Não encontrei meu bairro":
-        regiao_final = st.text_input(
-            label="Digite sua Cidade e o seu Bairro (Ex: Carapicuíba - Cohab, Osasco - Centro...):",
-            placeholder="Escreva sua localização aqui...",
-            key="input_regiao_manual"
-        )
-    else:
-        regiao_final = regiao_menu
-
+        
     st.write("---")
 
     if st.session_state.aba_consumidor == "menu_triagem":
         st.markdown("##### *O termômetro de carências da nossa região.*")
+        st.write(""); st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"): st.session_state.aba_consumidor = "produto"; st.rerun()
         st.write("")
-        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
-            st.session_state.aba_consumidor = "produto"
-            st.rerun()
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"): st.session_state.aba_consumidor = "servico"; st.rerun()
         st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
-            st.session_state.aba_consumidor = "servico"
-            st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
-            st.session_state.aba_consumidor = "infra"
-            st.rerun()
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"): st.session_state.aba_consumidor = "infra"; st.rerun()
 
     else:
         if st.session_state.aba_consumidor == "produto":
-            st.markdown(
-                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
+            st.markdown("### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
             label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X, ração de gato..."
             label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia, padaria..."
             label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto? (Opcional)", "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
-            st.markdown(
-                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+            st.markdown("### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
             label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro?", "Ex: Sapataria, lavanderia, costureira, padaria..."
             label_local, placeholder_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?", "Ex: Bairro Centro, Avenida X..."
             label_contato, tipo_envio = "Quer ser avisado caso este novo comércio seja aberto? (Opcional)", "Serviço Local / Novo Estabelecimento"
         else:
-            st.markdown(
-                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
+            st.markdown("### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
             label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
             label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
             label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
         st.write("")
-        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
+
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
             local_ocorrencia = st.text_input(
