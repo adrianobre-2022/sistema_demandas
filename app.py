@@ -123,24 +123,24 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
-
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- BARRA DE NAVEGAÇÃO SUPERIOR COM SIMETRIA PERFEITA ---
+    # --- BARRA DE NAVEGAÇÃO SUPERIOR COM TRAVA DE TAMANHO GÊMEO ---
     col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
-        if st.button("🏠 Ir para Home", key="nav_home_simetrico"):
+        # Adicionado use_container_width=True para forçar a largura total da metade da tela
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
             st.session_state.tela_atual = "home"
             st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico"):
+            # Adicionado use_container_width=True para igualar o tamanho perfeitamente
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
     st.title("🔍 E o que falta?")
     st.write("---")
-
     if st.session_state.aba_consumidor == "menu_triagem":
         st.markdown("##### *O termômetro de carências da nossa região.*")
         st.write("")
