@@ -34,7 +34,7 @@ st.markdown("""
         color: #FFFFFF !important;
     }
     
-    /* ESTILIZAÇÃO DOS BOTÕES DO SISTEMA (FORMULÁRIOS E ENVIAR) */
+    /* PADRONIZAÇÃO DE COR: Todos os botões normais e de formulário */
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
         background-color: #00B359 !important;
         color: #000000 !important;
@@ -63,25 +63,29 @@ st.markdown("""
         width: 100% !important;
         margin-bottom: 1.5rem !important;
     }
+    
+    /* CORREÇÃO VISUAL: Força os botões superiores a seguirem o mesmo padrão Verde Esmeralda */
     .btn-nav-premium {
-        flex: 1 !important; /* Força os dois botões a terem rigorosamente o mesmo tamanho */
-        background-color: #00B359 !important;
-        color: #000000 !important;
-        font-weight: 900 !important;
+        flex: 1 !important;
+        background-color: #00B359 !important; /* Verde Esmeralda Corporativo */
+        color: #000000 !important; /* Letras pretas */
+        font-weight: 900 !important; /* Negrito ultra destacado */
         text-align: center !important;
-        padding: 0.8rem 0.5rem !important;
+        padding: 0.8rem 0.2rem !important;
         border-radius: 12px !important;
-        font-size: 14px !important;
+        font-size: 13px !important; /* Compactado sutilmente para o celular */
         text-decoration: none !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
         display: block !important;
+        border: none !important;
     }
     .btn-nav-premium:hover {
         background-color: #00803b !important;
+        color: #000000 !important;
     }
     .btn-oculto-fake {
         flex: 1 !important;
-        visibility: hidden !important; /* Mantém o espaço invisível na triagem para o Home não esticar */
+        visibility: hidden !important;
     }
     
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
@@ -131,9 +135,9 @@ if "aba_consumidor" not in st.session_state:
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
-    st.markdown("##### *O termômetro de carências da nossa região.*")
+    st.markdown("##### *O termômetro de carências da nossa region.*")
     st.write("---")
-    st.write("Selecione o seu perfil de acesso para continuing:")
+    st.write("Selecione o seu perfil de acesso para continuar:")
     st.write("")
 
     col1, col2 = st.columns(2)
@@ -149,11 +153,10 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- CAPTURA DE EVENTOS DE CLIQUE DOS BOTÕES HTML ---
     parametros_url = st.query_params
     if "acao_nav" in parametros_url:
         comando = parametros_url["acao_nav"]
-        st.query_params.clear()  # Limpa a URL imediatamente
+        st.query_params.clear()
         if comando == "ir_home":
             st.session_state.tela_atual = "home"
             st.rerun()
@@ -161,8 +164,72 @@ elif st.session_state.tela_atual == "consumidor":
             st.session_state.aba_consumidor = "menu_triagem"
             st.rerun()
 
-    # --- BARRA DE ATALHOS IMPOSITIVA COM ESPAÇAMENTO FIXO DE MEIO CENTÍMETRO ---
     if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown("""
+            <div class="container-botoes-gemeos">
+                <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
+                <div class="btn-oculto-fake"></div>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        # CORREÇÃO DE UX TEXTUAL: "Mudar Categoria" (Curto e limpo)
+        st.markdown("""
+            <div class="container-botoes-gemeos">
+                <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
+                <a href="?acao_nav=mudar_cat" target="_self" class="btn-nav-premium">🗂️ Mudar Categoria</a>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.title("🔍 Central de Demandas Ocultas")
+    st.write("---")
+
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown(
+            "##### *Deixe saber o que você deseja e sente falta na região.*")
+        st.write("")
+        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"):
+            st.session_state.aba_consumidor = "produto"
+            st.rerun()
+        st.write("")
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria, costureira...)", use_container_width=True, key="triagem_serv"):
+            st.session_state.aba_consumidor = "servico"
+            st.rerun()
+        st.write("")
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto, posto de saúde...)", use_container_width=True, key="triagem_infra"):
+            st.session_state.aba_consumidor = "infra"
+            st.rerun()
+
+    else:
+        # CORREÇÃO DE TEXTO LONGO: Removido o termo repetitivo "Formulário:"
+        if st.session_state.aba_consumidor == "produto":
+            st.markdown(
+                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
+            label_item = "Qual produto ou marca você buscou e não encontrou?"
+            placeholder_item = "Ex: Leite condensado marca X, ração premium de gato..."
+            label_local = "Em qual estabelecimento isso ocorreu?"
+            placeholder_local = "Ex: Nome do mercado, farmácia, padaria..."
+            label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
+            tipo_envio = "Produto / Marca"
+        elif st.session_state.aba_consumidor == "servico":
+            st.markdown(
+                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+            label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
+            placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
+            label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
+            placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
+            label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
+            tipo_envio = "Serviço Local / Novo Estabelecimento"
+        else:
+            st.markdown(
+                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
+            label_item = "Qual carência de infraestrutura/manutenção você identificou?"
+            placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
+            label_local = "Qual o ponto de referência ou localidade exata?"
+            placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
+            label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
+            tipo_envio = "Serviço Público / Infraestrutura"
+        st.write("")
         st.markdown("""
             <div class="container-botoes-gemeos">
                 <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
