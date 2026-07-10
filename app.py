@@ -134,7 +134,6 @@ if st.session_state.tela_atual == "home":
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
-# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
@@ -149,19 +148,14 @@ elif st.session_state.tela_atual == "consumidor":
 
     st.title("🔍 E o que falta?")
 
-    # --- ENGENHARIA DE USABILIDADE: EXIBE A LOCALIZAÇÃO APENAS NA TRIAGEM INICIAL ---
     if st.session_state.aba_consumidor == "menu_triagem":
         st.markdown("##### 📍 Onde você está agora?")
-
-        # EXEMPLO ÚNICO E UNIVERSAL: Remove confusões de metrópoles e induz ao traço padrão
         regiao_final = st.text_input(
             label="Localização Única do Morador",
             placeholder="Ex: Carapicuíba - Centro",
             key="input_regiao_via_unica",
             label_visibility="collapsed"
         )
-
-        # REDUÇÃO DE ESPAÇAMENTO MOBILE: Removeu divisórias de linha para colar os botões no topo
         st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
         if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
@@ -174,8 +168,6 @@ elif st.session_state.tela_atual == "consumidor":
         if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
-
-    # --- NOS FORMULÁRIOS INTERNOS, A PERGUNTA DE LOCALIZAÇÃO SOME POR COMPLETO ---
     else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
@@ -195,6 +187,9 @@ elif st.session_state.tela_atual == "consumidor":
             label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
             label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
             label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+        st.write("")
+
+        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
             local_ocorrencia = st.text_input(
@@ -206,7 +201,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("")
             botao_enviar = st.form_submit_button(
                 "Registrar Ocorrência", use_container_width=True)
-
         if botao_enviar:
             if item_solicitado and local_ocorrencia:
                 texto_usuario, local_usuario = item_solicitado.strip(
@@ -226,7 +220,7 @@ elif st.session_state.tela_atual == "consumidor":
                     mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva de forma construtiva."
                 if any(p in texto_usuario for p in termos_politicos_proibidos) or any(p in local_usuario for p in termos_politicos_proibidos) or any(p in obs_texto for p in termos_politicos_proibidos):
                     contem_bloqueio = True
-                    mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais. Manifestações político-ideológicas nacionais (como PECs) devem ser direcionadas às ouvidorias do Senado ou Câmara."
+                    mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais. Manifestações político-ideológicas nacionais devem ser direcionadas às ouvidorias competentes."
                 if "lixo" in texto_usuario or "lixo" in local_usuario:
                     if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
                         contem_bloqueio = True
@@ -245,14 +239,17 @@ elif st.session_state.tela_atual == "consumidor":
                     st.error(
                         "⚠️ Ops! Parece um problema de Infraestrutura Pública. Modifique no menu principal.")
                     erro_detectado = True
-                elif tipo_envio == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
+                elif tipo_envio == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in words_produto if p in palavras_produto):
                     st.error(
                         "⚠️ Ops! Parece a falta de um produto de mercado. Modifique no menu principal.")
                     erro_detectado = True
 
                 if not erro_detectado:
                     try:
-                        texto_regiao = regiao_final.strip().title() if regiao_final else "Outra Região"
+                        regiao_salva = st.session_state.get(
+                            "input_regiao_via_unica", "Carapicuíba - Centro")
+                        texto_regiao = regiao_salva.strip().title(
+                        ) if regiao_salva else "Carapicuíba - Centro"
                         estado_detectado = "RJ" if "Rio" in texto_regiao else "SP"
 
                         local_formatado = local_ocorrencia.strip().title()
@@ -317,13 +314,20 @@ elif st.session_state.tela_atual == "autenticacao":
 
     st.title("🔒 Área Restrita de Inteligência")
     st.markdown(
-        "##### *Insira a sua chave de acesso corporativa para liberar os relatórios.*")
+        "##### *Insira o seu token de acesso corporativo para liberar os relatórios.*")
     st.write("---")
 
+    # Campo direto que aceita o ENTER nativo do teclado
     token_inserido = st.text_input(
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
+    st.write("")
 
-    if st.button("Validar Credenciais", use_container_width=True):
+    # Botão físico visível na tela para clique manual do usuário
+    botao_validar = st.button("Validar Credenciais e Acessar",
+                              use_container_width=True, key="btn_validar_token_hibrido")
+
+    # REGRA HÍBRIDA: Concede o acesso se o usuário pressionou ENTER (token_inserido mudou) OU se clicou no botão físico
+    if botao_validar or (token_inserido and not st.session_state.token_valido):
         if token_inserido == "COMERCIO10":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "comerciante"
@@ -354,9 +358,9 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.perfil_cliente = "gestor"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        else:
+        elif token_inserido != "":
             st.error(
-                "❌ Token inválido ou expirado. Entre em contato com o administrador.")
+                "❌ Token inválido ou expirado. Verifique as credenciais e tente novamente.")
 # --- TELA: PAINEL DO COMERCIANTE / GESTOR ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -459,15 +463,15 @@ elif st.session_state.tela_atual == "comerciante":
             if not dados_limpos:
                 dados_limpos = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
-                        "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde.", "SubSegmento": "Supermercado"},
+                        "Cidade": "Carapicuíba - Centro", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde.", "SubSegmento": "Supermercado"},
                     {"ID": 993, "O que Falta": "Fisioterapeuta Pediátrico", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Condomínio Novo - Bloco B",
-                        "Cidade": "São Paulo", "Dias": 5, "Observação": "Não há clínicas com essa especialidade perto.", "SubSegmento": "Saude"},
+                        "Cidade": "Carapicuíba - Centro", "Dias": 5, "Observação": "Não há clínicas com essa especialidade perto.", "SubSegmento": "Saude"},
                     {"ID": 995, "O que Falta": "Ração Premium Gatos Castrados", "Categoria": "Produto / Marca", "Local/Referência": "Petshop Bairro Alto",
-                        "Cidade": "São Paulo", "Dias": 3, "Observação": "Marca X sumiu do estoque.", "SubSegmento": "Petshop"},
+                        "Cidade": "Carapicuíba - Centro", "Dias": 3, "Observação": "Marca X sumiu do estoque.", "SubSegmento": "Petshop"},
                     {"ID": 996, "O que Falta": "Barbearia Retrô", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal 1200",
-                        "Cidade": "São Paulo", "Dias": 14, "Observação": "Homens do bairro precisam viajar ao centro para cortar cabelo.", "SubSegmento": "Beleza"},
+                        "Cidade": "Carapicuíba - Centro", "Dias": 14, "Observação": "Homens do bairro precisam viajar ao centro para cortar cabelo.", "SubSegmento": "Beleza"},
                     {"ID": 997, "O que Falta": "Manutenção De Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua das Flores, 40",
-                        "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste apagado gerando escuridão extrema.", "SubSegmento": "Geral"}
+                        "Cidade": "Carapicuíba - Centro", "Dias": 2, "Observação": "Poste apagado gerando escuridão extrema.", "SubSegmento": "Geral"}
                 ]
                 if st.session_state.perfil_cliente == "comerciante":
                     dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
@@ -495,101 +499,123 @@ elif st.session_state.tela_atual == "comerciante":
             if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                 df_filtrado = df[df['Categoria'] == "Produto / Marca"]
             elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                df_filtrado = df[df['Categoria'] == "Serviço Local / Novo Estabelecimento"]
+                df_filtrado = df[df['Categoria'] ==
+                                 "Serviço Local / Novo Estabelecimento"]
             elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                df_filtrado = df[df['Categoria'] == "Serviço Público / Infraestrutura"]
+                df_filtrado = df[df['Categoria'] ==
+                                 "Serviço Público / Infraestrutura"]
 
             if termo_busca:
-                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
+                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
+                    termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
+                # --- AGRUPAMENTO COMERCIAL CONSOLIDADO POR PRODUTO ---
+                df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=(
+                    "ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Total", ascending=False).reset_index()
+
                 st.write("---")
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
-                
-                df_exportar = df_filtrado[["O que Falta", "Categoria", "Local/Referência", "Cidade", "Dias"]].copy()
-                df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência", "Cidade/Região", "Dias Desde o Alerta"]
-                
+                df_exportar = df_agrupado.copy()
+                df_exportar.columns = [
+                    "Item", "Segmento", "Cidade", "Pedidos", "Dias"]
+
                 import io
                 from reportlab.lib.pagesizes import letter
                 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
                 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
                 from reportlab.lib import colors
-                
+
                 buffer_pdf = io.BytesIO()
-                doc = SimpleDocTemplate(buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                doc = SimpleDocTemplate(
+                    buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
                 elementos_pdf = []
                 estilos = getSampleStyleSheet()
-                estilo_titulo = ParagraphStyle('T', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00803B'), spaceAfter=15)
-                estilo_texto = ParagraphStyle('X', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
-                
-                elementos_pdf.append(Paragraph("<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
+                estilo_titulo = ParagraphStyle(
+                    'T', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00803B'), spaceAfter=15)
+                estilo_texto = ParagraphStyle(
+                    'X', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
+
+                elementos_pdf.append(Paragraph(
+                    "<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
                 from zoneinfo import ZoneInfo
-                data_hora_brasil = datetime.datetime.now(ZoneInfo("America/Sao_Paulo")).strftime('%d/%m/%Y %H:%M')
-                elementos_pdf.append(Paragraph(f"Perfil: {st.session_state.perfil_cliente.upper()}<br/>Emissão: {data_hora_brasil}", estilo_texto))
+                data_hora_brasil = datetime.datetime.now(
+                    ZoneInfo("America/Sao_Paulo")).strftime('%d/%m/%Y %H:%M')
+                elementos_pdf.append(Paragraph(
+                    f"Perfil: {st.session_state.perfil_cliente.upper()}<br/>Emissão: {data_hora_brasil}", estilo_texto))
                 elementos_pdf.append(Spacer(1, 10))
-                
-                dados_tabela = [df_exportar.columns.tolist()] + df_exportar.values.tolist()
+
+                dados_tabela = [df_exportar.columns.tolist()] + \
+                    df_exportar.values.tolist()
                 tabela_pdf = Table(dados_tabela)
                 tabela_pdf.setStyle(TableStyle([
-                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#00803B')), ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#DDDDDD'))
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00803B')
+                     ), ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), ('GRID',
+                                                                      (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD'))
                 ]))
                 elementos_pdf.append(tabela_pdf)
                 doc.build(elementos_pdf)
                 dados_pdf_final = buffer_pdf.getvalue()
-                
-                st.download_button(label="📥 Baixar Relatório Gerencial (PDF)", data=dados_pdf_final, file_name=f"relatorio_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_pdf_uni")
-                
+
+                st.download_button(label="📥 Baixar Relatório Gerencial (PDF)", data=dados_pdf_final,
+                                   file_name=f"relatorio_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_pdf_uni")
+
                 st.write("---")
                 st.markdown("#### 📈 Detalhamento das Carências Ativas")
-                st.write(f"*(Encontrados {len(df_filtrado)} alertas individuais)*")
-                st.write("")
-                
-                for indice, linha in df_filtrado.iterrows():
-                    item_id = linha['ID']
+                st.write(
+                    f"*(Encontrados {len(df_agrupado)} itens consolidados na região)*")
+
+                for indice, linha in df_agrupado.iterrows():
                     item_nome = linha['O que Falta']
-                    local_nome = linha['Local/Referência']
-                    
-                    classe_tag = "tag-calor-baixa"
-                    label_tag = "INICIAL • 1 Alerta"
-                    
-                    st.markdown(f"""
-                        <div class="bloco-lista-premium">
-                            <span class="{classe_tag}">{label_tag}</span>
-                            <b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b>
-                            <div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Solicitado há {linha['Dias']} dias</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    st.markdown(f"📍 **Estabelecimento Alvo:** {local_nome} ({linha['Cidade']})")
-                    obs_texto = str(linha['Observação']).strip()
-                    if obs_texto: 
-                        st.info(f"💬 *Relato do Morador:* \"{obs_texto}\"")
-                    
-                    st.write("")
-                    chave_confirmacao = f"confirma_baixa_{item_id}"
-                    if chave_confirmacao not in st.session_state: 
-                        st.session_state[chave_confirmacao] = False
-                    
-                    if not st.session_state[chave_confirmacao]:
-                        if st.button(f"✅ Marcar como Resolvido no {local_nome}", key=f"btn_pre_{item_id}"):
-                            st.session_state[chave_confirmacao] = True; st.rerun()
-                    else:
-                        st.warning(f"⚠️ Dar baixa apenas neste pedido de '{item_nome}' do estabelecimento '{local_nome}'?")
-                        col_b1, col_b2 = st.columns(2)
-                        with col_b1:
-                            if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{item_id}"):
-                                supabase.table("relatos_escassez").update({"status": "Atendido"}).eq("id", item_id).execute()
-                                st.success("🎉 Atualizado!")
-                                import time; time.sleep(1)
-                                st.session_state[chave_confirmacao] = False
-                                st.session_state.busca_ativa = False
+                    volume = float(linha['Volume_Total'])
+                    classe_tag = "tag-calor-alta" if volume >= 7 else (
+                        "tag-calor-media" if volume >= 3 else "tag-calor-baixa")
+                    label_tag = f"CRÍTICA • {int(volume)} Pedidos" if volume >= 7 else (
+                        f"MODERADA • {int(volume)} Pedidos" if volume >= 3 else f"INICIAL • {int(volume)} Pedido")
+
+                    st.markdown(
+                        f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Último alerta há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
+
+                    detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
+                    for _, sub_linha in detalhes_item.iterrows():
+                        sub_id = sub_linha['ID']
+                        sub_local = sub_linha['Local/Referência']
+                        st.markdown(
+                            f"📍 **No estabelecimento:** {sub_local} ({sub_linha['Cidade']})")
+                        obs_texto = str(sub_linha['Observação']).strip()
+                        if obs_texto:
+                            st.info(f"💬 *Relato:* \"{obs_texto}\"")
+
+                        chave_confirmacao = f"confirma_baixa_{sub_id}"
+                        if chave_confirmacao not in st.session_state:
+                            st.session_state[chave_confirmacao] = False
+
+                        if not st.session_state[chave_confirmacao]:
+                            if st.button(f"✅ Dar baixa apenas no {sub_local}", key=f"btn_pre_{sub_id}"):
+                                st.session_state[chave_confirmacao] = True
                                 st.rerun()
-                        with col_b2:
-                            if st.button("❌ Cancelar", key=f"btn_cancelar_{item_id}"):
-                                st.session_state[chave_confirmacao] = False; st.rerun()
-                    st.markdown("<hr style='border-top: 1px dashed #333; margin-top:1rem; margin-bottom:1rem;'/>", unsafe_allow_html=True)
-            else: 
+                        else:
+                            st.warning(
+                                f"⚠️ Confirmar reposição de estoque do item '{item_nome}' exclusivamente na loja '{sub_local}'?")
+                            col_b1, col_b2 = st.columns(2)
+                            with col_b1:
+                                if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{sub_id}"):
+                                    supabase.table("relatos_escassez").update(
+                                        {"status": "Atendido"}).eq("id", sub_id).execute()
+                                    st.success("🎉 Atualizado!")
+                                    import time
+                                    time.sleep(1)
+                                    st.session_state[chave_confirmacao] = False
+                                    st.session_state.busca_ativa = False
+                                    st.rerun()
+                            with col_b2:
+                                if st.button("❌ Cancelar", key=f"btn_cancelar_{sub_id}"):
+                                    st.session_state[chave_confirmacao] = False
+                                    st.rerun()
+                    st.markdown(
+                        "<hr style='border-top: 1px dashed #333; margin-top:1rem; margin-bottom:1rem;'/>", unsafe_allow_html=True)
+            else:
                 st.info("ℹ️ Nenhum registro ativo encontrado.")
-        else: 
+        else:
             st.info("ℹ️ O banco de dados está limpo!")
