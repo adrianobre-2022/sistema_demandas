@@ -125,28 +125,27 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- BARRA DE NAVEGAÇÃO SUPERIOR FIXA E PADRONIZADA ---
+    # --- BARRA DE NAVEGAÇÃO COM SIMETRIA PERFEITA E MEIO CENTÍMETRO DE ESPAÇAMENTO ---
     col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
-        if st.button("🏠 Ir para Home", key="btn_superior_home", use_container_width=True):
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico"):
             st.session_state.tela_atual = "home"
             st.rerun()
+
     with col_nav2:
-        # Só exibe se um formulário estiver ativado, mantendo o alinhamento
         if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="btn_superior_mudar", use_container_width=True):
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico"):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
-    st.title("🔍 Central de Demandas Ocultas")
+    # --- FACHADA CORPORATIVA COM O NOME DE BATISMO OFICIAL ---
+    st.title("🔍 E O Que Falta")
     st.write("---")
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown(
-            "##### *Deixe saber o que você deseja e sente falta na região.*")
+        st.markdown("##### *O termômetro de carências da nossa região.*")
         st.write("")
         st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
-        st.write("")
         if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
@@ -160,9 +159,10 @@ elif st.session_state.tela_atual == "consumidor":
             st.rerun()
 
     else:
+        # TÍTULOS CURTOS, DIRETOS E INTEGRADOS À MARCA NOVO "E O QUE FALTA"
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
-                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
+                "### 📦 E O Que Falta: Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
             label_item = "Qual produto ou marca você buscou e não encontrou?"
             placeholder_item = "Ex: Leite condensado marca X, ração premium de gato..."
             label_local = "Em qual estabelecimento isso ocorreu?"
@@ -171,7 +171,7 @@ elif st.session_state.tela_atual == "consumidor":
             tipo_envio = "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
             st.markdown(
-                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+                "### 🏪 E O Que Falta: Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
             label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
             placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
             label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
@@ -180,7 +180,7 @@ elif st.session_state.tela_atual == "consumidor":
             tipo_envio = "Serviço Local / Novo Estabelecimento"
         else:
             st.markdown(
-                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
+                "### 🏛️ E O Que Falta: Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
             label_item = "Qual carência de infraestrutura/manutenção você identificou?"
             placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
             label_local = "Qual o ponto de referência ou localidade exata?"
@@ -188,6 +188,7 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
             tipo_envio = "Serviço Público / Infraestrutura"
         st.write("")
+
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
