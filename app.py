@@ -67,13 +67,13 @@ st.markdown("""
     /* CORREÇÃO VISUAL: Força os botões superiores a seguirem o mesmo padrão Verde Esmeralda */
     .btn-nav-premium {
         flex: 1 !important;
-        background-color: #00B359 !important; /* Verde Esmeralda Corporativo */
-        color: #000000 !important; /* Letras pretas */
-        font-weight: 900 !important; /* Negrito ultra destacado */
+        background-color: #00B359 !important;
+        color: #000000 !important;
+        font-weight: 900 !important;
         text-align: center !important;
         padding: 0.8rem 0.2rem !important;
         border-radius: 12px !important;
-        font-size: 13px !important; /* Compactado sutilmente para o celular */
+        font-size: 13px !important;
         text-decoration: none !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
         display: block !important;
@@ -119,6 +119,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Inicializa as variáveis na memória do navegador
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -131,11 +132,10 @@ if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
 if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
-
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
-    st.markdown("##### *O termômetro de carências da nossa region.*")
+    st.markdown("##### *O termômetro de carências da nossa região.*")
     st.write("---")
     st.write("Selecione o seu perfil de acesso para continuar:")
     st.write("")
@@ -172,7 +172,6 @@ elif st.session_state.tela_atual == "consumidor":
             </div>
         """, unsafe_allow_html=True)
     else:
-        # CORREÇÃO DE UX TEXTUAL: "Mudar Categoria" (Curto e limpo)
         st.markdown("""
             <div class="container-botoes-gemeos">
                 <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
@@ -201,7 +200,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.rerun()
 
     else:
-        # CORREÇÃO DE TEXTO LONGO: Removido o termo repetitivo "Formulário:"
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
                 "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
@@ -230,72 +228,7 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
             tipo_envio = "Serviço Público / Infraestrutura"
         st.write("")
-        st.markdown("""
-            <div class="container-botoes-gemeos">
-                <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
-                <div class="btn-oculto-fake"></div>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-            <div class="container-botoes-gemeos">
-                <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
-                <a href="?acao_nav=mudar_cat" target="_self" class="btn-nav-premium">🗂️ Mudar de Categoria</a>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.title("🔍 Central de Demandas Ocultas")
-    st.write("---")
-
-    if st.session_state.aba_consumidor == "menu_triagem":
-
-        st.markdown(
-            "##### *Deixe saber o que você deseja e sente falta na região.*")
-        st.write("")
-        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"):
-            st.session_state.aba_consumidor = "produto"
-            st.rerun()
-        st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria, costureira...)", use_container_width=True, key="triagem_serv"):
-            st.session_state.aba_consumidor = "servico"
-            st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto, posto de saúde...)", use_container_width=True, key="triagem_infra"):
-            st.session_state.aba_consumidor = "infra"
-            st.rerun()
-
-    else:
-        if st.session_state.aba_consumidor == "produto":
-            st.markdown(
-                "### 📦 Formulário: Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
-            label_item = "Qual produto ou marca você buscou e não encontrou?"
-            placeholder_item = "Ex: Leite condensado marca X, ração premium de gato..."
-            label_local = "Em qual estabelecimento isso ocorreu?"
-            placeholder_local = "Ex: Nome do mercado, farmácia, padaria..."
-            label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
-            tipo_envio = "Produto / Marca"
-        elif st.session_state.aba_consumidor == "servico":
-            st.markdown(
-                "### 🏪 Formulário: Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
-            label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
-            placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
-            label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
-            placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
-            label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
-            tipo_envio = "Serviço Local / Novo Estabelecimento"
-        else:
-            st.markdown(
-                "### 🏛️ Formulário: Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
-            label_item = "Qual carência de infraestrutura/manutenção você identificou?"
-            placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
-            label_local = "Qual o ponto de referência ou localidade exata?"
-            placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
-            label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
-            tipo_envio = "Serviço Público / Infraestrutura"
-        st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
-
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
             local_ocorrencia = st.text_input(
@@ -401,7 +334,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-
+# --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
         st.session_state.tela_atual = "home"
@@ -530,127 +463,95 @@ elif st.session_state.tela_atual == "comerciante":
             if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                 df_filtrado = df[df['Categoria'] == "Produto / Marca"]
             elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Local / Novo Estabelecimento"]
+                df_filtrado = df[df['Categoria'] == "Serviço Local / Novo Estabelecimento"]
             elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Público / Infraestrutura"]
+                df_filtrado = df[df['Categoria'] == "Serviço Público / Infraestrutura"]
 
             if termo_busca:
-                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
-                    termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
+                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
                 # --- AGROUPAMENTO DINÂMICO POR PERFIL B2B ---
                 if st.session_state.perfil_cliente == "comerciante":
-                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade", "Observação"]).agg(
-                        Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
+                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade", "Observação"]).agg(Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
                 else:
-                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade", "Observação"]).agg(Volume_Pedidos=(
-                        "ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
+                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade", "Observação"]).agg(Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
                     df_agrupado["Local/Referência"] = "Mapeamento Consolidado da Região"
 
-                st.markdown(
-                    "#### 🔥 Termômetro de Demandas Reprimidas (Ranking)")
-                st.write(
-                    "##### *Análise em tempo real ordenada por volume de intenção de compra:*")
+                st.markdown("#### 🔥 Termômetro de Demandas Reprimidas (Ranking)")
+                st.write("##### *Análise em tempo real ordenada por volume de intenção de compra:*")
                 for _, linha_rank in df_agrupado.iterrows():
                     volume = linha_rank['Volume_Pedidos']
-                    classe_tag = "tag-calor-alta" if volume >= 7 else (
-                        "tag-calor-media" if volume >= 3 else "tag-calor-baixa")
-                    label_tag = f"CRÍTICA • {volume} Pedidos" if volume >= 7 else (
-                        f"MODERADA • {volume} Pedidos" if volume >= 3 else f"INICIAL • {volume} Pedido")
-                    st.markdown(
-                        f'<div style="background-color: #1E1E1E; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid #333;"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 15px;">📦 {linha_rank["O que Falta"]}</b></div>', unsafe_allow_html=True)
-
+                    classe_tag = "tag-calor-alta" if volume >= 7 else ("tag-calor-media" if volume >= 3 else "tag-calor-baixa")
+                    label_tag = f"CRÍTICA • {volume} Pedidos" if volume >= 7 else (f"MODERADA • {volume} Pedidos" if volume >= 3 else f"INICIAL • {volume} Pedido")
+                    st.markdown(f'<div style="background-color: #1E1E1E; padding: 0.8rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid #333;"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 15px;">📦 {linha_rank["O que Falta"]}</b></div>', unsafe_allow_html=True)
+                
                 st.write("---")
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
                 df_exportar = df_agrupado.copy()
                 if st.session_state.perfil_cliente == "comerciante":
-                    df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência",
-                                           "Cidade", "Detalhes/Contexto", "Volume de Pedidos", "Dias Desde o Alerta"]
+                    df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência", "Cidade", "Detalhes/Contexto", "Volume de Pedidos", "Dias Desde o Alerta"]
                 else:
-                    df_exportar.columns = ["Item Solicitado", "Segmento", "Cidade",
-                                           "Detalhes/Contexto", "Volume Total de Pedidos", "Dias Desde o Alerta", "Escopo"]
-
+                    df_exportar.columns = ["Item Solicitado", "Segmento", "Cidade", "Detalhes/Contexto", "Volume Total de Pedidos", "Dias Desde o Alerta", "Escopo"]
+                
                 import io
                 from reportlab.lib.pagesizes import letter
                 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
                 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
                 from reportlab.lib import colors
-
+                
                 buffer_pdf = io.BytesIO()
-                doc = SimpleDocTemplate(
-                    buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                doc = SimpleDocTemplate(buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
                 elementos_pdf = []
                 estilos = getSampleStyleSheet()
-                estilo_titulo = ParagraphStyle(
-                    'TituloPDF', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00B359'), spaceAfter=15)
-                estilo_texto = ParagraphStyle(
-                    'TextoPDF', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
-                elementos_pdf.append(Paragraph(
-                    f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
-                elementos_pdf.append(Paragraph(
-                    f"Frente de Análise: {st.session_state.perfil_cliente.upper()}<br/>Data de emissão: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", estilo_texto))
+                estilo_titulo = ParagraphStyle('TituloPDF', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00B359'), spaceAfter=15)
+                estilo_texto = ParagraphStyle('TextoPDF', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
+                elementos_pdf.append(Paragraph(f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
+                elementos_pdf.append(Paragraph(f"Frente de Análise: {st.session_state.perfil_cliente.upper()}<br/>Data de emissão: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", estilo_texto))
                 elementos_pdf.append(Spacer(1, 10))
-
-                dados_tabela = [df_exportar.columns.tolist()] + \
-                    df_exportar.values.tolist()
+                
+                dados_tabela = [df_exportar.columns.tolist()] + df_exportar.values.tolist()
                 tabela_pdf = Table(dados_tabela)
                 tabela_pdf.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00B359')
-                     ), ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), ('FONTSIZE',
-                                                                      (0, 0), (-1, 0), 10), ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('GRID',
-                                                          (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD')),
-                    ('ROWBACKGROUNDS', (0, 1), (-1, -1),
-                     [colors.white, colors.HexColor('#F9F9F9')])
+                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#00B359')), ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,0), 10), ('BOTTOMPADDING', (0,0), (-1,0), 8),
+                    ('ALIGN', (0,0), (-1,-1), 'LEFT'), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#DDDDDD')),
+                    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F9F9F9')])
                 ]))
                 elementos_pdf.append(tabela_pdf)
                 doc.build(elementos_pdf)
                 dados_pdf_final = buffer_pdf.getvalue()
-
-                st.download_button(label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)", data=dados_pdf_final,
-                                   file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_download_pdf_universal")
-
+                
+                st.download_button(label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)", data=dados_pdf_final, file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_download_pdf_universal")
+                
                 st.write("---")
-                st.write(
-                    f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
+                st.write(f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
                 for indice, linha in df_agrupado.iterrows():
                     titulo_card = f"❌ {linha['O que Falta']} ({linha['Volume_Pedidos']} solicitações)"
                     with st.expander(titulo_card):
                         if st.session_state.perfil_cliente == "comerciante":
-                            st.write(
-                                f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
+                            st.write(f"📍 **Local:** {linha['Local/Referência']} ({linha['Cidade']})")
                         else:
-                            st.write(
-                                f"📍 **Escopo Geográfico:** Consolidação Geral ({linha['Cidade']})")
-                        st.write(
-                            f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
+                            st.write(f"📍 **Escopo Geográfico:** Consolidação Geral ({linha['Cidade']})")
+                        st.write(f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
                         if linha['Observação'] and linha['Observação'] != "Sem observações registradas.":
-                            st.info(
-                                f"📝 **Relato de Contexto da Comunidade:** {linha['Observação']}")
-
+                            st.info(f"📝 **Relato de Contexto da Comunidade:** {linha['Observação']}")
+                        
                         st.write("")
                         chave_confirmacao = f"confirma_baixa_{indice}"
-                        if chave_confirmacao not in st.session_state:
-                            st.session_state[chave_confirmacao] = False
-
+                        if chave_confirmacao not in st.session_state: st.session_state[chave_confirmacao] = False
+                        
                         if not st.session_state[chave_confirmacao]:
                             if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=f"btn_pre_{indice}"):
                                 st.session_state[chave_confirmacao] = True
                                 st.rerun()
                         else:
-                            st.warning(
-                                "⚠️ Atenção: Esta ação dará baixa em todas as solicitações deste item simultaneamente.")
+                            st.warning("⚠️ Atenção: Esta ação dará baixa em todas as solicitações deste item simultaneamente.")
                             col_b1, col_b2 = st.columns(2)
                             with col_b1:
                                 if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{indice}"):
-                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
-                                        "item_solicitado", linha['O que Falta']).execute()
-                                    st.success(
-                                        f"🎉 Sucesso! O item foi atualizado.")
+                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq("item_solicitado", linha['O que Falta']).execute()
+                                    st.success(f"🎉 Sucesso! O item foi updated.")
                                     st.session_state[chave_confirmacao] = False
                                     st.session_state.busca_ativa = False
                                     st.rerun()
@@ -659,7 +560,6 @@ elif st.session_state.tela_atual == "comerciante":
                                     st.session_state[chave_confirmacao] = False
                                     st.rerun()
             else:
-                st.info(
-                    "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
+                st.info("ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
         else:
             st.info("ℹ️ O banco de dados está limpo e sem demandas pendentes!")
