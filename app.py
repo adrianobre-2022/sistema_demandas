@@ -114,6 +114,7 @@ if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
 if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
+
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 E o que falta?")
@@ -132,7 +133,6 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
-
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
@@ -149,35 +149,180 @@ elif st.session_state.tela_atual == "consumidor":
     st.title("🔍 E o que falta?")
     st.write("---")
 
-    # SELETOR INTELIGENTE: Opção de digitação livre colocada no TOPO com texto instrucional sugerido por você
+    # VIA ÚNICA REGIONAL: Campo único auto-limpante (texto cinza some sozinho ao digitar)
     st.markdown("##### 📍 Onde você está agora?")
-    opcoes_locais = [
-        "✍️ Digite: Cidade - Bairro ou selecione na lista",
-        "Carapicuíba - Centro", "Carapicuíba - Aldeia",
-        "São Paulo - Zona Oeste", "São Paulo - Zona Sul",
-        "Rio de Janeiro - Barra da Tijuca", "Rio de Janeiro - Centro"
-    ]
-    regiao_menu = st.selectbox(
-        label="Selecione a sua Região ou Cidade:",
-        options=opcoes_locais,
-        key="seletor_menu_base_unico"
+    regiao_final = st.text_input(
+        label="Localização do Morador",
+        placeholder="Digite: Cidade - Bairro (Ex: Carapicuíba - Centro, Rio de Janeiro - Copacabana...)",
+        key="input_regiao_via_unica",
+        label_visibility="collapsed"
     )
-
-    # Condicional que lê o texto exato sugerido por você
-    # Se o usuário escolher a opção de digitação, o campo abaixo nasce 100% limpo e em branco
-    if regiao_menu == "✍️ Digite: Cidade - Bairro ou selecione na lista":
-        st.write("👇 *Digite abaixo no formato Cidade - Bairro:*")
-        regiao_final = st.text_input(
-            label="Campo de digitação livre da região",
-            placeholder="Ex: Carapicuíba - Cohab",
-            key="input_regiao_manual_unica",
-            # Esconde o texto longo fixo para o campo nascer totalmente em branco
-            label_visibility="collapsed"
-        )
-    else:
-        regiao_final = regiao_menu
-
+    st.caption(
+        "💡 *Sugestões:* Carapicuíba - Centro • Carapicuíba - Aldeia • São Paulo - Zona Oeste")
     st.write("---")
+
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown("##### *O termômetro de carências da nossa região.*")
+        st.write("")
+        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
+            st.session_state.aba_consumidor = "produto"
+            st.rerun()
+        st.write("")
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
+            st.session_state.aba_consumidor = "servico"
+            st.rerun()
+        st.write("")
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
+            st.session_state.aba_consumidor = "infra"
+            st.rerun()
+
+    else:
+        if st.session_state.aba_consumidor == "produto":
+            st.markdown(
+                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
+            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X, ração de gato..."
+            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia, padaria..."
+            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto? (Opcional)", "Produto / Marca"
+        elif st.session_state.aba_consumidor == "servico":
+            st.markdown(
+                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro?", "Ex: Sapataria, lavanderia, costureira, padaria..."
+            label_local, placeholder_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?", "Ex: Avenida Principal, Rua das Palmeiras..."
+            label_contato, tipo_envio = "Quer ser avisado caso este novo comércio seja aberto? (Opcional)", "Serviço Local / Novo Estabelecimento"
+        else:
+            st.markdown(
+                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
+            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
+            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
+            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+        st.write("")
+        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
+            item_solicitado = st.text_input(
+                label=label_item, placeholder=placeholder_item, key="input_item")
+            local_ocorrencia = st.text_input(
+                label=label_local, placeholder=placeholder_local, key="input_local")
+            observacao_usuario = st.text_area(label="Mais detalhes ou observações sobre o problema (Opcional):",
+                                              placeholder="Ex: Detalhe o ocorrido de forma construtiva...", key="input_obs")
+            contato_usuario = st.text_input(
+                label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
+            st.write("")
+            botao_enviar = st.form_submit_button(
+                "Registrar Ocorrência", use_container_width=True)
+
+        if botao_enviar:
+            if item_solicitado and local_ocorrencia:
+                texto_usuario, local_usuario = item_solicitado.strip(
+                ).lower(), local_ocorrencia.strip().lower()
+                obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
+
+                palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
+                                      "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
+                termos_politicos_proibidos = ["pec", "deputado", "senado", "senador", "presidente",
+                                              "governador", "partido", "impeachment", "voto", "eleição", "politica", "político"]
+                excecoes_contexto = [
+                    "saco de lixo", "sacos de lixo", "lixeira", "pá de lixo", "coleta de lixo"]
+
+                contem_bloqueio, mensagem_erro = False, ""
+                if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas) or any(p in obs_texto for p in palavras_ofensivas):
+                    contem_bloqueio = True
+                    mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva de forma construtiva."
+                if any(p in texto_usuario for p in termos_politicos_proibidos) or any(p in local_usuario for p in termos_politicos_proibidos) or any(p in obs_texto for p in termos_politicos_proibidos):
+                    contem_bloqueio = True
+                    mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais. Manifestações político-ideológicas nacionais (como PECs) devem ser direcionadas às ouvidorias do Senado ou Câmara."
+                if "lixo" in texto_usuario or "lixo" in local_usuario:
+                    if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
+                        contem_bloqueio = True
+                        mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva. Por favor, reescreva de forma construtiva."
+
+                palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
+                                  "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
+                palavras_produto = ["leite", "fralda", "ração", "refrigerante",
+                                    "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
+
+                erro_detectado = False
+                if contem_bloqueio:
+                    st.error(mensagem_erro)
+                    erro_detectado = True
+                elif tipo_envio == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
+                    st.error(
+                        "⚠️ Ops! Parece um problema de Infraestrutura Pública. Modifique no menu principal.")
+                    erro_detectado = True
+                elif tipo_envio == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
+                    st.error(
+                        "⚠️ Ops! Parece a falta de um produto de mercado. Modifique no menu principal.")
+                    erro_detectado = True
+
+                if not erro_detectado:
+                    try:
+                        texto_regiao = regiao_final.strip().title() if regiao_final else "Outra Região"
+                        estado_detectado = "RJ" if "Rio" in texto_regiao else "SP"
+
+                        local_formatado = local_ocorrencia.strip().title()
+                        local_data = supabase.table("locais_destino").insert({
+                            "nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado
+                        }).execute()
+                        local_id = local_data.data["id"] if local_data.data and len(
+                            local_data.data) > 0 else None
+
+                        if local_id:
+                            item_formatado = item_solicitado.strip().title()
+                            segmento_detectado = "Geral"
+                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "bolo", "doce", "salgado", "padaria", "mercado", "hortifruti", "açougue"]):
+                                segmento_detectado = "Supermercado"
+                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "fisioterapia", "nutricionista", "clínica", "médico", "psicólogo", "dentista", "farmácia", "xarope"]):
+                                segmento_detectado = "Saude"
+                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho", "petshop", "coleira"]):
+                                segmento_detectado = "Petshop"
+                            elif any(p in texto_usuario for p in ["manicure", "salão", "barbearia", "cabeleireiro", "estética", "barbeiro", "unha"]):
+                                segmento_detectado = "Beleza"
+
+                            texto_obs = observacao_usuario.strip() if observacao_usuario else None
+                            supabase.table("relatos_escassez").insert({
+                                "local_id": local_id, "item_solicitado": item_formatado, "tipo_carencia": tipo_envio, "status": "Pendente",
+                                "contato_aviso": contato_usuario.strip() if contato_usuario else None,
+                                "detalhes_adicionais": texto_obs, "observacao_detalhe": texto_obs, "sub_segmento": segmento_detectado
+                            }).execute()
+
+                            st.success(
+                                "✅ Registro computado e salvo na nuvem com anonimato garantido!")
+                            import time
+                            time.sleep(1.5)
+                            st.session_state.aba_consumidor = "menu_triagem"
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
+            else:
+                st.warning(
+                    "⚠️ Por favor, preencha os campos obrigatórios antes de enviar.")
+
+    st.write("")
+    st.markdown("### 🏆 Impactos Recentes no Bairro")
+    try:
+        resolvidos = supabase.table("relatos_escassez").select(
+            "item_solicitado, locais_destino(nome_exibicao)").eq("status", "Atendido").limit(3).execute()
+        if resolvidos.data and len(resolvidos.data) > 0:
+            for item in resolvidos.data:
+                if item.get("locais_destino"):
+                    st.info(
+                        f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque: **{item['item_solicitado']}**!")
+        else:
+            st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
+    except:
+        pass
+# --- TELA: AUTENTICAÇÃO POR TOKEN ---
+elif st.session_state.tela_atual == "autenticacao":
+    if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
+        st.session_state.tela_atual = "home"
+        st.session_state.token_valido = False
+        st.session_state.perfil_cliente = None
+        st.rerun()
+
+    st.title("🔒 Área Restrita de Inteligência")
+    st.markdown(
+        "##### *Insira a sua chave de acesso corporativa para liberar os relatórios.*")
+    st.write("---")
+
     token_inserido = st.text_input(
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
 
@@ -364,7 +509,7 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- AGRUPAMENTO COMERCIAL CONSOLIDADO ---
+                # --- AGRUPAMENTO COMERCIAL CONSOLIDADO POR PRODUTO ---
                 df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=(
                     "ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Total", ascending=False).reset_index()
 
