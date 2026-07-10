@@ -33,7 +33,7 @@ st.markdown("""
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
-
+    
     /* CORREÇÃO DO DALTONISMO: Força Verde Esmeralda Sólido Escuro com Texto PRETO e em Negrito Pesado */
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
         background-color: #00B359 !important;
@@ -52,20 +52,20 @@ st.markdown("""
         background-color: #00803b !important;
         color: #000000 !important; /* Garante que continua preto ao passar o mouse */
     }
-
+    
     /* CORREÇÃO DO TÍTULO MOBILE: Diminui o tamanho da fonte para caber em uma única linha no celular sem quebrar */
     h1 {
         font-size: 26px !important; /* Encolhe sutilmente para evitar a quebra depois do 'que' */
         white-space: nowrap !important; /* Força matematicamente a ficar na mesma linha horizontal */
     }
-
+    
     /* Força os botões superiores a ficarem colados a meio centímetro (10px) sem quebrar linha */
-    [data-testid="stHorizontalBlock"]:has(button[key*="superior"]) {
+    [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) {
         gap: 10px !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
     }
-
+    
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
         background-color: #1E1E1E !important;
         color: #FFFFFF !important;
@@ -132,12 +132,12 @@ if st.session_state.tela_atual == "home":
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
-        if st.button("🏠 Ir para Home", key="btn_superior_home", use_container_width=True):
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
             st.session_state.tela_atual = "home"
             st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="btn_superior_mudar", use_container_width=True):
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
@@ -149,47 +149,37 @@ elif st.session_state.tela_atual == "consumidor":
         st.write("")
         st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
         st.write("")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias, petshops...)", use_container_width=True, key="triagem_prod"):
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
         st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria, costureira...)", use_container_width=True, key="triagem_serv"):
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
         st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto, posto de saúde...)", use_container_width=True, key="triagem_infra"):
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
     else:
-        # CORREÇÃO DE DUPLICIDADE: Exibe apenas o ícone e o nome do escopo direto
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
                 "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
-            label_item = "Qual produto ou marca você buscou e não encontrou?"
-            placeholder_item = "Ex: Leite condensado marca X, ração premium de gato..."
-            label_local = "Em qual estabelecimento isso ocorreu?"
-            placeholder_local = "Ex: Nome do mercado, farmácia, padaria..."
-            label_contato = "Quer ser avisado caso o estoque seja reposto? (Opcional)"
-            tipo_envio = "Produto / Marca"
+            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X, ração de gato..."
+            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia, padaria..."
+            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto? (Opcional)", "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
             st.markdown(
                 "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
-            label_item = "Qual tipo de comércio ou serviço falta neste bairro?"
-            placeholder_item = "Ex: Sapataria, lavanderia, costureira, padaria..."
-            label_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?"
-            placeholder_local = "Ex: Bairro Centro, Próximo à praça principal, Avenida X..."
-            label_contato = "Quer ser avisado caso este novo comércio ou serviço seja aberto? (Opcional)"
-            tipo_envio = "Serviço Local / Novo Estabelecimento"
+            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro?", "Ex: Sapataria, lavanderia, costureira, padaria..."
+            label_local, placeholder_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?", "Ex: Bairro Centro, Avenida X..."
+            label_contato, tipo_envio = "Quer ser avisado caso este novo comércio seja aberto? (Opcional)", "Serviço Local / Novo Estabelecimento"
         else:
             st.markdown(
                 "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
-            label_item = "Qual carência de infraestrutura/manutenção você identificou?"
-            placeholder_item = "Ex: Falha na iluminação, falta de médicos, linha de ônibus ruim..."
-            label_local = "Qual o ponto de referência ou localidade exata?"
-            placeholder_local = "Ex: Posto de saúde do bairro Y, Praça da igreja, Rua Z..."
-            label_contato = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)"
-            tipo_envio = "Serviço Público / Infraestrutura"
+            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
+            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
+            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
@@ -206,8 +196,8 @@ elif st.session_state.tela_atual == "consumidor":
 
         if botao_enviar:
             if item_solicitado and local_ocorrencia:
-                texto_usuario = item_solicitado.strip().lower()
-                local_usuario = local_ocorrencia.strip().lower()
+                texto_usuario, local_usuario = item_solicitado.strip(
+                ).lower(), local_ocorrencia.strip().lower()
                 obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
 
                 palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
@@ -252,8 +242,6 @@ elif st.session_state.tela_atual == "consumidor":
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": "São Paulo", "regiao_estado": "SP"}).execute()
-
-                        # INDICE CORRIGIDO DE SINTAXE: Lê a primeira linha da lista devolvida pelo Supabase v2
                         local_id = local_data.data[0]["id"] if local_data.data and len(
                             local_data.data) > 0 else None
 
@@ -269,7 +257,6 @@ elif st.session_state.tela_atual == "consumidor":
                             elif any(p in texto_usuario for p in ["pão", "bolo", "doce", "salgado", "padaria"]):
                                 segmento_detectado = "Padaria"
 
-                            # Executa a inserção do produto de forma síncrona bloqueante
                             supabase.table("relatos_escassez").insert({
                                 "local_id": local_id, "item_solicitado": item_formatado, "tipo_carencia": tipo_envio, "status": "Pendente",
                                 "contato_aviso": contato_usuario.strip() if contato_usuario else None,
@@ -277,7 +264,6 @@ elif st.session_state.tela_atual == "consumidor":
                                 "sub_segmento": segmento_detectado
                             }).execute()
 
-                            # TRAVA DE ATRASO: Garante o aviso de sucesso em tela antes de dar o rerun na sessão
                             st.success(
                                 "✅ Registro computado e salvo na nuvem com anonimato garantido!")
                             import time
@@ -304,7 +290,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -371,66 +356,62 @@ elif st.session_state.tela_atual == "comerciante":
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
 
     st.write("---")
+
     filtro_frente = st.selectbox(
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
                                 placeholder="Digite para refinar...", key="input_busca_painel")
-    # CORREÇÃO: Alinhamento travado com 4 espaços exatos na margem esquerda
-     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
-          st.session_state.busca_ativa = True
-           try:
-                # BUSCA DIRETA BRUTA: Remove o filtro de status pendente para forçar a leitura de todas as linhas
-                resposta = supabase.table("relatos_escassez").select(
-                    "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").execute()
-                dados_limpos = []
-                agora = datetime.datetime.now(datetime.timezone.utc)
 
-                if resposta.data and len(resposta.data) > 0:
-                    for registro in resposta.data:
-                        if registro.get("locais_destino"):
-                            # Captura a idade de forma tolerante a falhas
-                            idade_dias = 0
-                            data_str = registro.get("data_registro")
-                            if data_str:
-                                try:
-                                    data_limpa = data_str.replace(
-                                        "Z", "+00:00")
-                                    data_reg = datetime.datetime.fromisoformat(
-                                        data_limpa)
-                                    if data_reg.tzinfo is None:
-                                        data_reg = data_reg.replace(
-                                            tzinfo=datetime.timezone.utc)
-                                    idade_dias = max(
-                                        0, (agora - data_reg).days)
-                                except:
-                                    idade_dias = 0
+    if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
+        st.session_state.busca_ativa = True
+        try:
+            resposta = supabase.table("relatos_escassez").select(
+                "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").execute()
+            dados_limpos = []
+            agora = datetime.datetime.now(datetime.timezone.utc)
 
-                            cat_bruta = str(registro.get(
-                                "tipo_carencia", "Produto / Marca")).strip()
+            if resposta.data and len(resposta.data) > 0:
+                for registro in resposta.data:
+                    if registro.get("locais_destino"):
+                        idade_dias = 0
+                        data_str = registro.get("data_registro")
+                        if data_str:
+                            try:
+                                data_limpa = data_str.replace("Z", "+00:00")
+                                data_reg = datetime.datetime.fromisoformat(
+                                    data_limpa)
+                                if data_reg.tzinfo is None:
+                                    data_reg = data_reg.replace(
+                                        tzinfo=datetime.timezone.utc)
+                                idade_dias = max(0, (agora - data_reg).days)
+                            except:
+                                idade_dias = 0
 
-                            dados_limpos.append({
-                                "ID": registro["id"],
-                                "O que Falta": registro["item_solicitado"],
-                                "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
-                                "Local/Referência": registro["locais_destino"]["nome_exibicao"],
-                                "Cidade": registro["locais_destino"]["regiao_cidade"],
-                                "Dias": idade_dias,
-                                "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
-                            })
+                        cat_bruta = str(registro.get(
+                            "tipo_carencia", "Produto / Marca")).strip()
 
-                # Se mesmo sem filtros o banco de dados falhar na leitura, ativa o Mock Data para demonstração
-                if not dados_limpos:
-                    dados_limpos = [
-                        {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro",
-                            "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
-                        {"ID": 992, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal",
-                            "Cidade": "São Paulo", "Dias": 12, "Observação": "Moradores precisam ir até o centro para consertar sapatos."},
-                        {"ID": 995, "O que Falta": "Manutenção de Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 número 40",
-                            "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste com lâmpada piscando, gerando escuridão extrema."}
-                    ]
-                st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
-            except Exception as e:
-                st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
+                        dados_limpos.append({
+                            "ID": registro["id"],
+                            "O que Falta": registro["item_solicitado"],
+                            "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
+                            "Local/Referência": registro["locais_destino"]["nome_exibicao"],
+                            "Cidade": registro["locais_destino"]["regiao_cidade"],
+                            "Dias": idade_dias,
+                            "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
+                        })
+
+            if not dados_limpos:
+                dados_limpos = [
+                    {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro",
+                        "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
+                    {"ID": 992, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal",
+                        "Cidade": "São Paulo", "Dias": 12, "Observação": "Moradores precisam ir até o centro para consertar sapatos."},
+                    {"ID": 995, "O que Falta": "Manutenção de Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 número 40",
+                        "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste com lâmpada piscando, gerando escuridão extrema."}
+                ]
+            st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
+        except Exception as e:
+            st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
     if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
@@ -495,10 +476,11 @@ elif st.session_state.tela_atual == "comerciante":
                     'TituloPDF', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00B359'), spaceAfter=15)
                 estilo_texto = ParagraphStyle(
                     'TextoPDF', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
+
                 elementos_pdf.append(Paragraph(
                     f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
 
-                # CORREÇÃO DE FUSO HORÁRIO: Força a captura exata do horário de Brasília (America/Sao_Paulo)
+                # CORREÇÃO DE FUSO HORÁRIO: Captura exata do horário de Brasília (America/Sao_Paulo)
                 from zoneinfo import ZoneInfo
                 fuso_brasil = ZoneInfo("America/Sao_Paulo")
                 data_hora_brasil = datetime.datetime.now(
@@ -527,6 +509,7 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.download_button(label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)", data=dados_pdf_final,
                                    file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_download_pdf_universal")
+
                 st.write("---")
                 st.write(
                     f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
