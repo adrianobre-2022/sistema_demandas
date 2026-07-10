@@ -180,78 +180,7 @@ elif st.session_state.tela_atual == "consumidor":
                 "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
             label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
             label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
-            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
-        st.write("")
-# --- TELA: HOME ---
-if st.session_state.tela_atual == "home":
-    st.title("🔍 E o que falta?")
-    st.markdown("##### *O termômetro de carências da nossa região.*")
-    st.write("---")
-    st.write("Selecione o seu perfil de acesso para continuar:")
-    st.write("")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("📝 Sou Consumidor\n(Registrar Falta)", use_container_width=True, key="btn_ir_consumidor"):
-            st.session_state.tela_atual = "consumidor"
-            st.session_state.aba_consumidor = "menu_triagem"
-            st.rerun()
-    with col2:
-        if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
-            st.session_state.tela_atual = "autenticacao"
-            st.rerun()
-
-# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
-elif st.session_state.tela_atual == "consumidor":
-    col_nav1, col_nav2 = st.columns(2, gap="small")
-    with col_nav1:
-        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
-            st.session_state.tela_atual = "home"
-            st.rerun()
-    with col_nav2:
-        if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
-
-    st.title("🔍 E o que falta?")
-    st.write("---")
-
-    if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown("##### *O termômetro de carências da nossa região.*")
-        st.write("")
-        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
-            st.session_state.aba_consumidor = "produto"
-            st.rerun()
-        st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
-            st.session_state.aba_consumidor = "servico"
-            st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
-            st.session_state.aba_consumidor = "infra"
-            st.rerun()
-
-    else:
-        if st.session_state.aba_consumidor == "produto":
-            st.markdown(
-                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
-            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X, ração de gato..."
-            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia, padaria..."
-            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto? (Opcional)", "Produto / Marca"
-        elif st.session_state.aba_consumidor == "servico":
-            st.markdown(
-                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
-            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro?", "Ex: Sapataria, lavanderia, costureira, padaria..."
-            label_local, placeholder_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?", "Ex: Bairro Centro, Avenida X..."
-            label_contato, tipo_envio = "Quer ser avisado caso este novo comércio seja aberto? (Opcional)", "Serviço Local / Novo Estabelecimento"
-        else:
-            st.markdown(
-                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
-            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
-            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
-            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
@@ -319,15 +248,17 @@ elif st.session_state.tela_atual == "consumidor":
 
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
+
+                            # CLASSIFICAÇÃO INTELIGENTE MULTI-SETORIAL: Organiza os dados nas caixas B2B corretas
                             segmento_detectado = "Geral"
-                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão"]):
+                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "bolo", "padaria", "mercado", "hortifruti"]):
                                 segmento_detectado = "Supermercado"
-                            elif any(p in texto_usuario for p in ["remédio", "xarope", "fralda", "pomada", "curativo"]):
-                                segmento_detectado = "Farmácia"
-                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "coleira"]):
+                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "fisioterapia", "nutricionista", "clínica", "médico", "psicólogo", "dentista", "farmácia"]):
+                                segmento_detectado = "Saude"
+                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho"]):
                                 segmento_detectado = "Petshop"
-                            elif any(p in texto_usuario for p in ["pão", "bolo", "doce", "salgado", "padaria"]):
-                                segmento_detectado = "Padaria"
+                            elif any(p in texto_usuario for p in ["manicure", "salão", "barbearia", "cabeleireiro", "estética", "barbeiro"]):
+                                segmento_detectado = "Beleza"
 
                             texto_obs = observacao_usuario.strip() if observacao_usuario else None
                             supabase.table("relatos_escassez").insert({
@@ -389,6 +320,21 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.perfil_cliente = "comerciante"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
+        elif token_inserido == "SAUDE20":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "saude"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_inserido == "PET30":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "petshop"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_inserido == "BELEZA40":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "beleza"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
         elif token_inserido == "INVEST20":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "investidor"
@@ -402,7 +348,6 @@ elif st.session_state.tela_atual == "autenticacao":
         else:
             st.error(
                 "❌ Token inválido ou expirado. Entre em contato com o administrador.")
-
 # --- TELA: PAINEL DO COMERCIANTE / GESTOR ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -423,6 +368,18 @@ elif st.session_state.tela_atual == "comerciante":
         st.markdown(
             "##### 🏪 *Nível de Acesso: Varejo Local (Foco em Gôndolas e Supermercados)*")
         opcoes_filtro = ["Apenas Produtos/Marcas (Varejo)"]
+    elif st.session_state.perfil_cliente == "saude":
+        st.markdown(
+            "##### 🩺 *Nível de Acesso: Saúde & Bem-Estar (Foco em Clínicas e Especialistas)*")
+        opcoes_filtro = ["Apenas Serviços de Saúde e Clínicas"]
+    elif st.session_state.perfil_cliente == "petshop":
+        st.markdown(
+            "##### 🐶 *Nível de Acesso: Petshop & Veterinária (Foco em Produtos e Serviços Pet)*")
+        opcoes_filtro = ["Apenas Produtos e Serviços Pet"]
+    elif st.session_state.perfil_cliente == "beleza":
+        st.markdown(
+            "##### 💈 *Nível de Acesso: Beleza & Estética (Foco em Salões e Barbearias)*")
+        opcoes_filtro = ["Apenas Serviços de Estética e Beleza"]
     elif st.session_state.perfil_cliente == "investidor":
         st.markdown(
             "##### 💼 *Nível de Acesso: Investidor e Expansão (Foco em Serviços do Bairro)*")
@@ -433,7 +390,6 @@ elif st.session_state.tela_atual == "comerciante":
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
 
     st.write("---")
-
     filtro_frente = st.selectbox(
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
@@ -450,10 +406,15 @@ elif st.session_state.tela_atual == "comerciante":
             if resposta.data and len(resposta.data) > 0:
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
-                        # FILTRAGEM DE SEGMENTO: Esconde itens que não pertencem ao setor de supermercado
                         sub_seg = str(registro.get(
                             "sub_segmento", "Geral")).strip()
                         if st.session_state.perfil_cliente == "comerciante" and sub_seg not in ["Supermercado", "Geral"]:
+                            continue
+                        elif st.session_state.perfil_cliente == "saude" and sub_seg not in ["Saude", "Geral"]:
+                            continue
+                        elif st.session_state.perfil_cliente == "petshop" and sub_seg not in ["Petshop", "Geral"]:
+                            continue
+                        elif st.session_state.perfil_cliente == "beleza" and sub_seg not in ["Beleza", "Geral"]:
                             continue
 
                         idade_dias = 0
@@ -476,22 +437,44 @@ elif st.session_state.tela_atual == "comerciante":
                             "detalhes_adicionais") or ""
 
                         dados_limpos.append({
-                            "ID": registro["id"],
-                            "O que Falta": registro["item_solicitado"].strip().title(),
+                            "ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(),
                             "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
-                            "Local/Referência": registro["locais_destino"]["nome_exibicao"],
-                            "Cidade": registro["locais_destino"]["regiao_cidade"],
-                            "Dias": idade_dias,
-                            "Observação": texto_detalhe
+                            "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
+                            "Dias": idade_dias, "Observação": texto_detalhe, "SubSegmento": sub_seg
                         })
 
             if not dados_limpos:
                 dados_limpos = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
-                        "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
-                    {"ID": 996, "O que Falta": "Feijão Preto Tipo 1", "Categoria": "Produto / Marca", "Local/Referência":
-                        "Supermercado Central", "Cidade": "São Paulo", "Dias": 1, "Observação": "Falta feijão da marca X."},
+                        "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde.", "SubSegmento": "Supermercado"},
+                    {"ID": 992, "O que Falta": "Feijão Preto Tipo 1", "Categoria": "Produto / Marca", "Local/Referência": "Supermercado Central",
+                        "Cidade": "São Paulo", "Dias": 1, "Observação": "Falta feijão da marca X nas gôndolas.", "SubSegmento": "Supermercado"},
+                    {"ID": 993, "O que Falta": "Fisioterapeuta Pediátrico", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Condomínio Novo - Bloco B",
+                        "Cidade": "São Paulo", "Dias": 5, "Observação": "Não há clínicas com essa especialidade perto.", "SubSegmento": "Saude"},
+                    {"ID": 994, "O que Falta": "Nutricionista Esportivo", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Academia Corpo Em Forma",
+                        "Cidade": "São Paulo", "Dias": 10, "Observação": "Falta um profissional para atender atletas do bairro.", "SubSegmento": "Saude"},
+                    {"ID": 995, "O que Falta": "Ração Premium Gatos Castrados", "Categoria": "Produto / Marca", "Local/Referência": "Petshop Bairro Alto",
+                        "Cidade": "São Paulo", "Dias": 3, "Observação": "Marca X sumiu do estoque.", "SubSegmento": "Petshop"},
+                    {"ID": 996, "O que Falta": "Barbearia Retrô", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal 1200",
+                        "Cidade": "São Paulo", "Dias": 14, "Observação": "Homens do bairro precisam ir até o centro para cortar cabelo.", "SubSegmento": "Beleza"},
+                    {"ID": 997, "O que Falta": "Manutenção De Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 Número 40",
+                        "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste apagado gerando escuridão extrema.", "SubSegmento": "Geral"},
+                    {"ID": 998, "O que Falta": "Lavanderia Expressa", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Praça Central",
+                        "Cidade": "São Paulo", "Dias": 15, "Observação": "Prédios novos sem lavanderia por perto.", "SubSegmento": "Geral"}
                 ]
+                if st.session_state.perfil_cliente == "comerciante":
+                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
+                        "Supermercado", "Geral"]]
+                elif st.session_state.perfil_cliente == "saude":
+                    dados_limpos = [
+                        d for d in dados_limpos if d["SubSegmento"] in ["Saude", "Geral"]]
+                elif st.session_state.perfil_cliente == "petshop":
+                    dados_limpos = [
+                        d for d in dados_limpos if d["SubSegmento"] in ["Petshop", "Geral"]]
+                elif st.session_state.perfil_cliente == "beleza":
+                    dados_limpos = [
+                        d for d in dados_limpos if d["SubSegmento"] in ["Beleza", "Geral"]]
+
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
@@ -513,7 +496,7 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- NOVO AGRUPAMENTO COMERCIAL CONSOLIDADO ---
+                # --- AGRUPAMENTO COMERCIAL CONSOLIDADO POR PRODUTO ---
                 df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(
                     Volume_Total=("ID", "count"),
                     Menor_Idade=("Dias", "min")
@@ -579,7 +562,7 @@ elif st.session_state.tela_atual == "comerciante":
                     f"*(Encontrados {len(df_agrupado)} itens consolidados na região)*")
                 st.write("")
 
-                # --- INTERFACE UNIFICADA DO PRIMEIRO MODELO DE BLOCOS LISOS ---
+                # --- LAYOUT UNIFICADO EM BLOCOS GRAFITE PREMIUM ---
                 for indice, linha in df_agrupado.iterrows():
                     item_nome = linha['O que Falta']
                     volume = float(linha['Volume_Total'])
@@ -589,7 +572,7 @@ elif st.session_state.tela_atual == "comerciante":
                     label_tag = f"CRÍTICA • {int(volume)} Pedidos" if volume >= 7 else (
                         f"MODERADA • {int(volume)} Pedidos" if volume >= 3 else f"INICIAL • {int(volume)} Pedido")
 
-                    # Abre o Bloco Grafite com Margem Fina do Primeiro Modelo
+                    # Renderiza a caixa com o design do primeiro modelo
                     st.markdown(f"""
                         <div class="bloco-lista-premium">
                             <span class="{classe_tag}">{label_tag}</span>
@@ -598,11 +581,11 @@ elif st.session_state.tela_atual == "comerciante":
                         </div>
                     """, unsafe_allow_html=True)
 
-                    # Lista os locais físicos exatos (bairros/lojas) e as observações reais dentro do mesmo bloco
+                    # Detalha os locais físicos exatos (bairros/lojas) e as observações reais dentro do mesmo bloco
                     detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
                     for _, sub_linha in detalhes_item.iterrows():
                         st.markdown(
-                            f"📍 **Local:** {sub_linha['Local/Referência']}")
+                            f"📍 **Local Geográfico Exato:** {sub_linha['Local/Referência']}")
                         obs_texto = str(sub_linha['Observação']).strip()
                         if obs_texto:
                             st.info(
@@ -630,13 +613,12 @@ elif st.session_state.tela_atual == "comerciante":
                                 import time
                                 time.sleep(1)
                                 st.session_state[chave_confirmacao] = False
-
                                 st.session_state.busca_ativa = False
                                 st.rerun()
-                        with col_b2:
-                            if st.button("❌ Cancelar", key=f"btn_cancelar_{indice}"):
-                                st.session_state[chave_confirmacao] = False
-                                st.rerun()
+                            with col_b2:
+                                if st.button("❌ Cancelar", key=f"btn_cancelar_{indice}"):
+                                    st.session_state[chave_confirmacao] = False
+                                    st.rerun()
                     st.markdown(
                         "<hr style='border-top: 1px dashed #333; margin-top:1rem; margin-bottom:1rem;'/>", unsafe_allow_html=True)
             else:
