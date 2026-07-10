@@ -492,8 +492,15 @@ elif st.session_state.tela_atual == "comerciante":
                     'TextoPDF', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
                 elementos_pdf.append(Paragraph(
                     f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
+
+                # CORREÇÃO DE FUSO HORÁRIO: Força a captura exata do horário de Brasília (America/Sao_Paulo)
+                from zoneinfo import ZoneInfo
+                fuso_brasil = ZoneInfo("America/Sao_Paulo")
+                data_hora_brasil = datetime.datetime.now(
+                    fuso_brasil).strftime('%d/%m/%Y %H:%M')
+
                 elementos_pdf.append(Paragraph(
-                    f"Frente de Análise: {st.session_state.perfil_cliente.upper()}<br/>Data de emissão: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", estilo_texto))
+                    f"Frente de Análise: {st.session_state.perfil_cliente.upper()}<br/>Data de emissão: {data_hora_brasil}", estilo_texto))
                 elementos_pdf.append(Spacer(1, 10))
 
                 dados_tabela = [df_exportar.columns.tolist()] + \
@@ -515,7 +522,6 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.download_button(label="📥 Baixar Relatório Gerencial Oficial (Formato PDF)", data=dados_pdf_final,
                                    file_name=f"relatorio_gerencial_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_download_pdf_universal")
-
                 st.write("---")
                 st.write(
                     f"📈 **Detalhamento das carências ativas ({len(df_agrupado)} itens encontrados):**")
