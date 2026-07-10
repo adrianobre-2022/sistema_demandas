@@ -371,12 +371,11 @@ elif st.session_state.tela_atual == "comerciante":
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
 
     st.write("---")
-
     filtro_frente = st.selectbox(
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
                                 placeholder="Digite para refinar...", key="input_busca_painel")
-
+    # CORREÇÃO: Alinhamento travado com 4 espaços exatos na margem esquerda
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
         try:
@@ -388,10 +387,12 @@ elif st.session_state.tela_atual == "comerciante":
             if resposta.data and len(resposta.data) > 0:
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
+                        # ENGENHARIA TOLERANTE: Garante 0 dias caso a data venha nula do Supabase
                         idade_dias = 0
-                        try:
-                            data_str = registro.get("data_registro")
-                            if data_str:
+                        data_str = registro.get("data_registro")
+
+                        if data_str:
+                            try:
                                 data_limpa = data_str.replace("Z", "+00:00")
                                 data_reg = datetime.datetime.fromisoformat(
                                     data_limpa)
@@ -399,15 +400,20 @@ elif st.session_state.tela_atual == "comerciante":
                                     data_reg = data_reg.replace(
                                         tzinfo=datetime.timezone.utc)
                                 idade_dias = max(0, (agora - data_reg).days)
-                        except:
-                            idade_dias = 0
+                            except:
+                                idade_dias = 0
 
                         dados_limpos.append({
-                            "ID": registro["id"], "O que Falta": registro["item_solicitado"], "Categoria": registro.get("tipo_carencia", "Produto / Marca"),
-                            "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
-                            "Dias": idade_dias, "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
+                            "ID": registro["id"],
+                            "O que Falta": registro["item_solicitado"],
+                            "Categoria": registro.get("tipo_carencia", "Produto / Marca"),
+                            "Local/Referência": registro["locais_destino"]["nome_exibicao"],
+                            "Cidade": registro["locais_destino"]["regiao_cidade"],
+                            "Dias": idade_dias,
+                            "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
                         })
 
+            # Se a lista da nuvem estiver zerada por completo, o Python ativa o Mock Data automático para demonstração
             if not dados_limpos:
                 dados_limpos = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro",
