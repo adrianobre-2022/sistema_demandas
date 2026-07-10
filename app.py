@@ -164,17 +164,20 @@ elif st.session_state.tela_atual == "consumidor":
     )
 
     # Condicional que lê o texto exato sugerido por você
+    # Se o usuário escolher a opção de digitação, o campo abaixo nasce 100% limpo e em branco
     if regiao_menu == "✍️ Digite: Cidade - Bairro ou selecione na lista":
+        st.write("👇 *Digite abaixo no formato Cidade - Bairro:*")
         regiao_final = st.text_input(
-            label="Digite aqui a sua Cidade - Bairro (Ex: Carapicuíba - Cohab, Rio de Janeiro - Copacabana...):",
-            placeholder="Ex: Cidade - Bairro",
-            key="input_regiao_manual_unica"
+            label="Campo de digitação livre da região",
+            placeholder="Ex: Carapicuíba - Cohab",
+            key="input_regiao_manual_unica",
+            # Esconde o texto longo fixo para o campo nascer totalmente em branco
+            label_visibility="collapsed"
         )
     else:
         regiao_final = regiao_menu
 
     st.write("---")
-
     token_inserido = st.text_input(
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
 
