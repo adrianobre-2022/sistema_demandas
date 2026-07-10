@@ -488,89 +488,71 @@ elif st.session_state.tela_atual == "comerciante":
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
-        if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
+    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
             df_filtrado = df
             if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                 df_filtrado = df[df['Categoria'] == "Produto / Marca"]
             elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Local / Novo Estabelecimento"]
+                df_filtrado = df[df['Categoria'] == "Serviço Local / Novo Estabelecimento"]
             elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Público / Infraestrutura"]
+                df_filtrado = df[df['Categoria'] == "Serviço Público / Infraestrutura"]
 
             if termo_busca:
-                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
-                    termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
+                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
                 st.write("---")
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
-
-                # --- PREPARAÇÃO DO EXPORTADOR EM PDF OFICIAL ---
-                df_exportar = df_filtrado[[
-                    "O que Falta", "Categoria", "Local/Referência", "Cidade", "Dias"]].copy()
-                df_exportar.columns = ["Item Solicitado", "Segmento",
-                                       "Ponto de Referência", "Cidade/Região", "Dias Desde o Alerta"]
-
+                
+                df_exportar = df_filtrado[["O que Falta", "Categoria", "Local/Referência", "Cidade", "Dias"]].copy()
+                df_exportar.columns = ["Item Solicitado", "Segmento", "Ponto de Referência", "Cidade/Região", "Dias Desde o Alerta"]
+                
                 import io
                 from reportlab.lib.pagesizes import letter
                 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
                 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
                 from reportlab.lib import colors
-
+                
                 buffer_pdf = io.BytesIO()
-                doc = SimpleDocTemplate(
-                    buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                doc = SimpleDocTemplate(buffer_pdf, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
                 elementos_pdf = []
                 estilos = getSampleStyleSheet()
-                estilo_titulo = ParagraphStyle(
-                    'T', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00803B'), spaceAfter=15)
-                estilo_texto = ParagraphStyle(
-                    'X', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
-
-                elementos_pdf.append(Paragraph(
-                    "<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
+                estilo_titulo = ParagraphStyle('T', parent=estilos['Heading1'], fontSize=18, textColor=colors.HexColor('#00803B'), spaceAfter=15)
+                estilo_texto = ParagraphStyle('X', parent=estilos['Normal'], fontSize=10, spaceAfter=20)
+                
+                elementos_pdf.append(Paragraph("<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
                 from zoneinfo import ZoneInfo
-                data_hora_brasil = datetime.datetime.now(
-                    ZoneInfo("America/Sao_Paulo")).strftime('%d/%m/%Y %H:%M')
-                elementos_pdf.append(Paragraph(
-                    f"Perfil: {st.session_state.perfil_cliente.upper()}<br/>Emissão: {data_hora_brasil}", estilo_texto))
+                data_hora_brasil = datetime.datetime.now(ZoneInfo("America/Sao_Paulo")).strftime('%d/%m/%Y %H:%M')
+                elementos_pdf.append(Paragraph(f"Perfil: {st.session_state.perfil_cliente.upper()}<br/>Emissão: {data_hora_brasil}", estilo_texto))
                 elementos_pdf.append(Spacer(1, 10))
-
-                dados_tabela = [df_exportar.columns.tolist()] + \
-                    df_exportar.values.tolist()
+                
+                dados_tabela = [df_exportar.columns.tolist()] + df_exportar.values.tolist()
                 tabela_pdf = Table(dados_tabela)
                 tabela_pdf.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00803B')
-                     ), ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), ('GRID',
-                                                                      (0, 0), (-1, -1), 0.5, colors.HexColor('#DDDDDD'))
+                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#00803B')), ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                    ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#DDDDDD'))
                 ]))
                 elementos_pdf.append(tabela_pdf)
                 doc.build(elementos_pdf)
                 dados_pdf_final = buffer_pdf.getvalue()
-
-                st.download_button(label="📥 Baixar Relatório Gerencial (PDF)", data=dados_pdf_final,
-                                   file_name=f"relatorio_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_pdf_uni")
-
+                
+                st.download_button(label="📥 Baixar Relatório Gerencial (PDF)", data=dados_pdf_final, file_name=f"relatorio_{st.session_state.perfil_cliente}.pdf", mime="application/pdf", key="btn_pdf_uni")
+                
                 st.write("---")
                 st.markdown("#### 📈 Detalhamento das Carências Ativas")
-                st.write(
-                    f"*(Encontrados {len(df_filtrado)} alertas individuais)*")
+                st.write(f"*(Encontrados {len(df_filtrado)} alertas individuais)*")
                 st.write("")
-
-                # --- RENDERS INDIVIDUAIS COM ISOLAMENTO DE EXCLUSÃO POR ID ---
+                
                 for indice, linha in df_filtrado.iterrows():
                     item_id = linha['ID']
                     item_nome = linha['O que Falta']
                     local_nome = linha['Local/Referência']
-
+                    
                     classe_tag = "tag-calor-baixa"
                     label_tag = "INICIAL • 1 Alerta"
-
+                    
                     st.markdown(f"""
                         <div class="bloco-lista-premium">
                             <span class="{classe_tag}">{label_tag}</span>
@@ -578,44 +560,36 @@ elif st.session_state.tela_atual == "comerciante":
                             <div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Solicitado há {linha['Dias']} dias</div>
                         </div>
                     """, unsafe_allow_html=True)
-
-                    st.markdown(
-                        f"📍 **Estabelecimento Alvo:** {local_nome} ({linha['Cidade']})")
+                    
+                    st.markdown(f"📍 **Estabelecimento Alvo:** {local_nome} ({linha['Cidade']})")
                     obs_texto = str(linha['Observação']).strip()
-                    if obs_texto:
+                    if obs_texto: 
                         st.info(f"💬 *Relato do Morador:* \"{obs_texto}\"")
-
+                    
                     st.write("")
                     chave_confirmacao = f"confirma_baixa_{item_id}"
-                    if chave_confirmacao not in st.session_state:
+                    if chave_confirmacao not in st.session_state: 
                         st.session_state[chave_confirmacao] = False
-
+                    
                     if not st.session_state[chave_confirmacao]:
                         if st.button(f"✅ Marcar como Resolvido no {local_nome}", key=f"btn_pre_{item_id}"):
-                            st.session_state[chave_confirmacao] = True
-                            st.rerun()
+                            st.session_state[chave_confirmacao] = True; st.rerun()
                     else:
-                        st.warning(
-                            f"⚠️ Dar baixa apenas neste pedido de '{item_nome}' do estabelecimento '{local_nome}'?")
+                        st.warning(f"⚠️ Dar baixa apenas neste pedido de '{item_nome}' do estabelecimento '{local_nome}'?")
                         col_b1, col_b2 = st.columns(2)
                         with col_b1:
                             if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{item_id}"):
-                                # CANALIZADO CIRÚRGICO: Dá baixa apenas no ID correspondente daquela linha física
-                                supabase.table("relatos_escassez").update(
-                                    {"status": "Atendido"}).eq("id", item_id).execute()
+                                supabase.table("relatos_escassez").update({"status": "Atendido"}).eq("id", item_id).execute()
                                 st.success("🎉 Atualizado!")
-                                import time
-                                time.sleep(1)
+                                import time; time.sleep(1)
                                 st.session_state[chave_confirmacao] = False
                                 st.session_state.busca_ativa = False
                                 st.rerun()
                         with col_b2:
                             if st.button("❌ Cancelar", key=f"btn_cancelar_{item_id}"):
-                                st.session_state[chave_confirmacao] = False
-                                st.rerun()
-                    st.markdown(
-                        "<hr style='border-top: 1px dashed #333; margin-top:1rem; margin-bottom:1rem;'/>", unsafe_allow_html=True)
-            else:
+                                st.session_state[chave_confirmacao] = False; st.rerun()
+                    st.markdown("<hr style='border-top: 1px dashed #333; margin-top:1rem; margin-bottom:1rem;'/>", unsafe_allow_html=True)
+            else: 
                 st.info("ℹ️ Nenhum registro ativo encontrado.")
-        else:
+        else: 
             st.info("ℹ️ O banco de dados está limpo!")
