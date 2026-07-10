@@ -248,7 +248,9 @@ elif st.session_state.tela_atual == "consumidor":
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": "São Paulo", "regiao_estado": "SP"}).execute()
-                        local_id = local_data.data["id"] if local_data.data and len(
+
+                        # CORREÇÃO CIRÚRGICA: Injetado o índice [0] para ler corretamente a lista do Supabase v2
+                        local_id = local_data.data[0]["id"] if local_data.data and len(
                             local_data.data) > 0 else None
 
                         if local_id:
