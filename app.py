@@ -148,7 +148,6 @@ elif st.session_state.tela_atual == "consumidor":
         st.markdown("##### *O termômetro de carências da nossa região.*")
         st.write("")
         st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
-        st.write("")
         if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
@@ -257,10 +256,16 @@ elif st.session_state.tela_atual == "consumidor":
                             elif any(p in texto_usuario for p in ["pão", "bolo", "doce", "salgado", "padaria"]):
                                 segmento_detectado = "Padaria"
 
+                            # SALVAMENTO DUPLO MESTRE: Alimenta tanto contato_aviso quanto as duas colunas de texto de forma segura
+                            texto_obs = observacao_usuario.strip() if observacao_usuario else None
                             supabase.table("relatos_escassez").insert({
-                                "local_id": local_id, "item_solicitado": item_formatado, "tipo_carencia": tipo_envio, "status": "Pendente",
+                                "local_id": local_id,
+                                "item_solicitado": item_formatado,
+                                "tipo_carencia": tipo_envio,
+                                "status": "Pendente",
                                 "contato_aviso": contato_usuario.strip() if contato_usuario else None,
-                                "observacao_detalhe": observacao_usuario.strip() if observacao_usuario else None,
+                                "detalhes_adicionais": texto_obs,
+                                "observacao_detalhe": texto_obs,
                                 "sub_segmento": segmento_detectado
                             }).execute()
 
@@ -365,8 +370,9 @@ elif st.session_state.tela_atual == "comerciante":
     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
         try:
+            # Captura a resposta do banco trazendo as colunas mapeadas por extenso
             resposta = supabase.table("relatos_escassez").select(
-                "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").execute()
+                "id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").execute()
             dados_limpos = []
             agora = datetime.datetime.now(datetime.timezone.utc)
 
@@ -390,6 +396,10 @@ elif st.session_state.tela_atual == "comerciante":
                         cat_bruta = str(registro.get(
                             "tipo_carencia", "Produto / Marca")).strip()
 
+                        # Extração inteligente: Se uma coluna vier vazia, puxa o dado da outra cópia
+                        texto_detalhe = registro.get("observacao_detalhe") or registro.get(
+                            "detalhes_adicionais") or "Sem observações registradas."
+
                         dados_limpos.append({
                             "ID": registro["id"],
                             "O que Falta": registro["item_solicitado"],
@@ -397,7 +407,7 @@ elif st.session_state.tela_atual == "comerciante":
                             "Local/Referência": registro["locais_destino"]["nome_exibicao"],
                             "Cidade": registro["locais_destino"]["regiao_cidade"],
                             "Dias": idade_dias,
-                            "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
+                            "Observação": texto_detalhe
                         })
 
             if not dados_limpos:
@@ -480,7 +490,6 @@ elif st.session_state.tela_atual == "comerciante":
                 elementos_pdf.append(Paragraph(
                     f"<b>RELATÓRIO GERENCIAL - INTELIGÊNCIA DE MERCADO</b>", estilo_titulo))
 
-                # CORREÇÃO DE FUSO HORÁRIO: Captura exata do horário de Brasília (America/Sao_Paulo)
                 from zoneinfo import ZoneInfo
                 fuso_brasil = ZoneInfo("America/Sao_Paulo")
                 data_hora_brasil = datetime.datetime.now(
