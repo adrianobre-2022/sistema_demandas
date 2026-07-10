@@ -134,6 +134,7 @@ if st.session_state.tela_atual == "home":
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
+# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
@@ -147,23 +148,20 @@ elif st.session_state.tela_atual == "consumidor":
                 st.rerun()
 
     st.title("🔍 E o que falta?")
-    st.write("---")
 
-    # VIA ÚNICA REGIONAL: Campo único auto-limpante (texto cinza some sozinho ao digitar)
-    st.markdown("##### 📍 Onde você está agora?")
-    regiao_final = st.text_input(
-        label="Localização do Morador",
-        placeholder="Digite: Cidade - Bairro (Ex: Carapicuíba - Centro, Rio de Janeiro - Copacabana...)",
-        key="input_regiao_via_unica",
-        label_visibility="collapsed"
-    )
-    st.caption(
-        "💡 *Sugestões:* Carapicuíba - Centro • Carapicuíba - Aldeia • São Paulo - Zona Oeste")
-    st.write("---")
-
+    # --- ENGENHARIA DE USABILIDADE: EXIBE A LOCALIZAÇÃO APENAS NA TRIAGEM INICIAL ---
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown("##### *O termômetro de carências da nossa região.*")
-        st.write("")
+        st.markdown("##### 📍 Onde você está agora?")
+
+        # EXEMPLO ÚNICO E UNIVERSAL: Remove confusões de metrópoles e induz ao traço padrão
+        regiao_final = st.text_input(
+            label="Localização Única do Morador",
+            placeholder="Ex: Carapicuíba - Centro",
+            key="input_regiao_via_unica",
+            label_visibility="collapsed"
+        )
+
+        # REDUÇÃO DE ESPAÇAMENTO MOBILE: Removeu divisórias de linha para colar os botões no topo
         st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
         if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
@@ -177,6 +175,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
+    # --- NOS FORMULÁRIOS INTERNOS, A PERGUNTA DE LOCALIZAÇÃO SOME POR COMPLETO ---
     else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
@@ -196,8 +195,6 @@ elif st.session_state.tela_atual == "consumidor":
             label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
             label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
             label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
-        st.write("")
-        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
             local_ocorrencia = st.text_input(
