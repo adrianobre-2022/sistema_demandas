@@ -33,7 +33,7 @@ st.markdown("""
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
-    
+
     /* CORREÇÃO DO DALTONISMO: Força Verde Esmeralda Sólido Escuro com Texto PRETO e em Negrito Pesado */
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
         background-color: #00B359 !important;
@@ -52,20 +52,20 @@ st.markdown("""
         background-color: #00803b !important;
         color: #000000 !important; /* Garante que continua preto ao passar o mouse */
     }
-    
+
     /* CORREÇÃO DO TÍTULO MOBILE: Diminui o tamanho da fonte para caber em uma única linha no celular sem quebrar */
     h1 {
         font-size: 26px !important; /* Encolhe sutilmente para evitar a quebra depois do 'que' */
         white-space: nowrap !important; /* Força matematicamente a ficar na mesma linha horizontal */
     }
-    
+
     /* Força os botões superiores a ficarem colados a meio centímetro (10px) sem quebrar linha */
     [data-testid="stHorizontalBlock"]:has(button[key*="superior"]) {
         gap: 10px !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
     }
-    
+
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
         background-color: #1E1E1E !important;
         color: #FFFFFF !important;
@@ -304,6 +304,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
+
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -376,56 +377,49 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
                                 placeholder="Digite para refinar...", key="input_busca_painel")
 
-     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
+    if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
         st.session_state.busca_ativa = True
         try:
-            # Busca direta de todos os relatos pendentes na nuvem
-            resposta = supabase.table("relatos_escassez").select("id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
-            
+            resposta = supabase.table("relatos_escassez").select(
+                "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
             dados_limpos = []
-            
+            agora = datetime.datetime.now(datetime.timezone.utc)
+
             if resposta.data and len(resposta.data) > 0:
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
-                        # Captura a idade de forma segura. Se falhar, assume 0 dias (cadastro novo)
                         idade_dias = 0
                         try:
                             data_str = registro.get("data_registro")
                             if data_str:
-                                agora = datetime.datetime.now(datetime.timezone.utc)
                                 data_limpa = data_str.replace("Z", "+00:00")
-                                data_reg = datetime.datetime.fromisoformat(data_limpa)
+                                data_reg = datetime.datetime.fromisoformat(
+                                    data_limpa)
                                 if data_reg.tzinfo is None:
-                                    data_reg = data_reg.replace(tzinfo=datetime.timezone.utc)
+                                    data_reg = data_reg.replace(
+                                        tzinfo=datetime.timezone.utc)
                                 idade_dias = max(0, (agora - data_reg).days)
                         except:
                             idade_dias = 0
-                        
-                        # CORREÇÃO COLETIVA: Salva o dado direto sem aplicar o filtro de validade restrito no ambiente de teste
+
                         dados_limpos.append({
-                            "ID": registro["id"],
-                            "O que Falta": registro["item_solicitado"],
-                            "Categoria": registro.get("tipo_carencia", "Produto / Marca"),
-                            "Local/Referência": registro["locais_destino"]["nome_exibicao"],
-                            "Cidade": registro["locais_destino"]["regiao_cidade"],
-                            "Dias": idade_dias,
-                            "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
+                            "ID": registro["id"], "O que Falta": registro["item_solicitado"], "Categoria": registro.get("tipo_carencia", "Produto / Marca"),
+                            "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
+                            "Dias": idade_dias, "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
                         })
-            
-            # Se mesmo assim a lista estiver zerada na nuvem, ativa o Mock Data automático para não quebrar a tela
+
             if not dados_limpos:
                 dados_limpos = [
-                    {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro", "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
-                    {"ID": 992, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal", "Cidade": "São Paulo", "Dias": 12, "Observação": "Moradores precisam ir até o centro para consertar sapatos."},
-                    {"ID": 993, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Rua das Palmeiras", "Cidade": "São Paulo", "Dias": 8, "Observação": "Falta comércio de sapataria por aqui."},
-                    {"ID": 994, "O que Falta": "Lavanderia Expressa", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Praça Central", "Cidade": "São Paulo", "Dias": 15, "Observação": "Bairro cheio de prédio novo sem lavanderia por perto."},
-                    {"ID": 995, "O que Falta": "Manutenção de Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 número 40", "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste com lâmpada piscando, gerando escuridão extrema."}
+                    {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro",
+                        "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
+                    {"ID": 992, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal",
+                        "Cidade": "São Paulo", "Dias": 12, "Observação": "Moradores precisam ir até o centro para consertar sapatos."},
+                    {"ID": 995, "O que Falta": "Manutenção de Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 número 40",
+                        "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste com lâmpada piscando, gerando escuridão extrema."}
                 ]
-                
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
-
     if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
@@ -444,7 +438,6 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- AGROUPAMENTO DINÂMICO POR PERFIL B2B ---
                 if st.session_state.perfil_cliente == "comerciante":
                     df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Local/Referência", "Cidade", "Observação"]).agg(
                         Volume_Pedidos=("ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Pedidos", ascending=False).reset_index()
