@@ -251,13 +251,13 @@ elif st.session_state.tela_atual == "consumidor":
 
                             # CLASSIFICAÇÃO INTELIGENTE MULTI-SETORIAL: Organiza os dados nas caixas B2B corretas
                             segmento_detectado = "Geral"
-                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "bolo", "padaria", "mercado", "hortifruti"]):
+                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "bolo", "doce", "salgado", "padaria", "mercado", "hortifruti", "açougue"]):
                                 segmento_detectado = "Supermercado"
-                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "fisioterapia", "nutricionista", "clínica", "médico", "psicólogo", "dentista", "farmácia"]):
+                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "fisioterapia", "nutricionista", "clínica", "médico", "psicólogo", "dentista", "farmácia", "xarope"]):
                                 segmento_detectado = "Saude"
-                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho"]):
+                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho", "petshop", "coleira"]):
                                 segmento_detectado = "Petshop"
-                            elif any(p in texto_usuario for p in ["manicure", "salão", "barbearia", "cabeleireiro", "estética", "barbeiro"]):
+                            elif any(p in texto_usuario for p in ["manicure", "salão", "barbearia", "cabeleireiro", "estética", "barbeiro", "unha"]):
                                 segmento_detectado = "Beleza"
 
                             texto_obs = observacao_usuario.strip() if observacao_usuario else None
@@ -386,7 +386,7 @@ elif st.session_state.tela_atual == "comerciante":
         opcoes_filtro = ["Oportunidades de Novos Negócios (Serviços)"]
     else:
         st.markdown(
-            "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura Urbana)*")
+            "##### 🏛️ *Nível de Acesso: Gestão Pública e Imprensa (Foco em Infraestrutura Urbana)*")
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
 
     st.write("---")
@@ -408,6 +408,15 @@ elif st.session_state.tela_atual == "comerciante":
                     if registro.get("locais_destino"):
                         sub_seg = str(registro.get(
                             "sub_segmento", "Geral")).strip()
+                        cat_bruta = str(registro.get(
+                            "tipo_carencia", "Produto / Marca")).strip()
+
+                        # ISOLAMENTO DE INFRAESTRUTURA: Proíbe problemas urbanos nas telas de comércios especializados
+                        if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"]:
+                            if "Infraestrutura" in cat_bruta or "Público" in cat_bruta:
+                                continue
+
+                        # Filtro de sub-segmento por token de acesso
                         if st.session_state.perfil_cliente == "comerciante" and sub_seg not in ["Supermercado", "Geral"]:
                             continue
                         elif st.session_state.perfil_cliente == "saude" and sub_seg not in ["Saude", "Geral"]:
@@ -431,8 +440,6 @@ elif st.session_state.tela_atual == "comerciante":
                             except:
                                 idade_dias = 0
 
-                        cat_bruta = str(registro.get(
-                            "tipo_carencia", "Produto / Marca")).strip()
                         texto_detalhe = registro.get("observacao_detalhe") or registro.get(
                             "detalhes_adicionais") or ""
 
@@ -456,24 +463,27 @@ elif st.session_state.tela_atual == "comerciante":
                     {"ID": 995, "O que Falta": "Ração Premium Gatos Castrados", "Categoria": "Produto / Marca", "Local/Referência": "Petshop Bairro Alto",
                         "Cidade": "São Paulo", "Dias": 3, "Observação": "Marca X sumiu do estoque.", "SubSegmento": "Petshop"},
                     {"ID": 996, "O que Falta": "Barbearia Retrô", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal 1200",
-                        "Cidade": "São Paulo", "Dias": 14, "Observação": "Homens do bairro precisam ir até o centro para cortar cabelo.", "SubSegmento": "Beleza"},
-                    {"ID": 997, "O que Falta": "Manutenção De Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 Número 40",
+                        "Cidade": "São Paulo", "Dias": 14, "Observação": "Homens do bairro precisam viajar ao centro para cortar cabelo.", "SubSegmento": "Beleza"},
+                    {"ID": 997, "O que Falta": "Manutenção De Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua das Flores, 40",
                         "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste apagado gerando escuridão extrema.", "SubSegmento": "Geral"},
                     {"ID": 998, "O que Falta": "Lavanderia Expressa", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Praça Central",
                         "Cidade": "São Paulo", "Dias": 15, "Observação": "Prédios novos sem lavanderia por perto.", "SubSegmento": "Geral"}
                 ]
                 if st.session_state.perfil_cliente == "comerciante":
                     dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Supermercado", "Geral"]]
+                        "Supermercado", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
                 elif st.session_state.perfil_cliente == "saude":
-                    dados_limpos = [
-                        d for d in dados_limpos if d["SubSegmento"] in ["Saude", "Geral"]]
+                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
+                        "Saude", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
                 elif st.session_state.perfil_cliente == "petshop":
-                    dados_limpos = [
-                        d for d in dados_limpos if d["SubSegmento"] in ["Petshop", "Geral"]]
+                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
+                        "Petshop", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
                 elif st.session_state.perfil_cliente == "beleza":
+                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
+                        "Beleza", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
+                elif st.session_state.perfil_cliente == "gestor":
                     dados_limpos = [
-                        d for d in dados_limpos if d["SubSegmento"] in ["Beleza", "Geral"]]
+                        d for d in dados_limpos if d["Categoria"] == "Serviço Público / Infraestrutura"]
 
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
