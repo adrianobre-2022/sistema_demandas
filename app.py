@@ -33,6 +33,8 @@ st.markdown("""
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
         color: #FFFFFF !important;
     }
+    
+    /* ESTILIZAÇÃO DOS BOTÕES DO SISTEMA (FORMULÁRIOS E ENVIAR) */
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
         background-color: #00B359 !important;
         color: #000000 !important;
@@ -48,22 +50,38 @@ st.markdown("""
     .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover {
         background-color: #00803b !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.4) !important;
     }
     
-    /* ENGENHARIA FLEXBOX: Força os botões a serem gêmeos idênticos na mesma linha em qualquer tela */
-    .barra-navegacao-premium {
+    /* --- BARRA DE ATALHOS PREMIUM INDESTRUTÍVEL (FLEXBOX REAL) --- */
+    .container-botoes-gemeos {
         display: flex !important;
         flex-direction: row !important;
+        flex-wrap: nowrap !important;
         justify-content: flex-start !important;
         align-items: center !important;
-        gap: 8px !important; /* Espaçamento físico fixo de exatos meio centímetro */
+        gap: 10px !important; /* Espaçamento físico fixo de exatos 0.5 cm */
         width: 100% !important;
-        margin-bottom: 1rem !important;
+        margin-bottom: 1.5rem !important;
     }
-    .bloco-botao-nav {
-        flex: 1 !important; /* Força ambos os botões a terem exatamente o mesmo tamanho */
-        max-width: 50% !important; /* Garante que ocupem no máximo metade da tela */
+    .btn-nav-premium {
+        flex: 1 !important; /* Força os dois botões a terem rigorosamente o mesmo tamanho */
+        background-color: #00B359 !important;
+        color: #000000 !important;
+        font-weight: 900 !important;
+        text-align: center !important;
+        padding: 0.8rem 0.5rem !important;
+        border-radius: 12px !important;
+        font-size: 14px !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        display: block !important;
+    }
+    .btn-nav-premium:hover {
+        background-color: #00803b !important;
+    }
+    .btn-oculto-fake {
+        flex: 1 !important;
+        visibility: hidden !important; /* Mantém o espaço invisível na triagem para o Home não esticar */
     }
     
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {
@@ -115,7 +133,7 @@ if st.session_state.tela_atual == "home":
     st.title("🔍 Central de Demandas Ocultas")
     st.markdown("##### *O termômetro de carências da nossa região.*")
     st.write("---")
-    st.write("Selecione o seu perfil de acesso para continuar:")
+    st.write("Selecione o seu perfil de acesso para continuing:")
     st.write("")
 
     col1, col2 = st.columns(2)
@@ -131,26 +149,33 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # --- INTERFACE DE NAVEGAÇÃO INDESTRUTÍVEL COMPACTADA ---
-    if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown(
-            '<div class="barra-navegacao-premium"><div class="bloco-botao-nav">', unsafe_allow_html=True)
-        if st.button("🏠 Ir para Home", key="nav_home_solit"):
+    # --- CAPTURA DE EVENTOS DE CLIQUE DOS BOTÕES HTML ---
+    parametros_url = st.query_params
+    if "acao_nav" in parametros_url:
+        comando = parametros_url["acao_nav"]
+        st.query_params.clear()  # Limpa a URL imediatamente
+        if comando == "ir_home":
             st.session_state.tela_atual = "home"
             st.rerun()
-        st.markdown('</div></div>', unsafe_allow_html=True)
-    else:
-        st.markdown(
-            '<div class="barra-navegacao-premium"><div class="bloco-botao-nav">', unsafe_allow_html=True)
-        if st.button("🏠 Ir para Home", key="nav_home_par_flex"):
-            st.session_state.tela_atual = "home"
-            st.rerun()
-        st.markdown('</div><div class="bloco-botao-nav">',
-                    unsafe_allow_html=True)
-        if st.button("🗂️ Mudar de Categoria", key="nav_categ_par_flex"):
+        elif comando == "mudar_cat":
             st.session_state.aba_consumidor = "menu_triagem"
             st.rerun()
-        st.markdown('</div></div>', unsafe_allow_html=True)
+
+    # --- BARRA DE ATALHOS IMPOSITIVA COM ESPAÇAMENTO FIXO DE MEIO CENTÍMETRO ---
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown("""
+            <div class="container-botoes-gemeos">
+                <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
+                <div class="btn-oculto-fake"></div>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <div class="container-botoes-gemeos">
+                <a href="?acao_nav=ir_home" target="_self" class="btn-nav-premium">🏠 Ir para Home</a>
+                <a href="?acao_nav=mudar_cat" target="_self" class="btn-nav-premium">🗂️ Mudar de Categoria</a>
+            </div>
+        """, unsafe_allow_html=True)
 
     st.title("🔍 Central de Demandas Ocultas")
     st.write("---")
