@@ -150,12 +150,30 @@ elif st.session_state.tela_atual == "consumidor":
     st.write("---")
 
     st.markdown("##### 📍 Onde você está agora?")
+    st.markdown("##### 📍 Onde você está agora?")
     opcoes_locais = [
         "Carapicuíba - Centro", "Carapicuíba - Aldeia",
         "São Paulo - Zona Oeste", "São Paulo - Zona Sul",
         "Rio de Janeiro - Barra da Tijuca", "Rio de Janeiro - Centro",
-        "➡️ Outra Região / Não encontrei meu bairro"
+        "✍️ Outra Região / Digite sua Cidade e Bairro"
     ]
+    regiao_menu = st.selectbox(
+        label="Selecione a sua Região ou Cidade:",
+        options=opcoes_locais,
+        key="seletor_menu_base"
+    )
+
+    # Nova condicional atualizada com o rótulo intuitivo sugerido por você
+    if regiao_menu == "✍️ Outra Região / Digite sua Cidade e Bairro":
+        regiao_final = st.text_input(
+            label="Digite aqui a sua Cidade - Bairro (Ex: Carapicuíba - Cohab, Rio de Janeiro - Copacabana...):",
+            placeholder="Escreva sua localização exata aqui...",
+            key="input_regiao_manual"
+        )
+    else:
+        regiao_final = regiao_menu
+
+    st.write("---")
     regiao_menu = st.selectbox(
         label="Selecione a sua Região ou Cidade:",
         options=opcoes_locais,
