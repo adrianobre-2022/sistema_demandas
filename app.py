@@ -23,7 +23,7 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="E o que falta?",
                    page_icon="🔍", layout="centered")
 
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (VERDE FECHADO + TEXTO BRANCO LEGÍVEL) ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM (VERDE FECHADO + LISTAS GRAFITE PREMIUM) ---
 st.markdown("""
     <style>
     .stApp {
@@ -36,8 +36,8 @@ st.markdown("""
     
     /* ACESSIBILIDADE WCAG: Verde Floresta Fechado Confortável com Letras Brancas Gorda */
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
-        background-color: #00803B !important; /* Escurecido para dar contraste real */
-        color: #FFFFFF !important; /* Texto branco de alta legibilidade */
+        background-color: #00803B !important; 
+        color: #FFFFFF !important; 
         font-weight: 800 !important;
         border-radius: 12px !important;
         border: none !important;
@@ -77,13 +77,23 @@ st.markdown("""
         font-style: italic !important;
         opacity: 1 !important;
     }
-    .stExpander {
-        background-color: #1E1E1E !important;
-        border-left: 5px solid #00803B !important;
-        border-radius: 10px !important;
-        margin-bottom: 0.8rem !important;
+    
+    /* ESTILIZAÇÃO DO PRIMEIRO MODELO DE LISTA (GRAFITE COM BORDA FINA) */
+    .bloco-lista-premium {
+        background-color: #1E1E1E !important; 
+        padding: 1.2rem !important; 
+        border-radius: 10px !important; 
+        margin-bottom: 0.8rem !important; 
+        border: 1px solid #333333 !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
+        overflow: hidden !important;
     }
+    
+    /* TAGS LATERAIS COLORIDAS DE CALOR DO PRIMEIRO MODELO */
+    .tag-calor-alta { background-color: #ff3333 !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
+    .tag-calor-media { background-color: #ff9933 !important; color: black !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
+    .tag-calor-baixa { background-color: #3399ff !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
+    
     [data-testid="stForm"] { border: none !important; padding: 0px !important; }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     </style>
@@ -170,7 +180,78 @@ elif st.session_state.tela_atual == "consumidor":
                 "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
             label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
             label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
-            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+        st.write("")
+# --- TELA: HOME ---
+if st.session_state.tela_atual == "home":
+    st.title("🔍 E o que falta?")
+    st.markdown("##### *O termômetro de carências da nossa região.*")
+    st.write("---")
+    st.write("Selecione o seu perfil de acesso para continuar:")
+    st.write("")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📝 Sou Consumidor\n(Registrar Falta)", use_container_width=True, key="btn_ir_consumidor"):
+            st.session_state.tela_atual = "consumidor"
+            st.session_state.aba_consumidor = "menu_triagem"
+            st.rerun()
+    with col2:
+        if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
+            st.session_state.tela_atual = "autenticacao"
+            st.rerun()
+
+# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
+elif st.session_state.tela_atual == "consumidor":
+    col_nav1, col_nav2 = st.columns(2, gap="small")
+    with col_nav1:
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
+            st.session_state.tela_atual = "home"
+            st.rerun()
+    with col_nav2:
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
+
+    st.title("🔍 E o que falta?")
+    st.write("---")
+
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown("##### *O termômetro de carências da nossa região.*")
+        st.write("")
+        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
+            st.session_state.aba_consumidor = "produto"
+            st.rerun()
+        st.write("")
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
+            st.session_state.aba_consumidor = "servico"
+            st.rerun()
+        st.write("")
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
+            st.session_state.aba_consumidor = "infra"
+            st.rerun()
+
+    else:
+        if st.session_state.aba_consumidor == "produto":
+            st.markdown(
+                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias na região.*")
+            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X, ração de gato..."
+            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia, padaria..."
+            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto? (Opcional)", "Produto / Marca"
+        elif st.session_state.aba_consumidor == "servico":
+            st.markdown(
+                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro?", "Ex: Sapataria, lavanderia, costureira, padaria..."
+            label_local, placeholder_local = "Em qual rua, travessa ou pedaço do bairro isso faz falta?", "Ex: Bairro Centro, Avenida X..."
+            label_contato, tipo_envio = "Quer ser avisado caso este novo comércio seja aberto? (Opcional)", "Serviço Local / Novo Estabelecimento"
+        else:
+            st.markdown(
+                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças aos órgãos públicos.*")
+            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
+            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
+            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
             item_solicitado = st.text_input(
@@ -369,6 +450,7 @@ elif st.session_state.tela_atual == "comerciante":
             if resposta.data and len(resposta.data) > 0:
                 for registro in resposta.data:
                     if registro.get("locais_destino"):
+                        # FILTRAGEM DE SEGMENTO: Esconde itens que não pertencem ao setor de supermercado
                         sub_seg = str(registro.get(
                             "sub_segmento", "Geral")).strip()
                         if st.session_state.perfil_cliente == "comerciante" and sub_seg not in ["Supermercado", "Geral"]:
@@ -391,7 +473,7 @@ elif st.session_state.tela_atual == "comerciante":
                         cat_bruta = str(registro.get(
                             "tipo_carencia", "Produto / Marca")).strip()
                         texto_detalhe = registro.get("observacao_detalhe") or registro.get(
-                            "detalhes_adicionais") or "Sem observações registradas."
+                            "detalhes_adicionais") or ""
 
                         dados_limpos.append({
                             "ID": registro["id"],
@@ -405,10 +487,10 @@ elif st.session_state.tela_atual == "comerciante":
 
             if not dados_limpos:
                 dados_limpos = [
-                    {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro",
+                    {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
                         "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
-                    {"ID": 996, "O que Falta": "Feijão Preto Tipo 1", "Categoria": "Produto / Marca",
-                        "Local/Referência": "Mercado Modelo", "Cidade": "São Paulo", "Dias": 1, "Observação": "Gôndola zerada desde cedo."},
+                    {"ID": 996, "O que Falta": "Feijão Preto Tipo 1", "Categoria": "Produto / Marca", "Local/Referência":
+                        "Supermercado Central", "Cidade": "São Paulo", "Dias": 1, "Observação": "Falta feijão da marca X."},
                 ]
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
@@ -431,7 +513,7 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- AGRUPAMENTO COMERCIAL DE ELITE (UNIFICA PRODUTOS IGUAIS POR CIDADE) ---
+                # --- NOVO AGRUPAMENTO COMERCIAL CONSOLIDADO ---
                 df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(
                     Volume_Total=("ID", "count"),
                     Menor_Idade=("Dias", "min")
@@ -497,56 +579,66 @@ elif st.session_state.tela_atual == "comerciante":
                     f"*(Encontrados {len(df_agrupado)} itens consolidados na região)*")
                 st.write("")
 
-                # --- INTERFACE UNIFICADA EM CARDS SANFONA ---
+                # --- INTERFACE UNIFICADA DO PRIMEIRO MODELO DE BLOCOS LISOS ---
                 for indice, linha in df_agrupado.iterrows():
                     item_nome = linha['O que Falta']
-                    volume = linha['Volume_Total']
+                    volume = float(linha['Volume_Total'])
 
-                    label_critico = "🔥 CRÍTICA" if volume >= 7 else (
-                        "🔸 MODERADA" if volume >= 3 else "🔹 INICIAL")
-                    titulo_card = f"{label_critico} • {item_nome} ({volume} solicitações)"
+                    classe_tag = "tag-calor-alta" if volume >= 7 else (
+                        "tag-calor-media" if volume >= 3 else "tag-calor-baixa")
+                    label_tag = f"CRÍTICA • {int(volume)} Pedidos" if volume >= 7 else (
+                        f"MODERADA • {int(volume)} Pedidos" if volume >= 3 else f"INICIAL • {int(volume)} Pedido")
 
-                    with st.expander(titulo_card):
-                        st.write(f"🌍 **Região Mapeada:** {linha['Cidade']}")
-                        st.write(
-                            f"⏱️ **Último alerta há:** {linha['Menor_Idade']} dias")
-                        st.write("---")
-                        st.write(
-                            "📍 **Estabelecimentos e Contexto relatados pelos moradores:**")
+                    # Abre o Bloco Grafite com Margem Fina do Primeiro Modelo
+                    st.markdown(f"""
+                        <div class="bloco-lista-premium">
+                            <span class="{classe_tag}">{label_tag}</span>
+                            <b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b>
+                            <div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Último alerta há {linha['Menor_Idade']} dias</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                        detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                        for _, sub_linha in detalhes_item.iterrows():
-                            st.markdown(
-                                f"• **{sub_linha['Local/Referência']}**: *\"{sub_linha['Observação']}\"*")
+                    # Lista os locais físicos exatos (bairros/lojas) e as observações reais dentro do mesmo bloco
+                    detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
+                    for _, sub_linha in detalhes_item.iterrows():
+                        st.markdown(
+                            f"📍 **Local:** {sub_linha['Local/Referência']}")
+                        obs_texto = str(sub_linha['Observação']).strip()
+                        if obs_texto:
+                            st.info(
+                                f"💬 *Relato da Comunidade:* \"{obs_texto}\"")
 
-                        st.write("")
-                        chave_confirmacao = f"confirma_baixa_{indice}"
-                        if chave_confirmacao not in st.session_state:
-                            st.session_state[chave_confirmacao] = False
+                    st.write("")
+                    chave_confirmacao = f"confirma_baixa_{indice}"
+                    if chave_confirmacao not in st.session_state:
+                        st.session_state[chave_confirmacao] = False
 
-                        if not st.session_state[chave_confirmacao]:
-                            if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=f"btn_pre_{indice}"):
-                                st.session_state[chave_confirmacao] = True
+                    if not st.session_state[chave_confirmacao]:
+                        if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=f"btn_pre_{indice}"):
+                            st.session_state[chave_confirmacao] = True
+                            st.rerun()
+                    else:
+                        st.warning(
+                            f"⚠️ Confirma dar baixa em todas as {int(volume)} solicitações de '{item_nome}' simultaneamente?")
+                        col_b1, col_b2 = st.columns(2)
+                        with col_b1:
+                            if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{indice}"):
+                                supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
+                                    "item_solicitado", item_nome).execute()
+                                st.success(
+                                    "🎉 Demandas atualizadas com sucesso!")
+                                import time
+                                time.sleep(1)
+                                st.session_state[chave_confirmacao] = False
+
+                                st.session_state.busca_ativa = False
                                 st.rerun()
-                        else:
-                            st.warning(
-                                f"⚠️ Confirma dar baixa em todas as {volume} solicitações de '{item_nome}' simultaneamente?")
-                            col_b1, col_b2 = st.columns(2)
-                            with col_b1:
-                                if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{indice}"):
-                                    supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
-                                        "item_solicitado", item_nome).execute()
-                                    st.success(
-                                        "🎉 Demandas atualizadas com sucesso!")
-                                    import time
-                                    time.sleep(1)
-                                    st.session_state[chave_confirmacao] = False
-                                    st.session_state.busca_ativa = False
-                                    st.rerun()
-                            with col_b2:
-                                if st.button("❌ Cancelar", key=f"btn_cancelar_{indice}"):
-                                    st.session_state[chave_confirmacao] = False
-                                    st.rerun()
+                        with col_b2:
+                            if st.button("❌ Cancelar", key=f"btn_cancelar_{indice}"):
+                                st.session_state[chave_confirmacao] = False
+                                st.rerun()
+                    st.markdown(
+                        "<hr style='border-top: 1px dashed #333; margin-top:1rem; margin-bottom:1rem;'/>", unsafe_allow_html=True)
             else:
                 st.info(
                     "ℹ️ Nenhum registro ativo encontrado para os filtros selecionados.")
