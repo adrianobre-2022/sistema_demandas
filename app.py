@@ -149,12 +149,10 @@ elif st.session_state.tela_atual == "consumidor":
     st.title("🔍 E o que falta?")
     st.write("---")
 
-    # SELETOR HÍBRIDO UNITÁRIO CORRIGIDO DE CIDADES/BAIRROS
-    st.markdown("##### 📍 Onde você está agora?")
-    # SELETOR INTELIGENTE: Opção de digitação livre colocada no TOPO para nunca sumir na rolagem
+    # SELETOR INTELIGENTE: Opção de digitação livre colocada no TOPO com texto instrucional sugerido por você
     st.markdown("##### 📍 Onde você está agora?")
     opcoes_locais = [
-        "✍️ Outra Região / Digite aqui a sua: Cidade - Bairro",
+        "✍️ Digite: Cidade - Bairro ou selecione na lista",
         "Carapicuíba - Centro", "Carapicuíba - Aldeia",
         "São Paulo - Zona Oeste", "São Paulo - Zona Sul",
         "Rio de Janeiro - Barra da Tijuca", "Rio de Janeiro - Centro"
@@ -165,8 +163,8 @@ elif st.session_state.tela_atual == "consumidor":
         key="seletor_menu_base_unico"
     )
 
-    # Induz o usuário ao formato padrão usando o traço no exemplo do placeholder
-    if regiao_menu == "✍️ Outra Região / Digite aqui a sua: Cidade - Bairro":
+    # Condicional que lê o texto exato sugerido por você
+    if regiao_menu == "✍️ Digite: Cidade - Bairro ou selecione na lista":
         regiao_final = st.text_input(
             label="Digite aqui a sua Cidade - Bairro (Ex: Carapicuíba - Cohab, Rio de Janeiro - Copacabana...):",
             placeholder="Ex: Cidade - Bairro",
@@ -176,6 +174,7 @@ elif st.session_state.tela_atual == "consumidor":
         regiao_final = regiao_menu
 
     st.write("---")
+
     token_inserido = st.text_input(
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
 
