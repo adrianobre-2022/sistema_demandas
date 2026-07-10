@@ -488,7 +488,7 @@ elif st.session_state.tela_atual == "comerciante":
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
-    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
+        if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
             df_filtrado = df
@@ -506,15 +506,14 @@ elif st.session_state.tela_atual == "comerciante":
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
 
             if not df_filtrado.empty:
-                # --- AGRUPAMENTO COMERCIAL CONSOLIDADO POR PRODUTO ---
-                df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=(
-                    "ID", "count"), Menor_Idade=("Dias", "min")).sort_values(by="Volume_Total", ascending=False).reset_index()
-
                 st.write("---")
                 st.markdown("#### 📥 Exportar Inteligência de Mercado")
-                df_exportar = df_agrupado.copy()
-                df_exportar.columns = [
-                    "Item", "Segmento", "Cidade", "Pedidos", "Dias"]
+
+                # --- PREPARAÇÃO DO EXPORTADOR EM PDF OFICIAL ---
+                df_exportar = df_filtrado[[
+                    "O que Falta", "Categoria", "Local/Referência", "Cidade", "Dias"]].copy()
+                df_exportar.columns = ["Item Solicitado", "Segmento",
+                                       "Ponto de Referência", "Cidade/Região", "Dias Desde o Alerta"]
 
                 import io
                 from reportlab.lib.pagesizes import letter
@@ -559,44 +558,51 @@ elif st.session_state.tela_atual == "comerciante":
 
                 st.write("---")
                 st.markdown("#### 📈 Detalhamento das Carências Ativas")
-                st.write(f"*(Encontrados {len(df_agrupado)} itens)*")
+                st.write(
+                    f"*(Encontrados {len(df_filtrado)} alertas individuais)*")
+                st.write("")
 
-                for indice, linha in df_agrupado.iterrows():
+                # --- RENDERS INDIVIDUAIS COM ISOLAMENTO DE EXCLUSÃO POR ID ---
+                for indice, linha in df_filtrado.iterrows():
+                    item_id = linha['ID']
                     item_nome = linha['O que Falta']
-                    volume = float(linha['Volume_Total'])
-                    classe_tag = "tag-calor-alta" if volume >= 7 else (
-                        "tag-calor-media" if volume >= 3 else "tag-calor-baixa")
-                    label_tag = f"CRÍTICA • {int(volume)} Pedidos" if volume >= 7 else (
-                        f"MODERADA • {int(volume)} Pedidos" if volume >= 3 else f"INICIAL • {int(volume)} Pedido")
+                    local_nome = linha['Local/Referência']
+
+                    classe_tag = "tag-calor-baixa"
+                    label_tag = "INICIAL • 1 Alerta"
+
+                    st.markdown(f"""
+                        <div class="bloco-lista-premium">
+                            <span class="{classe_tag}">{label_tag}</span>
+                            <b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b>
+                            <div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Solicitado há {linha['Dias']} dias</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
                     st.markdown(
-                        f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Último alerta há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
-
-                    detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                    for _, sub_linha in detalhes_item.iterrows():
-                        st.markdown(
-                            f"📍 **Local Geográfico Exato:** {sub_linha['Local/Referência']}")
-                        obs_texto = str(sub_linha['Observação']).strip()
-                        if obs_texto:
-                            st.info(f"💬 *Relato:* \"{obs_texto}\"")
+                        f"📍 **Estabelecimento Alvo:** {local_nome} ({linha['Cidade']})")
+                    obs_texto = str(linha['Observação']).strip()
+                    if obs_texto:
+                        st.info(f"💬 *Relato do Morador:* \"{obs_texto}\"")
 
                     st.write("")
-                    chave_confirmacao = f"confirma_baixa_{indice}"
+                    chave_confirmacao = f"confirma_baixa_{item_id}"
                     if chave_confirmacao not in st.session_state:
                         st.session_state[chave_confirmacao] = False
 
                     if not st.session_state[chave_confirmacao]:
-                        if st.button("✅ Marcar como Estoque Reposto / Resolvido", key=f"btn_pre_{indice}"):
+                        if st.button(f"✅ Marcar como Resolvido no {local_nome}", key=f"btn_pre_{item_id}"):
                             st.session_state[chave_confirmacao] = True
                             st.rerun()
                     else:
                         st.warning(
-                            f"⚠️ Confirma dar baixa em todas as {int(volume)} solicitações?")
+                            f"⚠️ Dar baixa apenas neste pedido de '{item_nome}' do estabelecimento '{local_nome}'?")
                         col_b1, col_b2 = st.columns(2)
                         with col_b1:
-                            if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{indice}"):
-                                supabase.table("relatos_escassez").update({"status": "Atendido"}).eq(
-                                    "item_solicitado", item_nome).execute()
+                            if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{item_id}"):
+                                # CANALIZADO CIRÚRGICO: Dá baixa apenas no ID correspondente daquela linha física
+                                supabase.table("relatos_escassez").update(
+                                    {"status": "Atendido"}).eq("id", item_id).execute()
                                 st.success("🎉 Atualizado!")
                                 import time
                                 time.sleep(1)
@@ -604,7 +610,7 @@ elif st.session_state.tela_atual == "comerciante":
                                 st.session_state.busca_ativa = False
                                 st.rerun()
                         with col_b2:
-                            if st.button("❌ Cancelar", key=f"btn_cancelar_{indice}"):
+                            if st.button("❌ Cancelar", key=f"btn_cancelar_{item_id}"):
                                 st.session_state[chave_confirmacao] = False
                                 st.rerun()
                     st.markdown(
