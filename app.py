@@ -376,50 +376,61 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Filtrar por palavra-chave:",
                                 placeholder="Digite para refinar...", key="input_busca_painel")
     # CORREÇÃO: Alinhamento travado com 4 espaços exatos na margem esquerda
-    if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
-        st.session_state.busca_ativa = True
-        try:
-            # Busca direta de todas as pendências salvando na nuvem
-            resposta = supabase.table("relatos_escassez").select("id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente").execute()
-            dados_limpos = []
-            agora = datetime.datetime.now(datetime.timezone.utc)
-            
-            if resposta.data and len(resposta.data) > 0:
-                for registro in resposta.data:
-                    if registro.get("locais_destino"):
-                        idade_dias = 0
-                        data_str = registro.get("data_registro")
-                        if data_str:
-                            try:
-                                data_limpa = data_str.replace("Z", "+00:00")
-                                data_reg = datetime.datetime.fromisoformat(data_limpa)
-                                if data_reg.tzinfo is None: data_reg = data_reg.replace(tzinfo=datetime.timezone.utc)
-                                idade_dias = max(0, (agora - data_reg).days)
-                            except:
-                                idade_dias = 0
-                        
-                        # CAPTURA SEGURA: Padroniza a categoria para não dar erro de leitura no filtro
-                        cat_bruta = str(registro.get("tipo_carencia", "Produto / Marca")).strip()
-                        
-                        dados_limpos.append({
-                            "ID": registro["id"], 
-                            "O que Falta": registro["item_solicitado"], 
-                            "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
-                            "Local/Referência": registro["locais_destino"]["nome_exibicao"], 
-                            "Cidade": registro["locais_destino"]["regiao_cidade"],
-                            "Dias": idade_dias, 
-                            "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
-                        })
-            
-            # Se mesmo assim não achar nenhuma linha salva na nuvem, mantém os dados fictícios de demonstração
-            if not dados_limpos:
-                dados_limpos = [
-                    {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro", "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
-                    {"ID": 992, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal", "Cidade": "São Paulo", "Dias": 12, "Observação": "Moradores precisam ir até o centro para consertar sapatos."},
-                    {"ID": 995, "O que Falta": "Manutenção de Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 número 40", "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste com lâmpada piscando, gerando escuridão extrema."}
-                ]
-            st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
-        except Exception as e: st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
+     if st.button("Buscar Oportunidades Ocultas", use_container_width=True, key="btn_buscar"):
+          st.session_state.busca_ativa = True
+           try:
+                # BUSCA DIRETA BRUTA: Remove o filtro de status pendente para forçar a leitura de todas as linhas
+                resposta = supabase.table("relatos_escassez").select(
+                    "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, locais_destino(nome_exibicao, regiao_cidade)").execute()
+                dados_limpos = []
+                agora = datetime.datetime.now(datetime.timezone.utc)
+
+                if resposta.data and len(resposta.data) > 0:
+                    for registro in resposta.data:
+                        if registro.get("locais_destino"):
+                            # Captura a idade de forma tolerante a falhas
+                            idade_dias = 0
+                            data_str = registro.get("data_registro")
+                            if data_str:
+                                try:
+                                    data_limpa = data_str.replace(
+                                        "Z", "+00:00")
+                                    data_reg = datetime.datetime.fromisoformat(
+                                        data_limpa)
+                                    if data_reg.tzinfo is None:
+                                        data_reg = data_reg.replace(
+                                            tzinfo=datetime.timezone.utc)
+                                    idade_dias = max(
+                                        0, (agora - data_reg).days)
+                                except:
+                                    idade_dias = 0
+
+                            cat_bruta = str(registro.get(
+                                "tipo_carencia", "Produto / Marca")).strip()
+
+                            dados_limpos.append({
+                                "ID": registro["id"],
+                                "O que Falta": registro["item_solicitado"],
+                                "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
+                                "Local/Referência": registro["locais_destino"]["nome_exibicao"],
+                                "Cidade": registro["locais_destino"]["regiao_cidade"],
+                                "Dias": idade_dias,
+                                "Observação": registro.get("observacao_detalhe", "Sem observações registradas.")
+                            })
+
+                # Se mesmo sem filtros o banco de dados falhar na leitura, ativa o Mock Data para demonstração
+                if not dados_limpos:
+                    dados_limpos = [
+                        {"ID": 991, "O que Falta": "Leite Desnatado Integrado", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho do Bairro",
+                            "Cidade": "São Paulo", "Dias": 4, "Observação": "Falta nas prateleiras toda quarta à tarde."},
+                        {"ID": 992, "O que Falta": "Sapataria Rápida", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Principal",
+                            "Cidade": "São Paulo", "Dias": 12, "Observação": "Moradores precisam ir até o centro para consertar sapatos."},
+                        {"ID": 995, "O que Falta": "Manutenção de Iluminação", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua 3 número 40",
+                            "Cidade": "São Paulo", "Dias": 2, "Observação": "Poste com lâmpada piscando, gerando escuridão extrema."}
+                    ]
+                st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
+            except Exception as e:
+                st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
     if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
