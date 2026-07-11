@@ -381,18 +381,24 @@ elif st.session_state.tela_atual == "comerciante":
                             "sub_segmento", "Geral")).strip()
                         cat_bruta = str(registro.get(
                             "tipo_carencia", "Produto / Marca")).strip()
+
+                        # BARREIRA IMPLACÁVEL DE NICHOS: Isola os dados e impede qualquer cruzamento indevido de categorias
                         if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and ("Infraestrutura" in cat_bruta or "Público" in cat_bruta):
                             continue
+
                         if "Marketplace" not in filtro_frente and not espectador_analitico:
-                            if st.session_state.perfil_cliente == "comerciante" and sub_seg not in ["Supermercado", "Geral"]:
+                            if st.session_state.perfil_cliente == "comerciante" and sub_seg != "Supermercado":
                                 continue
-                            elif st.session_state.perfil_cliente == "saude" and sub_seg not in ["Saude", "Geral"]:
+                            elif st.session_state.perfil_cliente == "saude" and sub_seg != "Saude":
                                 continue
-                            elif st.session_state.perfil_cliente == "petshop" and sub_seg not in ["Petshop", "Geral"]:
+                            elif st.session_state.perfil_cliente == "petshop" and sub_seg != "Petshop":
                                 continue
-                            elif st.session_state.perfil_cliente == "beleza" and sub_seg not in ["Beleza", "Geral"]:
+                            elif st.session_state.perfil_cliente == "beleza" and sub_seg != "Beleza":
                                 continue
-                        if st.session_state.perfil_cliente == "investidor" and (sub_seg == "Supermercado" or "Infraestrutura" in cat_bruta or "Público" in cat_bruta):
+
+                        if st.session_state.perfil_cliente == "investidor" and (sub_seg != "Investimento" or cat_bruta != "Serviço Local / Novo Estabelecimento"):
+                            continue
+                        if st.session_state.perfil_cliente == "gestor" and cat_bruta != "Serviço Público / Infraestrutura":
                             continue
 
                         idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
@@ -404,6 +410,7 @@ elif st.session_state.tela_atual == "comerciante":
                             "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg,
                             "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""
                         })
+
             if not dados_limpos:
                 dados_limpos = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
