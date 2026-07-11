@@ -459,7 +459,8 @@ elif st.session_state.tela_atual == "comerciante":
                         d for d in dados_limpos if d["Categoria"] == "Serviço Público / Infraestrutura"]
                 elif st.session_state.perfil_cliente == "jornalista":
                     dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Zeladoria", "Investimento"]]
+                        "Zeladoria", "Investimento", "Geral"]]
+
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico: {str(e)}")
