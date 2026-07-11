@@ -500,7 +500,6 @@ elif st.session_state.tela_atual == "comerciante":
                         st.markdown(
                             "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
 
-                # --- INTERFACE 2: INTERFACE OPERACIONAL + REVERSO (LOJISTAS) ---
                 else:
                     df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
                         "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
@@ -540,29 +539,80 @@ elif st.session_state.tela_atual == "comerciante":
                                     f"📱 **Cliente Faminto!** Chame no WhatsApp e ofereça o item: `{contato_morador}`")
 
                             chave_confirmacao = f"confirma_baixa_{sub_id}"
-                            if chave_confirmacao not in st.session_state:
-                                st.session_state[chave_confirmacao] = False
-                            if not st.session_state[chave_confirmacao]:
-                                if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}"):
-                                    st.session_state[chave_confirmacao] = True
-                                    st.rerun()
-                            else:
-                                st.warning("Confirmar reposição?")
-                                col_b1, col_b2 = st.columns(2)
-                                with col_b1:
-                                    if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}"):
-                                        supabase.table("relatos_escassez").update(
-                                            {"status": "Atendido"}).eq("id", sub_id).execute()
-                                        st.success("🎉 Concluído!")
-                                        import time
-                                        time.sleep(1)
-                                        st.session_state[chave_confirmacao] = False
-                                        st.session_state.busca_ativa = False
+                            # --- INTERFACE 2: INTERFACE OPERACIONAL + REVERSO (LOJISTAS) ---
+                else:
+                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(
+                        Volume_Total=("ID", "count"),
+                        Menor_Idade=("Dias", "min"),
+                        Foco_Dono=("É_Minha_Loja", "max")
+                    ).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
+
+                    st.markdown("#### 📥 Exportar Inteligência de Gôndola")
+                    st.download_button(label="Baixar Relatório (PDF)", data=b"PDF",
+                                       file_name="relatorio.pdf", mime="application/pdf", key="btn_pdf_operacional")
+                    st.write("---")
+                    st.markdown("#### 📈 Detalhamento das Demandas Ativas")
+
+                    for indice, linha in df_agrupado.iterrows():
+                        item_nome = linha['O que Falta']
+                        volume = float(linha['Volume_Total'])
+                        sou_alvo = int(linha['Foco_Dono'])
+
+                        if "Marketplace" in filtro_frente:
+                            classe_tag, label_tag = "tag-calor-media", f"🎯 REVERSO • {int(volume)} Compradores"
+                        elif sou_alvo == 1:
+                            classe_tag, label_tag = "tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos"
+                        else:
+                            classe_tag, label_tag = "tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"
+
+                        st.markdown(
+                            f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
+
+                        detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
+                        for _, sub_linha in detalhes_item.iterrows():
+                            sub_id = sub_linha['ID']
+                            sub_local = sub_linha['Local/Referência']
+                            contato_morador = sub_linha['Contato']
+
+                            prefixo_local = f"🔥 **SEU ESTABELECIMENTO:** {sub_local}" if sub_local == loja_alvo_prioridade else f"📍 **Captado no concorrente:** {sub_local}"
+                            st.markdown(
+                                f"{prefixo_local} ({sub_linha['Cidade']})")
+                            if sub_linha['Observação']:
+                                st.info(
+                                    f"💬 *Relato:* \"{sub_linha['Observação']}\"")
+
+                            # INTERAÇÃO REVERSO: Garante a exibição do WhatsApp do lead se o contato existir
+                            if contato_morador and ("Marketplace" in filtro_frente or sub_local != loja_alvo_prioridade):
+                                st.success(
+                                    f"📱 **Cliente Faminto!** Chame no WhatsApp e ofereça o item: `{contato_morador}`")
+
+                            # --- TRAVA ANTI-SABOTAGEM: O botão de baixa desaparece por completo se estiver na aba do Marketplace Reverso ---
+                            if "Marketplace" not in filtro_frente:
+                                chave_confirmacao = f"confirma_baixa_{sub_id}"
+                                if chave_confirmacao not in st.session_state:
+                                    st.session_state[chave_confirmacao] = False
+
+                                if not st.session_state[chave_confirmacao]:
+                                    if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}"):
+                                        st.session_state[chave_confirmacao] = True
                                         st.rerun()
-                                with col_b2:
-                                    if st.button("❌ Cancelar", key=f"btn_cancelar_{sub_id}"):
-                                        st.session_state[chave_confirmacao] = False
-                                        st.rerun()
+                                else:
+                                    st.warning("Confirmar reposição?")
+                                    col_b1, col_b2 = st.columns(2)
+                                    with col_b1:
+                                        if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}"):
+                                            supabase.table("relatos_escassez").update(
+                                                {"status": "Atendido"}).eq("id", sub_id).execute()
+                                            st.success("🎉 Concluído!")
+                                            import time
+                                            time.sleep(1)
+                                            st.session_state[chave_confirmacao] = False
+                                            st.session_state.busca_ativa = False
+                                            st.rerun()
+                                    with col_b2:
+                                        if st.button("❌ Cancelar", key=f"btn_cancelar_{sub_id}"):
+                                            st.session_state[chave_confirmacao] = False
+                                            st.rerun()
                         st.markdown(
                             "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
             else:
