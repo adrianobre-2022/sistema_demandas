@@ -375,6 +375,7 @@ elif st.session_state.tela_atual == "comerciante":
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
+
     if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
         st.session_state.busca_ativa = True
         try:
@@ -402,18 +403,23 @@ elif st.session_state.tela_atual == "comerciante":
                             elif st.session_state.perfil_cliente == "beleza" and sub_seg != "Beleza":
                                 continue
 
-                        if st.session_state.perfil_cliente == "investidor" and (sub_seg != "Investimento" or cat_bruta != "Serviço Local / Novo Estabelecimento"):
+                        if st.session_state.perfil_cliente == "investidor" and (sub_seg != "Investimento" or "Local" not in cat_bruta):
                             continue
                         if st.session_state.perfil_cliente == "jornalista" and (sub_seg == "Supermercado" or sub_seg == "Saude" or sub_seg == "Petshop" or sub_seg == "Beleza"):
                             continue
-                        if st.session_state.perfil_cliente == "gestor" and cat_bruta != "Serviço Público / Infraestrutura":
+                        if st.session_state.perfil_cliente == "gestor" and "Público" not in cat_bruta:
                             continue
 
                         idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
                             "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
+
+                        # CORREÇÃO CIRÚRGICA DA MATRIX: Mapeamento exato baseado na palavra exclusiva Público para evitar sobreposições
+                        categoria_limpa = "Serviço Público / Infraestrutura" if "Público" in cat_bruta or "Infra" in cat_bruta else (
+                            "Serviço Local / Novo Estabelecimento" if "Local" in cat_bruta or "Serviço" in cat_bruta else "Produto / Marca")
+
                         dados_limpos.append({
                             "ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(),
-                            "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
+                            "Categoria": category_fixed := categoria_limpa,
                             "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
                             "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg,
                             "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""
@@ -489,7 +495,6 @@ elif st.session_state.tela_atual == "comerciante":
                     df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                         "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
                     st.markdown("#### 📈 Ranking de Oportunidades")
-                    # CHAVE DINÂMICA IMPLACÁVEL: Atrela a key ao filtro ativo eliminando o erro de elemento duplicado em reloads
                     st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
                                        file_name="expansao.pdf", mime="application/pdf", key=f"btn_pdf_{filtro_frente}")
                     st.write("---")
@@ -522,7 +527,7 @@ elif st.session_state.tela_atual == "comerciante":
                     st.write("---")
                     st.markdown("#### 📈 Detalhamento das Demandas Ativas")
                     for indice, linha in df_agrupado.iterrows():
-                        item_nome = Finder = linha['O que Falta']
+                        item_nome = linha['O que Falta']
                         volume = float(linha['Volume_Total'])
                         sou_alvo = int(linha['Foco_Dono'])
                         if "Marketplace" in filtro_frente:
