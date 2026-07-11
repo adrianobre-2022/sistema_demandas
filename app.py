@@ -413,13 +413,13 @@ elif st.session_state.tela_atual == "comerciante":
                         idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
                             "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
 
-                        # CORREÇÃO CIRÚRGICA DA MATRIX: Mapeamento exato baseado na palavra exclusiva Público para evitar sobreposições
+                        # CORREÇÃO DE SINTAXE PURA: Atribuição tradicional de strings sem operador walrus perigoso
                         categoria_limpa = "Serviço Público / Infraestrutura" if "Público" in cat_bruta or "Infra" in cat_bruta else (
                             "Serviço Local / Novo Estabelecimento" if "Local" in cat_bruta or "Serviço" in cat_bruta else "Produto / Marca")
 
                         dados_limpos.append({
                             "ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(),
-                            "Categoria": category_fixed := categoria_limpa,
+                            "Categoria": categoria_limpa,
                             "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
                             "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg,
                             "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""
