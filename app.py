@@ -392,7 +392,7 @@ elif st.session_state.tela_atual == "comerciante":
                                 continue
                             elif st.session_state.perfil_cliente == "beleza" and sub_seg not in ["Beleza", "Geral"]:
                                 continue
-                        if st.session_state.perfil_cliente == "investidor" and sub_seg == "Supermercado":
+                        if st.session_state.perfil_cliente == "investidor" and (sub_seg == "Supermercado" or "Infraestrutura" in cat_bruta or "Público" in cat_bruta):
                             continue
 
                         idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
