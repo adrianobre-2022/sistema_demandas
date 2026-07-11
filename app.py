@@ -526,11 +526,14 @@ elif st.session_state.tela_atual == "comerciante":
             if not df_filtrado.empty:
                 df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                     lambda x: 1 if x == loja_alvo_prioridade else 0)
-
                 # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR) ---
                 if espectador_analitico:
-                    df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
-                        "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
+                    df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(
+                        Clientes_Unicos=("Pegada", "nunique"),
+                        Alertas_Totais=("ID", "count"),
+                        Maior_Espera=("Dias", "max")
+                    ).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
+
                     st.markdown(
                         "#### 📥 Exportar Relatório de Expansão Estatística")
                     st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
@@ -538,10 +541,12 @@ elif st.session_state.tela_atual == "comerciante":
                     st.write("---")
                     st.markdown(
                         "#### 📈 Ranking de Oportunidades por Clientes Únicos")
+
                     for indice, linha in df_analitico.iterrows():
                         item_nome = linha['O que Falta']
                         clientes = int(linha['Clientes_Unicos'])
                         alertas = int(linha['Alertas_Totais'])
+
                         classe_tag = "tag-calor-alta" if clientes >= 5 else (
                             "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
                         label_tag = f"🔥 VAZIO CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
@@ -549,14 +554,17 @@ elif st.session_state.tela_atual == "comerciante":
 
                         st.markdown(
                             f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Vazio de: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Espera: {linha["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
+
+                        # FILTRAGEM PURA UX: Exibe estritamente a localização geográfica e comunidade da reclamação, ocultando nomes de mercados concorrentes
                         detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                        for _, sub_linha in detalhes_item.iterrows():
-                            st.markdown(
-                                f"  * {sub_linha['Local/Referência']} ({sub_linha['Cidade']})")
+                        st.write("📍 **Localização das Reclamações Coletadas:**")
+
+                        # Remove duplicidades de texto para exibir apenas os bairros/cidades únicos de calor
+                        locais_unicos = detalhes_item['Cidade'].unique()
+                        for loc in locais_unicos:
+                            st.markdown(f"  * {loc}")
                         st.markdown(
                             "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-
-                # --- INTERFACE 2: INTERFACE OPERACIONAL + REVERSO (LOJISTAS) ---
                 else:
                     df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
                         "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
