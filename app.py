@@ -120,7 +120,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
-        else:
+    else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
                 "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias.*")
@@ -141,7 +141,6 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
         st.write("")
 
-        # --- FORMULÁRIO SEGURO COM MEMÓRIA ANTIDERRETIMENTO DE TEXTO ---
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
             item_solicitado = st.text_input(
                 label=label_item, placeholder=placeholder_item, key="input_item")
@@ -154,6 +153,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("")
             botao_enviar = st.form_submit_button(
                 "Registrar Ocorrência", use_container_width=True)
+
         if botao_enviar:
             if item_solicitado and local_ocorrencia:
                 texto_usuario, local_usuario = item_solicitado.strip(
