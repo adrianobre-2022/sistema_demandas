@@ -271,7 +271,6 @@ elif st.session_state.tela_atual == "autenticacao":
         st.session_state.token_valido = False
         st.rerun()
 
-    # BRANDING UNIFICADO: Estampa a marca principal grande e o aviso comercial menor e sem duplo sentido
     st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 16px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Área Restrita para Comerciantes e Gestores</p>", unsafe_allow_html=True)
@@ -314,6 +313,12 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.perfil_cliente = "gestor"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
+        # ADICIONADO PERFIL JORNALISTA DE IMPRENSA
+        elif token_inserido == "MIDIA40":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "jornalista"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
         elif token_inserido != "":
             st.error("❌ Token inválido.")
 
@@ -332,12 +337,12 @@ elif st.session_state.tela_atual == "comerciante":
 
     st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
-    # AJUSTE FINO UI: Aumentado levemente a fonte do subtitulo para 20px para leitura imponente
     st.markdown("<p style='text-align: center; font-size: 24px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Decisão Estratégica</p>", unsafe_allow_html=True)
 
     loja_alvo_prioridade = "Mercadinho Do Bairro" if st.session_state.perfil_cliente == "comerciante" else ""
+    # Interface analítica limpa estendida para o jornalista também
     espectador_analitico = st.session_state.perfil_cliente in [
-        "investidor", "gestor"]
+        "investidor", "gestor", "jornalista"]
 
     if st.session_state.perfil_cliente == "comerciante":
         opcoes_filtro = [
@@ -360,6 +365,11 @@ elif st.session_state.tela_atual == "comerciante":
         opcoes_filtro = ["Oportunidades de Novos Negócios (Serviços)"]
         st.markdown(
             "##### 💼 *Nível de Acesso: Investidor e Expansão (Mapeamento de Vazios Comerciais)*")
+    elif st.session_state.perfil_cliente == "jornalista":
+        opcoes_filtro = [
+            "Infraestrutura Urbana (Setor Público)", "Oportunidades de Novos Negócios (Serviços)"]
+        st.markdown(
+            "##### 📰 *Nível de Acesso: Imprensa e Jornalismo Regional (Dados Gerais Consolidados)*")
     else:
         opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
         st.markdown(
@@ -397,7 +407,11 @@ elif st.session_state.tela_atual == "comerciante":
                                 continue
                             elif st.session_state.perfil_cliente == "beleza" and sub_seg != "Beleza":
                                 continue
+
+                        # BLOQUEIO CIRÚRGICO DE NICHOS DO JORNALISTA (Ele consome dados consolidados sem vazamentos operacionais de marcas)
                         if st.session_state.perfil_cliente == "investidor" and (sub_seg != "Investimento" or cat_bruta != "Serviço Local / Novo Estabelecimento"):
+                            continue
+                        if st.session_state.perfil_cliente == "jornalista" and sub_seg == "Supermercado":
                             continue
                         if st.session_state.perfil_cliente == "gestor" and cat_bruta != "Serviço Público / Infraestrutura":
                             continue
@@ -411,42 +425,6 @@ elif st.session_state.tela_atual == "comerciante":
                             "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg,
                             "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""
                         })
-            if not dados_limpos:
-                dados_limpos = [
-                    {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 4, "Observação": "Falta toda quarta.", "SubSegmento": "Supermercado", "Pegada": "hash1", "Contato": "11999999999"},
-                    {"ID": 992, "O que Falta": "Feijão Preto Tipo 1 Camil", "Categoria": "Produto / Marca", "Local/Referência": "Supermercado Xavier",
-                        "Cidade": "São Paulo/SP - Tatuapé", "Dias": 1, "Observação": "Gôndola zerada.", "SubSegmento": "Supermercado", "Pegada": "hash2", "Contato": ""},
-                    {"ID": 993, "O que Falta": "Lingerie Vermelha Rendada", "Categoria": "Produto / Marca", "Local/Referência": "Bairro Popular",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 2, "Observação": "Falta loja focada.", "SubSegmento": "Beleza", "Pegada": "hash3", "Contato": "11888888888"},
-                    {"ID": 994, "O que Falta": "Lavanderia Expressa Auto-Serviço", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Das Palmeiras",
-                        "Cidade": "São Paulo/SP - Tatuapé", "Dias": 45, "Observação": "Prédios novos sem serviço.", "SubSegmento": "Investimento", "Pegada": "hash4", "Contato": ""},
-                    {"ID": 995, "O que Falta": "Ração Premium Gatos Royal", "Categoria": "Produto / Marca", "Local/Referência": "Petshop Bairro Alto",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 3, "Observação": "Sumiu do estoque.", "SubSegmento": "Petshop", "Pegada": "hash5", "Contato": "11988887777"},
-                    {"ID": 996, "O que Falta": "Sapataria E Conserto De Salto", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Bairro Popular",
-                        "Cidade": "São Paulo/SP - Tatuapé", "Dias": 14, "Observação": "Moradores viajam longe.", "SubSegmento": "Investimento", "Pegada": "hash6", "Contato": ""},
-                    {"ID": 997, "O que Falta": "Manutenção De Iluminação Pública", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua das Flores, 40",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 2, "Observação": "Poste apagado.", "SubSegmento": "Zeladoria", "Pegada": "hash7", "Contato": ""}
-                ]
-                if st.session_state.perfil_cliente == "comerciante":
-                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Supermercado", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "saude":
-                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Saude", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "petshop":
-                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Petshop", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "beleza":
-                    dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Beleza", "Geral"] and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "investidor":
-                    dados_limpos = [
-                        d for d in dados_limpos if d["SubSegmento"] == "Investimento"]
-                elif st.session_state.perfil_cliente == "gestor":
-                    dados_limpos = [
-                        d for d in dados_limpos if d["Categoria"] == "Serviço Público / Infraestrutura"]
-            st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico: {str(e)}")
     if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
