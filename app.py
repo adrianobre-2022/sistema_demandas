@@ -469,14 +469,25 @@ elif st.session_state.tela_atual == "comerciante":
                     lambda x: 1 if x == loja_alvo_prioridade else 0)
 
                 # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR) ---
+                # --- INTERFACE 1: INTERFACE ANALÍTICA COM BI GRÁFICO (INVESTIDOR/GESTOR) ---
                 if espectador_analitico:
                     df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                         "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
+
                     st.markdown(
                         "#### 📥 Exportar Relatório de Expansão Estatística")
                     st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
                                        file_name="expansao.pdf", mime="application/pdf", key="btn_pdf_analitico")
                     st.write("---")
+
+                    # --- COMPONENTE VISUAL AUTOMÁTICO: TERMÔMETRO DE CALOR GEOGRÁFICO POR DISTRITO/BAIRRO ---
+                    st.markdown("#### 🗺️ Mapa de Calor de Demandas por Região")
+                    df_grafico_regiao = df_filtrado.groupby(
+                        "Cidade")["Pegada"].nunique().reset_index()
+                    df_grafico_regiao.columns = ["Região", "Clientes Únicos"]
+                    st.bar_chart(data=df_grafico_regiao, x="Região",
+                                 y="Clientes Únicos", color="#00803B", use_container_width=True)
+                    st.write("")
                     st.markdown(
                         "#### 📈 Ranking de Oportunidades por Clientes Únicos")
                     for indice, dynamic_line in df_analitico.iterrows():
