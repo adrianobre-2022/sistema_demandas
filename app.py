@@ -332,7 +332,8 @@ elif st.session_state.tela_atual == "comerciante":
 
     st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Decisão Estratégica</p>", unsafe_allow_html=True)
+    # AJUSTE FINO UI: Aumentado levemente a fonte do subtitulo para 20px para leitura imponente
+    st.markdown("<p style='text-align: center; font-size: 20px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Decisão Estratégica</p>", unsafe_allow_html=True)
 
     loja_alvo_prioridade = "Mercadinho Do Bairro" if st.session_state.perfil_cliente == "comerciante" else ""
     espectador_analitico = st.session_state.perfil_cliente in [
@@ -448,7 +449,7 @@ elif st.session_state.tela_atual == "comerciante":
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico: {str(e)}")
-    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
+        if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
             df_filtrado = df
@@ -468,26 +469,15 @@ elif st.session_state.tela_atual == "comerciante":
                 df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                     lambda x: 1 if x == loja_alvo_prioridade else 0)
 
-                # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR) ---
-                # --- INTERFACE 1: INTERFACE ANALÍTICA COM BI GRÁFICO (INVESTIDOR/GESTOR) ---
+                # --- INTERFACE 1: INTERFACE ANALÍTICA LIMPA E INTEGRADA COM A MARCA (INVESTIDOR/GESTOR) ---
                 if espectador_analitico:
                     df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                         "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
-
                     st.markdown(
                         "#### 📥 Exportar Relatório de Expansão Estatística")
                     st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
                                        file_name="expansao.pdf", mime="application/pdf", key="btn_pdf_analitico")
                     st.write("---")
-
-                    # --- COMPONENTE VISUAL AUTOMÁTICO: TERMÔMETRO DE CALOR GEOGRÁFICO POR DISTRITO/BAIRRO ---
-                    st.markdown("#### 🗺️ Mapa de Calor de Demandas por Região")
-                    df_grafico_regiao = df_filtrado.groupby(
-                        "Cidade")["Pegada"].nunique().reset_index()
-                    df_grafico_regiao.columns = ["Região", "Clientes Únicos"]
-                    st.bar_chart(data=df_grafico_regiao, x="Região",
-                                 y="Clientes Únicos", color="#00803B", use_container_width=True)
-                    st.write("")
                     st.markdown(
                         "#### 📈 Ranking de Oportunidades por Clientes Únicos")
                     for indice, dynamic_line in df_analitico.iterrows():
@@ -499,8 +489,9 @@ elif st.session_state.tela_atual == "comerciante":
                         label_tag = f"🔥 VAZIO CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
                             f"⚠️ OPORTUNIDADE • {clientes} CPFs Únicos" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF Único")
 
+                        # ALINHAMENTO CONCEITUAL: Trocado o termo antigo "Vazio de:" por "Falta:" em sintonia síncrona com o branding
                         st.markdown(
-                            f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Vazio de: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Espera: {dynamic_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
+                            f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Espera: {dynamic_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
                         detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
                         st.write("📍 **Localização das Reclamações Coletadas:**")
                         locais_unicos = detalhes_item['Cidade'].unique()
