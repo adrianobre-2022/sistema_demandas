@@ -381,6 +381,40 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
+    # --- INTERFACE MASTER: PAINEL ADMINISTRATIVO SECRETO (GERADOR DE TOKENS UUID) ---
+    if st.session_state.perfil_cliente == "admin":
+        st.markdown("### 🛠️ Painel Administrativo Mestre")
+        st.markdown(
+            "##### *Cadastro de Assinantes e Emissão Automática de Tokens UUID*")
+        st.write("---")
+        with st.form(key="form_cadastro_b2b_admin", clear_on_submit=True):
+            nome_novo_comercio = st.text_input(
+                "Nome do Estabelecimento Comercial:", placeholder="Ex: Supermercado Xavier, Petshop Bairro Alto...")
+            perfil_novo_comercio = st.selectbox("Perfil de Acesso do Cliente:", [
+                                                "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
+            st.write("")
+            botao_gerar_chave = st.form_submit_button(
+                "💼 Cadastrar Cliente e Emitir Token UUID")
+            if botao_gerar_chave:
+                if nome_novo_comercio:
+                    try:
+                        novo_registro = supabase.table("clientes_b2b").insert(
+                            {"nome_estabelecimento": nome_novo_comercio.strip().title(), "perfil_segmento": perfil_novo_comercio}).execute()
+                        if novo_registro.data:
+                            st.success(
+                                "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
+                            st.info(
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
+                            st.warning(
+                                "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
+                    except Exception as error_db:
+                        st.error(
+                            f"⚠️ Falha na conexão com o banco: {str(error_db)}")
+                else:
+                    st.warning(
+                        "⚠️ Preencha o nome do estabelecimento para emitir a credencial.")
+        st.write("---")
+
     if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
         st.session_state.busca_ativa = True
         try:
@@ -417,14 +451,11 @@ elif st.session_state.tela_atual == "comerciante":
 
                         idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
                             "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
-
-                        # CORREÇÃO DE SINTAXE PURA: Atribuição tradicional de strings sem operador walrus perigoso
                         categoria_limpa = "Serviço Público / Infraestrutura" if "Público" in cat_bruta or "Infra" in cat_bruta else (
                             "Serviço Local / Novo Estabelecimento" if "Local" in cat_bruta or "Serviço" in cat_bruta else "Produto / Marca")
 
                         dados_limpos.append({
-                            "ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(),
-                            "Categoria": categoria_limpa,
+                            "ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa,
                             "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
                             "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg,
                             "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""
@@ -486,52 +517,12 @@ elif st.session_state.tela_atual == "comerciante":
                                  "Serviço Local / Novo Estabelecimento"]
             elif filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                 df_filtrado = df[df['Categoria'] == "Produto / Marca"]
-
             if termo_busca:
                 df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
-
             if not df_filtrado.empty:
                 df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                     lambda x: 1 if x == loja_alvo_prioridade else 0)
-                # --- INTERFACE MASTER: PAINEL ADMINISTRATIVO SECRETO (GERADOR DE TOKENS UUID) ---
-    if st.session_state.perfil_cliente == "admin":
-        st.markdown("### 🛠️ Painel Administrativo Mestre")
-        st.markdown(
-            "##### *Cadastro de Assinantes e Emissão Automática de Tokens UUID*")
-        st.write("---")
-
-        with st.form(key="form_cadastro_b2b_admin", clear_on_submit=True):
-            nome_novo_comercio = st.text_input(
-                "Nome do Estabelecimento Comercial:", placeholder="Ex: Supermercado Xavier, Petshop Bairro Alto...")
-            perfil_novo_comercio = st.selectbox("Perfil de Acesso do Cliente:", [
-                                                "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
-            st.write("")
-            botao_gerar_chave = st.form_submit_button(
-                "💼 Cadastrar Cliente e Emitir Token UUID")
-
-            if botao_gerar_chave:
-                if nome_novo_comercio:
-                    try:
-                        # Injeta os dados na tabela e força o Supabase a devolver a chave gerada de volta para o Python
-                        novo_registro = supabase.table("clientes_b2b").insert(
-                            {"nome_estabelecimento": nome_novo_comercio.strip().title(), "perfil_segmento": perfil_novo_comercio}).execute()
-                        if novo_registro.data:
-                            chave_uuid_gerada = novo_registro.data[0]["token_acesso"]
-                            st.success(
-                                "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
-                            st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{chave_uuid_gerada}`")
-                            st.warning(
-                                "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
-                    except Exception as error_db:
-                        st.error(
-                            f"⚠️ Falha na conexão com o banco: {str(error_db)}")
-                else:
-                    st.warning(
-                        "⚠️ Preencha o nome do estabelecimento para emitir a credencial.")
-
-                # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR/JORNALISTA) ---
                 if espectador_analitico:
                     df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                         "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
@@ -547,18 +538,14 @@ elif st.session_state.tela_atual == "comerciante":
                             "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
                         label_tag = f"🔥 CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
                             f"⚠️ OPORTUNIDADE • {clientes} CPFs Únicos" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF Único")
-
                         st.markdown(
                             f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Espera: {dynamic_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
                         detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
                         st.write("📍 **Localização das Reclamações Coletadas:**")
-                        locais_unicos = detalhes_item['Cidade'].unique()
-                        for loc in locais_unicos:
+                        for loc in detalhes_item['Cidade'].unique():
                             st.markdown(f"  * **{loc}**")
                         st.markdown(
                             "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-
-                # --- INTERFACE 2: INTERFACE OPERACIONAL + REVERSO (LOJISTAS) ---
                 else:
                     df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
                         "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
@@ -571,13 +558,8 @@ elif st.session_state.tela_atual == "comerciante":
                         item_nome = linha['O que Falta']
                         volume = float(linha['Volume_Total'])
                         sou_alvo = int(linha['Foco_Dono'])
-                        if "Marketplace" in filtro_frente:
-                            classe_tag, label_tag = "tag-calor-media", f"🎯 REVERSO • {int(volume)} Compradores"
-                        elif sou_alvo == 1:
-                            classe_tag, label_tag = "tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos"
-                        else:
-                            classe_tag, label_tag = "tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"
-
+                        classe_tag, label_tag = ("tag-calor-media", f"🎯 REVERSO • {int(volume)} Compradores") if "Marketplace" in filtro_frente else (
+                            ("tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos") if sou_alvo == 1 else ("tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"))
                         st.markdown(
                             f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
                         detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
@@ -585,17 +567,14 @@ elif st.session_state.tela_atual == "comerciante":
                             sub_id = sub_linha['ID']
                             sub_local = sub_linha['Local/Referência']
                             contato_morador = sub_linha['Contato']
-                            prefixo_local = f"🔥 **SEU ESTABELECIMENTO:** {sub_local}" if sub_local == loja_alvo_prioridade else f"📍 **Captado no concorrente:** {sub_local}"
-                            st.markdown(
-                                f"{prefixo_local} ({sub_linha['Cidade']})")
+                            st.markdown(f"{f'🔥 **SEU ESTABELECIMENTO:** {sub_local}' if sub_local ==
+                                        loja_alvo_prioridade else f'📍 **Captado no concorrente:** {sub_local}'} ({sub_linha['Cidade']})")
                             if sub_linha['Observação']:
                                 st.info(
                                     f"💬 *Relato:* \"{sub_linha['Observação']}\"")
-
                             if contato_morador and ("Marketplace" in filtro_frente or sub_local != loja_alvo_prioridade):
                                 st.success(
                                     f"📱 **Cliente Faminto!** Chame no WhatsApp e ofereça o item: `{contato_morador}`")
-
                             if "Marketplace" not in filtro_frente:
                                 id_confirmacao = f"confirma_baixa_{sub_id}"
                                 if id_confirmacao not in st.session_state:
