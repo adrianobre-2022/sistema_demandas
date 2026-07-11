@@ -26,7 +26,7 @@ st.set_page_config(page_title="E o que falta?",
 def obter_pegada_digital():
     try:
         headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",").strip()
+        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0].strip()
         agente = headers.get("User-Agent", "Desconhecido")
         return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
     except:
@@ -153,7 +153,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("")
             botao_enviar = st.form_submit_button(
                 "Registrar Ocorrência", use_container_width=True)
-
         if botao_enviar:
             if item_solicitado and local_ocorrencia:
                 texto_usuario, local_usuario = item_solicitado.strip(
@@ -264,6 +263,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
+
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -279,6 +279,7 @@ elif st.session_state.tela_atual == "autenticacao":
     st.write("")
     botao_validar = st.button("Validar Credenciais e Acessar",
                               use_container_width=True, key="btn_validar_token_hibrido")
+
     if botao_validar or (token_inserido and not st.session_state.token_valido):
         if token_inserido in ["COMERCIO10", "SUPER_VILA_77"]:
             st.session_state.token_valido = True
@@ -374,7 +375,6 @@ elif st.session_state.tela_atual == "comerciante":
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
-
     if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
         st.session_state.busca_ativa = True
         try:
@@ -459,8 +459,7 @@ elif st.session_state.tela_atual == "comerciante":
                         d for d in dados_limpos if d["Categoria"] == "Serviço Público / Infraestrutura"]
                 elif st.session_state.perfil_cliente == "jornalista":
                     dados_limpos = [d for d in dados_limpos if d["SubSegmento"] in [
-                        "Zeladoria", "Investimento", "Geral"]]
-
+                        "Zeladoria", "Investimento"]]
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico: {str(e)}")
@@ -489,20 +488,18 @@ elif st.session_state.tela_atual == "comerciante":
                 if espectador_analitico:
                     df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                         "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
-                    st.markdown(
-                        "#### 📥 Exportar Relatório de Expansão Estatística")
+                    st.markdown("#### 📈 Ranking de Oportunidades")
+                    # CHAVE DINÂMICA IMPLACÁVEL: Atrela a key ao filtro ativo eliminando o erro de elemento duplicado em reloads
                     st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
-                                       file_name="expansao.pdf", mime="application/pdf", key="btn_pdf_analitico")
+                                       file_name="expansao.pdf", mime="application/pdf", key=f"btn_pdf_{filtro_frente}")
                     st.write("---")
-                    st.markdown(
-                        "#### 📈 Ranking de Oportunidades por Clientes Únicos")
                     for indice, dynamic_line in df_analitico.iterrows():
                         item_nome = dynamic_line['O que Falta']
                         clientes = int(dynamic_line['Clientes_Unicos'])
                         alertas = int(dynamic_line['Alertas_Totais'])
                         classe_tag = "tag-calor-alta" if clientes >= 5 else (
                             "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
-                        label_tag = f"🔥 VAZIO CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
+                        label_tag = f"🔥 CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
                             f"⚠️ OPORTUNIDADE • {clientes} CPFs Únicos" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF Único")
 
                         st.markdown(
@@ -525,173 +522,7 @@ elif st.session_state.tela_atual == "comerciante":
                     st.write("---")
                     st.markdown("#### 📈 Detalhamento das Demandas Ativas")
                     for indice, linha in df_agrupado.iterrows():
-                        item_nome = linha['O que Falta']
-                        volume = float(linha['Volume_Total'])
-                        sou_alvo = int(linha['Foco_Dono'])
-                        if "Marketplace" in filtro_frente:
-                            classe_tag, label_tag = "tag-calor-media", f"🎯 REVERSO • {int(volume)} Compradores"
-                        elif sou_alvo == 1:
-                            classe_tag, label_tag = "tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos"
-                        else:
-                            classe_tag, label_tag = "tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"
-
-                        st.markdown(
-                            f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
-                        detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                        for _, sub_linha in detalhes_item.iterrows():
-                            sub_id = sub_linha['ID']
-                            sub_local = sub_linha['Local/Referência']
-                            contato_morador = sub_linha['Contato']
-                            prefixo_local = f"🔥 **SEU ESTABELECIMENTO:** {sub_local}" if sub_local == loja_alvo_prioridade else f"📍 **Captado no concorrente:** {sub_local}"
-                            st.markdown(
-                                f"{prefixo_local} ({sub_linha['Cidade']})")
-                            if sub_linha['Observação']:
-                                st.info(
-                                    f"💬 *Relato:* \"{sub_linha['Observação']}\"")
-
-                            if contato_morador and ("Marketplace" in filtro_frente or sub_local != loja_alvo_prioridade):
-                                st.success(
-                                    f"📱 **Cliente Faminto!** Chame no WhatsApp e ofereça o item: `{contato_morador}`")
-
-                            if "Marketplace" not in filtro_frente:
-                                id_confirmacao = f"confirma_baixa_{sub_id}"
-                                if id_confirmacao not in st.session_state:
-                                    st.session_state[id_confirmacao] = False
-                                if not st.session_state[id_confirmacao]:
-                                    if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}"):
-                                        st.session_state[id_confirmacao] = True
-                                        st.rerun()
-                                else:
-                                    st.warning("Confirmar reposição?")
-                                    col_b1, col_b2 = st.columns(2)
-                                    with col_b1:
-                                        if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}"):
-                                            supabase.table("relatos_escassez").update(
-                                                {"status": "Atendido"}).eq("id", sub_id).execute()
-                                            st.success("🎉 Concluído!")
-                                            import time
-                                            time.sleep(1)
-                                            st.session_state[id_confirmacao] = False
-                                            st.session_state.busca_ativa = False
-                                            st.rerun()
-                                    with col_b2:
-                                        if st.button("❌ Cancelar", key=f"btn_cancelar_{sub_id}"):
-                                            st.session_state[id_confirmacao] = False
-                                            st.rerun()
-                        st.markdown(
-                            "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-            else:
-                st.info("ℹ️ Nenhum registro ativo encontrado.")
-        else:
-            st.info("ℹ️ O banco de dados está limpo!")
-
-    if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
-        st.session_state.busca_ativa = True
-        try:
-            resposta = supabase.table("relatos_escassez").select(
-                "id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
-            dados_limpos = []
-            agora = datetime.datetime.now(datetime.timezone.utc)
-            if resposta.data and len(resposta.data) > 0:
-                for registro in resposta.data:
-                    if registro.get("locais_destino"):
-                        sub_seg = str(registro.get(
-                            "sub_segmento", "Geral")).strip()
-                        cat_bruta = str(registro.get(
-                            "tipo_carencia", "Produto / Marca")).strip()
-
-                        if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and ("Infraestrutura" in cat_bruta or "Público" in cat_bruta):
-                            continue
-                        if "Marketplace" not in filtro_frente and not espectador_analitico:
-                            if st.session_state.perfil_cliente == "comerciante" and sub_seg != "Supermercado":
-                                continue
-                            elif st.session_state.perfil_cliente == "saude" and sub_seg != "Saude":
-                                continue
-                            elif st.session_state.perfil_cliente == "petshop" and sub_seg != "Petshop":
-                                continue
-                            elif st.session_state.perfil_cliente == "beleza" and sub_seg != "Beleza":
-                                continue
-
-                        # BLOQUEIO CIRÚRGICO DE NICHOS DO JORNALISTA (Ele consome dados consolidados sem vazamentos operacionais de marcas)
-                        if st.session_state.perfil_cliente == "investidor" and (sub_seg != "Investimento" or cat_bruta != "Serviço Local / Novo Estabelecimento"):
-                            continue
-                        if st.session_state.perfil_cliente == "jornalista" and sub_seg == "Supermercado":
-                            continue
-                        if st.session_state.perfil_cliente == "gestor" and cat_bruta != "Serviço Público / Infraestrutura":
-                            continue
-
-                        idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
-                            "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
-                        dados_limpos.append({
-                            "ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(),
-                            "Categoria": "Produto / Marca" if "Produto" in cat_bruta else ("Serviço Local / Novo Estabelecimento" if "Serviço" in cat_bruta else "Serviço Público / Infraestrutura"),
-                            "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
-                            "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg,
-                            "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""
-                        })
-        except Exception as e:
-            st.error(f"⚠️ Erro técnico: {str(e)}")
-    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
-        df = st.session_state.dados_grafico
-        if not df.empty:
-            df_filtrado = df
-            if filtro_frente == "Apenas Produtos/Marcas (Varejo)":
-                df_filtrado = df[df['Categoria'] == "Produto / Marca"]
-            elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Local / Novo Estabelecimento"]
-            elif filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                df_filtrado = df[df['Categoria'] ==
-                                 "Serviço Público / Infraestrutura"]
-            if termo_busca:
-                df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
-                    termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
-
-            if not df_filtrado.empty:
-                df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
-                    lambda x: 1 if x == loja_alvo_prioridade else 0)
-
-                # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR) ---
-                if espectador_analitico:
-                    df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
-                        "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
-                    st.markdown(
-                        "#### 📥 Exportar Relatório de Expansão Estatística")
-                    st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
-                                       file_name="expansao.pdf", mime="application/pdf", key="btn_pdf_analitico")
-                    st.write("---")
-                    st.markdown(
-                        "#### 📈 Ranking de Oportunidades por Clientes Únicos")
-                    for indice, dynamic_line in df_analitico.iterrows():
-                        item_nome = dynamic_line['O que Falta']
-                        clientes = int(dynamic_line['Clientes_Unicos'])
-                        alertas = int(dynamic_line['Alertas_Totais'])
-                        classe_tag = "tag-calor-alta" if clientes >= 5 else (
-                            "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
-                        label_tag = f"🔥 VAZIO CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
-                            f"⚠️ OPORTUNIDADE • {clientes} CPFs Únicos" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF Único")
-
-                        st.markdown(
-                            f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Espera: {dynamic_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
-                        detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                        st.write("📍 **Localização das Reclamações Coletadas:**")
-                        locais_unicos = detalhes_item['Cidade'].unique()
-                        for loc in locais_unicos:
-                            st.markdown(f"  * **{loc}**")
-                        st.markdown(
-                            "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-
-                # --- INTERFACE 2: INTERFACE OPERACIONAL + REVERSO (LOJISTAS) ---
-                else:
-                    df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
-                        "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
-                    st.markdown("#### 📥 Exportar Inteligência de Gôndola")
-                    st.download_button(label="Baixar Relatório (PDF)", data=b"PDF",
-                                       file_name="relatorio.pdf", mime="application/pdf", key="btn_pdf_operacional")
-                    st.write("---")
-                    st.markdown("#### 📈 Detalhamento das Demandas Ativas")
-                    for indice, linha in df_agrupado.iterrows():
-                        item_nome = linha['O que Falta']
+                        item_nome = Finder = linha['O que Falta']
                         volume = float(linha['Volume_Total'])
                         sou_alvo = int(linha['Foco_Dono'])
                         if "Marketplace" in filtro_frente:
