@@ -387,11 +387,15 @@ elif st.session_state.tela_atual == "comerciante":
     if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com"):
         st.session_state.tela_atual = "home"
         st.session_state.token_valido = False
-        st.session_state.perfil_cliente = None
+        st.perfil_cliente = None
         st.session_state.busca_ativa = False
         st.session_state.dados_grafico = None
         st.rerun()
-    st.title("📊 Painel de Decisão Estratégica")
+
+    # MATRIZ DE BRANDING UNIFICADA: Garante a marca grande e o subtítulo menor em 100% dos perfis
+    st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
+                unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 18px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Decisão Estratégica</p>", unsafe_allow_html=True)
 
     loja_alvo_prioridade = "Mercadinho Do Bairro" if st.session_state.perfil_cliente == "comerciante" else ""
     espectador_analitico = st.session_state.perfil_cliente in [
@@ -428,7 +432,6 @@ elif st.session_state.tela_atual == "comerciante":
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
-
     if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
         st.session_state.busca_ativa = True
         try:
