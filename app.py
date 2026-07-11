@@ -323,6 +323,7 @@ elif st.session_state.tela_atual == "autenticacao":
             st.rerun()
         elif token_inserido != "":
             st.error("❌ Token inválido.")
+
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -338,12 +339,10 @@ elif st.session_state.tela_atual == "comerciante":
 
     st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
-
     loja_alvo_prioridade = "Mercadinho Do Bairro" if st.session_state.perfil_cliente == "comerciante" else ""
     espectador_analitico = st.session_state.perfil_cliente in [
         "investidor", "gestor", "jornalista"]
 
-    # DEFINIÇÃO UNIVERSAL ANTECIPADA: Evita o erro de name undefined em todos os escopos
     if st.session_state.perfil_cliente == "comerciante":
         opcoes_filtro = [
             "Apenas Produtos/Marcas (Varejo)", "🎯 Marketplace Reverso (Oportunidades Gerais do Bairro)"]
@@ -379,9 +378,9 @@ elif st.session_state.tela_atual == "comerciante":
             "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura)*")
 
     st.write("---")
-    # O selectbox agora é gerado antes de qualquer processamento de dados do Pandas
     filtro_frente = st.selectbox(
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
+
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
