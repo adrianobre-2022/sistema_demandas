@@ -316,6 +316,11 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.perfil_cliente = "jornalista"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
+        elif token_inserido == "ADMIN99":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "admin"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
         elif token_inserido != "":
             st.error("❌ Token inválido.")
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
@@ -489,6 +494,42 @@ elif st.session_state.tela_atual == "comerciante":
             if not df_filtrado.empty:
                 df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                     lambda x: 1 if x == loja_alvo_prioridade else 0)
+                # --- INTERFACE MASTER: PAINEL ADMINISTRATIVO SECRETO (GERADOR DE TOKENS UUID) ---
+    if st.session_state.perfil_cliente == "admin":
+        st.markdown("### 🛠️ Painel Administrativo Mestre")
+        st.markdown(
+            "##### *Cadastro de Assinantes e Emissão Automática de Tokens UUID*")
+        st.write("---")
+
+        with st.form(key="form_cadastro_b2b_admin", clear_on_submit=True):
+            nome_novo_comercio = st.text_input(
+                "Nome do Estabelecimento Comercial:", placeholder="Ex: Supermercado Xavier, Petshop Bairro Alto...")
+            perfil_novo_comercio = st.selectbox("Perfil de Acesso do Cliente:", [
+                                                "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
+            st.write("")
+            botao_gerar_chave = st.form_submit_button(
+                "💼 Cadastrar Cliente e Emitir Token UUID")
+
+            if botao_gerar_chave:
+                if nome_novo_comercio:
+                    try:
+                        # Injeta os dados na tabela e força o Supabase a devolver a chave gerada de volta para o Python
+                        novo_registro = supabase.table("clientes_b2b").insert(
+                            {"nome_estabelecimento": nome_novo_comercio.strip().title(), "perfil_segmento": perfil_novo_comercio}).execute()
+                        if novo_registro.data:
+                            chave_uuid_gerada = novo_registro.data[0]["token_acesso"]
+                            st.success(
+                                "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
+                            st.info(
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{chave_uuid_gerada}`")
+                            st.warning(
+                                "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
+                    except Exception as error_db:
+                        st.error(
+                            f"⚠️ Falha na conexão com o banco: {str(error_db)}")
+                else:
+                    st.warning(
+                        "⚠️ Preencha o nome do estabelecimento para emitir a credencial.")
 
                 # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR/JORNALISTA) ---
                 if espectador_analitico:
