@@ -414,6 +414,7 @@ elif st.session_state.tela_atual == "comerciante":
                 "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura Urbana)*")
 
         st.write("---")
+
         termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                     placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
@@ -439,7 +440,7 @@ elif st.session_state.tela_atual == "comerciante":
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
                             st.warning(
                                 "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
                     except Exception as error_db:
@@ -486,7 +487,10 @@ elif st.session_state.tela_atual == "comerciante":
                             "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
                         categoria_limpa = "Serviço Público / Infraestrutura" if "Público" in cat_bruta or "Infra" in cat_bruta else (
                             "Serviço Local / Novo Estabelecimento" if "Local" in cat_bruta or "Serviço" in cat_bruta else "Produto / Marca")
-                        dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"], "Dias": i= idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
+
+                        # CORREÇÃO CIRÚRGICA DE SINTAXE: Removido o caractere intruso 'i='
+                        dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
+                                            "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
             if not dados_limpos:
                 dados_limpos = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
@@ -520,7 +524,7 @@ elif st.session_state.tela_atual == "comerciante":
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico: {str(e)}")
-    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
+
         df = st.session_state.dados_grafico
         if not df.empty:
             df_filtrado = df
