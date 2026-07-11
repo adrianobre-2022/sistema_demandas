@@ -423,10 +423,11 @@ elif st.session_state.tela_atual == "comerciante":
         st.markdown(
             "### 🛠️ Painel Administrativo Mestre\n##### *Cadastro de Assinantes e Emissão Automática de Tokens UUID*")
         st.write("---")
-        with st.form(key="form_cadastro_b2b_admin", clear_on_submit=True):
+        id_formulario_admin = f"form_cadastro_admin_{datetime.datetime.now().strftime('%M%S')}"
+        with st.form(key=id_formulario_admin, clear_on_submit=True):
             nome_novo_comercio = st.text_input(
                 "Nome do Estabelecimento Comercial / Cliente Real:", placeholder="Ex: Supermercado Xavier, Petshop Bairro Alto...")
-            perfil_novo_comercio = st.selectbox("Perfil de Acesso Corporativo (Nível de Filtro):", [
+            perfil_novo_comercio = st.selectbox("Perfil de Acesso Corporativo:", [
                                                 "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
             st.write("")
             botao_gerar_chave = st.form_submit_button(
@@ -487,8 +488,6 @@ elif st.session_state.tela_atual == "comerciante":
                             "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
                         categoria_limpa = "Serviço Público / Infraestrutura" if "Público" in cat_bruta or "Infra" in cat_bruta else (
                             "Serviço Local / Novo Estabelecimento" if "Local" in cat_bruta or "Serviço" in cat_bruta else "Produto / Marca")
-
-                        # CORREÇÃO CIRÚRGICA DE SINTAXE: Removido o caractere intruso 'i='
                         dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
                                             "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
             if not dados_limpos:
@@ -524,7 +523,7 @@ elif st.session_state.tela_atual == "comerciante":
             st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
         except Exception as e:
             st.error(f"⚠️ Erro técnico: {str(e)}")
-
+    if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
         df = st.session_state.dados_grafico
         if not df.empty:
             df_filtrado = df
@@ -536,16 +535,12 @@ elif st.session_state.tela_atual == "comerciante":
                                  "Serviço Local / Novo Estabelecimento"]
             elif filtro_frente == "Apenas Produtos/Marcas (Varejo)":
                 df_filtrado = df[df['Categoria'] == "Produto / Marca"]
-
             if termo_busca:
                 df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
                     termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
-
             if not df_filtrado.empty:
                 df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                     lambda x: 1 if x == loja_alvo_prioridade else 0)
-
-                # --- INTERFACE 1: INTERFACE ANALÍTICA (INVESTIDOR/GESTOR/JORNALISTA) ---
                 if espectador_analitico and st.session_state.perfil_cliente != "admin":
                     df_analitico = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                         "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
@@ -561,7 +556,6 @@ elif st.session_state.tela_atual == "comerciante":
                             "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
                         label_tag = f"🔥 CRÍTICO • {clientes} CPFs Únicos" if clientes >= 5 else (
                             f"⚠️ OPORTUNIDADE • {clientes} CPFs Únicos" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF Único")
-
                         st.markdown(
                             f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Espera: {dynamic_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
                         detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
@@ -570,8 +564,6 @@ elif st.session_state.tela_atual == "comerciante":
                             st.markdown(f"  * **{loc}**")
                         st.markdown(
                             "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-
-                # --- INTERFACE 2: INTERFACE OPERACIONAL + REVERSO (LOJISTAS) ---
                 elif st.session_state.perfil_cliente != "admin":
                     df_agrupado = df_filtrado.groupby(["O que Falta", "Categoria", "Cidade"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
                         "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
@@ -586,7 +578,6 @@ elif st.session_state.tela_atual == "comerciante":
                         sou_alvo = int(linha['Foco_Dono'])
                         classe_tag, label_tag = ("tag-calor-media", f"🎯 REVERSO • {int(volume)} Compradores") if "Marketplace" in filtro_frente else (
                             ("tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos") if sou_alvo == 1 else ("tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"))
-
                         st.markdown(
                             f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
                         detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
