@@ -584,9 +584,6 @@ elif st.session_state.tela_atual == "comerciante":
         else:
             st.info("ℹ️ O banco de dados está limpo!")
 
-    termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
-                                placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
-
     if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
         st.session_state.busca_ativa = True
         try:
