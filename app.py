@@ -26,14 +26,14 @@ st.set_page_config(page_title="E o que falta?",
 def obter_pegada_digital():
     try:
         headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0].strip()
+        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",").strip()
         agente = headers.get("User-Agent", "Desconhecido")
         return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
     except:
         return "pegada_generica_fallback"
 
 
-# --- CUSTOMIZAÇÃO ESTÊTICA PREMIUM ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM ---
 st.markdown("""
     <style>
     .stApp { background-color: #121212 !important; color: #FFFFFF !important; }
@@ -87,72 +87,6 @@ if st.session_state.tela_atual == "home":
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
 
-# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
-elif st.session_state.tela_atual == "consumidor":
-    col_nav1, col_nav2 = st.columns(2, gap="small")
-    with col_nav1:
-        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
-            st.session_state.tela_atual = "home"
-            st.rerun()
-    with col_nav2:
-        if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
-
-    st.title("🔍 E o que falta?")
-
-    if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown("##### 📍 Onde você está agora?")
-        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP - Centro",
-                                     key="input_regiao_via_unica", label_visibility="collapsed")
-        st.write(
-            "Escolha o tipo de ausência que você quer registrar no bairro ou comunidade:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
-            st.session_state.aba_consumidor = "produto"
-            st.rerun()
-        st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
-            st.session_state.aba_consumidor = "servico"
-            st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
-            st.session_state.aba_consumidor = "infra"
-            st.rerun()
-
-    else:
-        if st.session_state.aba_consumidor == "produto":
-            st.markdown(
-                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias.*")
-            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X, ração de gato..."
-            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia, padaria..."
-            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto ou outra loja ofereça? (Opcional)", "Produto / Marca"
-        elif st.session_state.aba_consumidor == "servico":
-            st.markdown(
-                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
-            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro/comunidade?", "Ex: Sapataria, lavanderia, costureira, padaria..."
-            label_local, placeholder_local = "Em qual rua, travessa, faculdade ou ponto isso faz falta?", "Ex: Avenida Principal, Bloco C da Faculdade X..."
-            label_contato, tipo_envio = "Quer ser avisado caso este serviço seja aberto ou oferecido? (Opcional)", "Serviço Local / Novo Estabelecimento"
-        else:
-            st.markdown(
-                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças públicas.*")
-            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação, falta de médicos..."
-            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y, Rua Z..."
-            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
-        st.write("")
-
-        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=True):
-            item_solicitado = st.text_input(
-                label=label_item, placeholder=placeholder_item, key="input_item")
-            local_ocorrencia = st.text_input(
-                label=label_local, placeholder=placeholder_local, key="input_local")
-            observacao_usuario = st.text_area(
-                label="Mais detalhes (Opcional):", placeholder="Ex: Detalhe o ocorrido de forma construtiva...", key="input_obs")
-            contato_usuario = st.text_input(
-                label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
-            st.write("")
-            botao_enviar = st.form_submit_button(
-                "Registrar Ocorrência", use_container_width=True)
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
@@ -274,15 +208,15 @@ elif st.session_state.tela_atual == "consumidor":
                             try:
                                 partes_uf = texto_regiao.split("/")
                                 if len(partes_uf) > 1:
-                                    estado_detectado = partes_uf[1].split(
-                                        "-")[0].strip().upper()[:2]
+                                    estado_detectado = partes_uf.split(
+                                        "-").strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
 
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data[0]["id"] if local_data.data and len(
+                        local_id = local_data.data["id"] if local_data.data and len(
                             local_data.data) > 0 else None
 
                         if local_id:
@@ -392,7 +326,6 @@ elif st.session_state.tela_atual == "comerciante":
         st.session_state.dados_grafico = None
         st.rerun()
 
-    # MATRIZ DE BRANDING UNIFICADA: Garante a marca grande e o subtítulo menor em 100% dos perfis
     st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 18px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Decisão Estratégica</p>", unsafe_allow_html=True)
@@ -432,6 +365,7 @@ elif st.session_state.tela_atual == "comerciante":
         label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
+
     if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
         st.session_state.busca_ativa = True
         try:
@@ -474,15 +408,15 @@ elif st.session_state.tela_atual == "comerciante":
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 4, "Observação": "Falta toda quarta.", "SubSegmento": "Supermercado", "Pegada": "hash1", "Contato": "11999999999"},
                     {"ID": 992, "O que Falta": "Feijão Preto Tipo 1 Camil", "Categoria": "Produto / Marca", "Local/Referência": "Supermercado Xavier",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 1, "Observação": "Gôndola zerada.", "SubSegmento": "Supermercado", "Pegada": "hash2", "Contato": ""},
+                        "Cidade": "São Paulo/SP - Tatuapé", "Dias": 1, "Observação": "Gôndola zerada.", "SubSegmento": "Supermercado", "Pegada": "hash2", "Contato": ""},
                     {"ID": 993, "O que Falta": "Lingerie Vermelha Rendada", "Categoria": "Produto / Marca", "Local/Referência": "Bairro Popular",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 2, "Observação": "Falta loja focada.", "SubSegmento": "Geral", "Pegada": "hash3", "Contato": "11888888888"},
                     {"ID": 994, "O que Falta": "Lavanderia Expressa Auto-Serviço", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Das Palmeiras",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 45, "Observação": "Prédios novos sem serviço.", "SubSegmento": "Geral", "Pegada": "hash4", "Contato": ""},
+                        "Cidade": "São Paulo/SP - Tatuapé", "Dias": 45, "Observação": "Prédios novos sem serviço.", "SubSegmento": "Geral", "Pegada": "hash4", "Contato": ""},
                     {"ID": 995, "O que Falta": "Ração Premium Gatos Royal", "Categoria": "Produto / Marca", "Local/Referência": "Petshop Bairro Alto",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 3, "Observação": "Sumiu do estoque.", "SubSegmento": "Petshop", "Pegada": "hash5", "Contato": ""},
                     {"ID": 996, "O que Falta": "Sapataria E Conserto De Salto", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Bairro Popular",
-                        "Cidade": "São Paulo/SP - Centro", "Dias": 14, "Observação": "Moradores viajam longe.", "SubSegmento": "Geral", "Pegada": "hash6", "Contato": ""},
+                        "Cidade": "São Paulo/SP - Tatuapé", "Dias": 14, "Observação": "Moradores viajam longe.", "SubSegmento": "Geral", "Pegada": "hash6", "Contato": ""},
                     {"ID": 997, "O que Falta": "Manutenção De Iluminação Pública", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua das Flores, 40",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 2, "Observação": "Poste apagado.", "SubSegmento": "Geral", "Pegada": "hash7", "Contato": ""}
                 ]
