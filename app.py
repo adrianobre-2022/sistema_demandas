@@ -75,6 +75,7 @@ if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
 if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
+
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 E o que falta?")
@@ -121,6 +122,36 @@ elif st.session_state.tela_atual == "consumidor":
         if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
+# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
+elif st.session_state.tela_atual == "consumidor":
+    col_nav1, col_nav2 = st.columns(2, gap="small")
+    with col_nav1:
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
+            st.session_state.tela_atual = "home"
+            st.rerun()
+    with col_nav2:
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
+    st.title("🔍 E o que falta?")
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown("##### 📍 Onde você está agora?")
+        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP - Centro",
+                                     key="input_regiao_via_unica", label_visibility="collapsed")
+        st.write(
+            "Escolha o tipo de ausência que você quer registrar no bairro ou comunidade:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
+            st.session_state.aba_consumidor = "produto"
+            st.rerun()
+        st.write("")
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
+            st.session_state.aba_consumidor = "servico"
+            st.rerun()
+        st.write("")
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
+            st.session_state.aba_consumidor = "infra"
+            st.rerun()
     else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown(
@@ -130,7 +161,7 @@ elif st.session_state.tela_atual == "consumidor":
             label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto ou outra loja ofereça? (Opcional)", "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
             st.markdown(
-                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+                "### 🏪 Novo Comércio / Service\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
             label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro/comunidade?", "Ex: Sapataria, lavanderia..."
             label_local, placeholder_local = "Em qual rua, travessa, faculdade ou ponto isso faz falta?", "Ex: Avenida Principal..."
             label_contato, tipo_envio = "Quer ser avisado caso este serviço seja aberto ou oferecido? (Opcional)", "Serviço Local / Novo Estabelecimento"
@@ -208,7 +239,7 @@ elif st.session_state.tela_atual == "consumidor":
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data[0]["id"] if local_data.data and len(
+                        local_id = local_data.data["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -306,7 +337,6 @@ elif st.session_state.tela_atual == "autenticacao":
             st.rerun()
         elif token_inserido != "":
             st.error("❌ Token inválido.")
-
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -326,42 +356,27 @@ elif st.session_state.tela_atual == "comerciante":
         "investidor", "gestor", "jornalista"]
 
     if st.session_state.perfil_cliente == "comerciante":
-        opcoes_filtro = [
-            "Apenas Produtos/Marcas (Varejo)", "🎯 Marketplace Reverso (Oportunidades Gerais do Bairro)"]
         st.markdown(
             "##### 🏪 *Nível de Acesso: Varejo Local (Foco em Gôndolas)*")
     elif st.session_state.perfil_cliente == "saude":
-        opcoes_filtro = ["Apenas Serviços de Saúde e Clínicas",
-                         "🎯 Marketplace Reverso (Oportunidades Gerais do Bairro)"]
         st.markdown("##### 🩺 *Nível de Acesso: Saúde & Bem-Estar*")
     elif st.session_state.perfil_cliente == "petshop":
-        opcoes_filtro = ["Apenas Produtos e Serviços Pet",
-                         "🎯 Marketplace Reverso (Oportunidades Gerais do Bairro)"]
         st.markdown("##### 🐶 *Nível de Acesso: Petshop & Veterinária*")
     elif st.session_state.perfil_cliente == "beleza":
-        opcoes_filtro = ["Apenas Serviços de Estética e Beleza",
-                         "🎯 Marketplace Reverso (Oportunidades Gerais do Bairro)"]
         st.markdown("##### 💈 *Nível de Acesso: Beleza & Estética*")
     elif st.session_state.perfil_cliente == "investidor":
-        opcoes_filtro = ["Oportunidades de Novos Negócios (Serviços)"]
         st.markdown(
             "##### 💼 *Nível de Acesso: Investidor e Expansão (Vazios Comerciais)*")
     elif st.session_state.perfil_cliente == "jornalista":
-        opcoes_filtro = [
-            "Infraestrutura Urbana (Setor Público)", "Oportunidades de Novos Negócios (Serviços)"]
         st.markdown(
             "##### 📰 *Nível de Acesso: Imprensa e Jornalismo Regional (Dados Consolidados)*")
     elif st.session_state.perfil_cliente == "admin":
-        opcoes_filtro = ["Painel de Controle Administrativo"]
         st.markdown("<p style='text-align: center; font-size: 24px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Controle Mestre</p>", unsafe_allow_html=True)
     else:
-        opcoes_filtro = ["Infraestrutura Urbana (Setor Público)"]
         st.markdown(
             "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura)*")
 
     st.write("---")
-    filtro_frente = st.selectbox(
-        label="Selecione a Frente de Inteligência:", options=opcoes_filtro, key="selectbox_frente")
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
@@ -411,23 +426,6 @@ elif st.session_state.tela_atual == "comerciante":
                                 "sub_segmento", "Geral")).strip()
                             cat_bruta = str(registro.get(
                                 "tipo_carencia", "Produto / Marca")).strip()
-                            if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and ("Infra" in cat_bruta or "Público" in cat_bruta or "Publico" in cat_bruta):
-                                continue
-                            if "Marketplace" not in filtro_frente and not espectador_analitico:
-                                if st.session_state.perfil_cliente == "comerciante" and "Super" not in sub_seg:
-                                    continue
-                                elif st.session_state.perfil_cliente == "saude" and "Saude" not in sub_seg and "Saúde" not in sub_seg:
-                                    continue
-                                elif st.session_state.perfil_cliente == "petshop" and "Pet" not in sub_seg:
-                                    continue
-                                elif st.session_state.perfil_cliente == "beleza" and "Beleza" not in sub_seg:
-                                    continue
-                            if st.session_state.perfil_cliente == "investidor" and ("Invest" not in sub_seg or "Local" not in cat_bruta):
-                                continue
-                            if st.session_state.perfil_cliente == "jornalista" and ("Super" in sub_seg or "Saude" in sub_seg or "Pet" in sub_seg or "Beleza" in sub_seg):
-                                continue
-                            if st.session_state.perfil_cliente == "gestor" and ("Infra" not in cat_bruta and "Público" not in cat_bruta and "Publico" not in cat_bruta):
-                                continue
                             idade_dias = max(0, (agora - datetime.datetime.fromisoformat(registro.get(
                                 "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
                             categoria_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_bruta or "Publico" in cat_bruta or "Infra" in cat_bruta or "Zeladoria" in sub_seg) else (
@@ -446,148 +444,163 @@ elif st.session_state.tela_atual == "comerciante":
                 for m in dados_mock:
                     if not any(d["O que Falta"].lower() == m["O que Falta"].lower() for d in dados_limpos):
                         dados_limpos.append(m)
-                if st.session_state.perfil_cliente == "comerciante":
-                    dados_limpos = [d for d in dados_limpos if "Super" in str(
-                        d["SubSegmento"]) and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "saude":
-                    dados_limpos = [d for d in dados_limpos if ("Saude" in str(d["SubSegmento"]) or "Saúde" in str(
-                        d["SubSegmento"])) and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "petshop":
-                    dados_limpos = [d for d in dados_limpos if "Pet" in str(
-                        d["SubSegmento"]) and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "beleza":
-                    dados_limpos = [d for d in dados_limpos if "Beleza" in str(
-                        d["SubSegmento"]) and d["Categoria"] != "Serviço Público / Infraestrutura"]
-                elif st.session_state.perfil_cliente == "investidor":
-                    dados_limpos = [
-                        d for d in dados_limpos if "Invest" in str(d["SubSegmento"])]
-                elif st.session_state.perfil_cliente == "gestor":
-                    dados_limpos = [d for d in dados_limpos if d["Categoria"] ==
-                                    "Serviço Público / Infraestrutura" or "Zeladoria" in str(d["SubSegmento"])]
-                elif st.session_state.perfil_cliente == "jornalista":
-                    dados_limpos = [d for d in dados_limpos if "Zeladoria" in str(
-                        d["SubSegmento"]) or "Invest" in str(d["SubSegmento"])]
                 st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
             except Exception as e:
                 st.error(f"⚠️ Erro técnico: {str(e)}")
         if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
             df = st.session_state.dados_grafico
             if not df.empty:
-                df_filtrado = df
-                if filtro_frente == "Infraestrutura Urbana (Setor Público)":
-                    df_filtrado = df[df['Categoria'] ==
-                                     "Serviço Público / Infraestrutura"]
-                elif filtro_frente == "Oportunidades de Novos Negócios (Serviços)":
-                    df_filtrado = df[df['Categoria'] ==
-                                     "Serviço Local / Novo Estabelecimento"]
-                elif filtro_frente == "Apenas Produtos/Marcas (Varejo)":
-                    df_filtrado = df[df['Categoria'] == "Produto / Marca"]
-                if termo_busca:
-                    df_filtrado = df_filtrado[df_filtrado['O que Falta'].str.contains(
-                        termo_busca, case=False) | df_filtrado['Local/Referência'].str.contains(termo_busca, case=False)]
-                if not df_filtrado.empty:
-                    df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
-                        lambda x: 1 if x == loja_alvo_prioridade else 0)
-
-                    # --- INTERFACE 1: INTERFACE ANALÍTICA AGRUPADA (INVESTIDOR / GESTOR / JORNALISTA) ---
-                    if espectador_analitico and st.session_state.perfil_cliente != "admin":
-                        st.markdown("#### 📈 Ranking de Oportunidades")
-                        st.markdown(
-                            f"<div style='text-align: right; font-size: 13px; color: #888888; margin-top:-35px; margin-bottom:15px;'>Total de Oportunidades: {len(df_filtrado)}</div>", unsafe_allow_html=True)
-                        st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
-                                           file_name="expansao.pdf", mime="application/pdf", key=f"btn_pdf_{filtro_frente}")
-                        st.write("---")
-                        df_agrupado_mestre = df_filtrado.groupby(["O que Falta", "Categoria"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
-                            "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
-                        for indice, mestre_line in df_agrupado_mestre.iterrows():
-                            item_nome = mestre_line['O que Falta']
-                            clientes = int(mestre_line['Clientes_Unicos'])
-                            alertas = int(mestre_line['Alertas_Totais'])
-                            classe_tag = "tag-calor-alta" if clientes >= 5 else (
-                                "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
-                            label_tag = f"🔥 CRÍTICO • {clientes} CPFs" if clientes >= 5 else (
-                                f"⚠️ OPORTUNIDADE • {clientes} CPFs" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF")
-                            st.markdown(
-                                f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {alertas} relatos • Maior espera: {mestre_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
-                            detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                            st.write(
-                                "📍 **Localização e Detalhes das Ocorrências Coletadas:**")
-                            for _, sub_item in detalhes_item.iterrows():
-                                st.markdown(
-                                    f"  * **{sub_item['Cidade']}** - *Ponto:* {sub_item['Local/Referência']}")
-                                if sub_item['Observação']:
-                                    st.markdown(
-                                        f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
-                            st.markdown(
-                                "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-
-                    # --- INTERFACE 2: INTERFACE OPERACIONAL AGRUPADA (LOJISTAS) ---
-                    elif st.session_state.perfil_cliente != "admin":
-                        st.markdown("#### 📈 Detalhamento das Demandas Ativas")
-                        total_sua_loja = len(
-                            df_filtrado[df_filtrado['Local/Referência'] == loja_alvo_prioridade])
-                        total_conconrrencia = len(df_filtrado) - total_sua_loja
-                        st.markdown(
-                            f"<div style='text-align: right; font-size: 12px; color: #888888; margin-top:-35px; margin-bottom:15px;'>Sua Loja: {total_sua_loja} • Concorrência: {total_conconrrencia} • Total Geral: {len(df_filtrado)}</div>", unsafe_allow_html=True)
-                        st.download_button(label="Baixar Relatório (PDF)", data=b"PDF",
-                                           file_name="relatorio.pdf", mime="application/pdf", key="btn_pdf_operacional")
-                        st.write("---")
-                        df_agrupado_mestre = df_filtrado.groupby(["O que Falta", "Categoria"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
-                            "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
-                        for indice, linha in df_agrupado_mestre.iterrows():
-                            item_nome = linha['O que Falta']
-                            volume = float(linha['Volume_Total'])
-                            sou_alvo = int(linha['Foco_Dono'])
-                            classe_tag, label_tag = ("tag-calor-media", f"🎯 REVERSO • {int(volume)} Pedidos") if "Marketplace" in filtro_frente else (
-                                ("tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos") if sou_alvo == 1 else ("tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"))
-                            st.markdown(
-                                f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
-                            detalhes_item = df_filtrado[df_filtrado['O que Falta'] == item_nome]
-                            for _, sub_linha in detalhes_item.iterrows():
-                                sub_id = sub_linha['ID']
-                                sub_local = sub_linha['Local/Referência']
-                                contato_morador = sub_linha['Contato']
-                                is_dono_vazio = (
-                                    sub_local == loja_alvo_prioridade)
-                                st.markdown(
-                                    f"{'🔥 **SEU ESTABELECIMENTO:** ' if is_dono_vazio else '📍 **Captado no concorrente:** '}{sub_local} ({sub_linha['Cidade']})")
-                                if sub_linha['Observação']:
-                                    st.info(
-                                        f"💬 *Relato:* \"{sub_linha['Observação']}\"")
-                                if contato_morador and ("Marketplace" in filtro_frente or not is_dono_vazio):
-                                    st.success(
-                                        f"📱 **Cliente Faminto!** WhatsApp: `{contato_morador}`")
-                                if "Marketplace" not in filtro_frente and is_dono_vazio:
-                                    id_confirmacao = f"confirma_baixa_{sub_id}"
-                                    if id_confirmacao not in st.session_state:
-                                        st.session_state[id_confirmacao] = False
-                                    if not st.session_state[id_confirmacao]:
-                                        if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}"):
-                                            st.session_state[id_confirmacao] = True
-                                            st.rerun()
-                                    else:
-                                        st.warning("Confirmar reposição?")
-                                        col_b1, col_b2 = st.columns(2)
-                                        with col_b1:
-                                            if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}"):
-                                                supabase.table("relatos_escassez").update(
-                                                    {"status": "Atendido"}).eq("id", sub_id).execute()
-                                                st.success("🎉 Concluído!")
-                                                import time
-                                                time.sleep(1)
-                                                st.session_state[id_confirmacao] = False
-                                                st.session_state.busca_ativa = False
-                                                st.rerun()
-                                        with col_b2:
-                                            if st.button("❌ Cancelar", key=f"btn_cancelar_{sub_id}"):
-                                                st.session_state[id_confirmacao] = False
-                                                st.rerun()
-                            st.markdown(
-                                "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
+                if st.session_state.perfil_cliente == "comerciante":
+                    nomes_abas = [
+                        "📦 Apenas Produtos/Marcas (Varejo)", "🎯 Marketplace Reverso (Ocorrências Gerais)"]
+                elif st.session_state.perfil_cliente == "saude":
+                    nomes_abas = ["📦 Apenas Serviços de Saúde",
+                                  "🎯 Marketplace Reverso (Ocorrências Gerais)"]
+                elif st.session_state.perfil_cliente == "petshop":
+                    nomes_abas = ["📦 Apenas Produtos e Serviços Pet",
+                                  "🎯 Marketplace Reverso (Ocorrências Gerais)"]
+                elif st.session_state.perfil_cliente == "beleza":
+                    nomes_abas = ["📦 Apenas Serviços de Estética",
+                                  "🎯 Marketplace Reverso (Ocorrências Gerais)"]
+                elif st.session_state.perfil_cliente == "investidor":
+                    nomes_abas = ["💼 Oportunidades de Novos Negócios"]
+                elif st.session_state.perfil_cliente == "jornalista":
+                    nomes_abas = ["🏛️ Infraestrutura Urbana",
+                                  "💼 Oportunidades de Novos Negócios"]
                 else:
-                    if st.session_state.perfil_cliente != "admin":
-                        st.info(
-                            "ℹ️ Nenhum registro ativo encontrado para este filtro.")
-            else:
-                if st.session_state.perfil_cliente != "admin":
-                    st.info("ℹ️ O banco de dados está limpo!")
+                    nomes_abas = ["🏛️ Infraestrutura Urbana (Setor Público)"]
+
+                abas_st = st.tabs(nomes_abas)
+                for num_aba, nome_aba_ativa in enumerate(nomes_abas):
+                    with abas_st[num_aba]:
+                        frente_ativa = "Infra" if "Infraestrutura" in nome_aba_ativa else (
+                            "Serviços" if "Novos Negócios" in nome_aba_ativa else "Varejo")
+                        is_reverso_ativa = "Marketplace Reverso" in nome_aba_ativa
+                        df_filtro_aba = df
+                        if frente_ativa == "Infra":
+                            df_filtro_aba = df[df['Categoria'] ==
+                                               "Serviço Público / Infraestrutura"]
+                        elif frente_ativa == "Serviços":
+                            df_filtro_aba = df[df['Categoria'] ==
+                                               "Serviço Local / Novo Estabelecimento"]
+                        elif frente_ativa == "Varejo" and not is_reverso_ativa:
+                            if st.session_state.perfil_cliente == "comerciante":
+                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
+                                    df['SubSegmento'].str.contains("Super", case=False))]
+                            elif st.session_state.perfil_cliente == "saude":
+                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
+                                    df['SubSegmento'].str.contains("Saude|Saúde", case=False))]
+                            elif st.session_state.perfil_cliente == "petshop":
+                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
+                                    df['SubSegmento'].str.contains("Pet", case=False))]
+                            elif st.session_state.perfil_cliente == "beleza":
+                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
+                                    df['SubSegmento'].str.contains("Beleza", case=False))]
+                        if termo_busca:
+                            df_filtro_aba = df_filtro_aba[df_filtro_aba['O que Falta'].str.contains(
+                                termo_busca, case=False) | df_filtro_aba['Local/Referência'].str.contains(termo_busca, case=False)]
+
+                        if not df_filtro_aba.empty:
+                            df_filtro_aba['É_Minha_Loja'] = df_filtro_aba['Local/Referência'].apply(
+                                lambda x: 1 if x == loja_alvo_prioridade else 0)
+                            if espectador_analitico:
+                                st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
+                                                   file_name="expansao.pdf", mime="application/pdf", key=f"btn_pdf_{num_aba}")
+                                st.markdown(
+                                    f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
+                                st.write("---")
+                                df_agrupado_mestre = df_filtro_aba.groupby(["O que Falta", "Categoria"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
+                                    "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
+                                for _, mestre_line in df_agrupado_mestre.iterrows():
+                                    item_nome = mestre_line['O que Falta']
+                                    clientes = int(
+                                        mestre_line['Clientes_Unicos'])
+                                    classe_tag = "tag-calor-alta" if clientes >= 5 else (
+                                        "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
+                                    label_tag = f"🔥 CRÍTICO • {clientes} CPFs" if clientes >= 5 else (
+                                        f"⚠️ OPORTUNIDADE • {clientes} CPFs" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF")
+                                    st.markdown(
+                                        f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {mestre_line["Alertas_Totais"]} relatos • Maior espera: {mestre_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
+                                    detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
+                                    st.write(
+                                        "📍 **Localização e Detalhes das Ocorrências Coletadas:**")
+                                    for _, sub_item in detalhes_item.iterrows():
+                                        st.markdown(
+                                            f"  * **{sub_item['Cidade']}** - *Ponto:* {sub_item['Local/Referência']}")
+                                        if sub_item['Observação']:
+                                            st.markdown(
+                                                f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
+                                    st.markdown(
+                                        "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
+                            # --- MODELO B: INTERFACE OPERACIONAL COMERCIAL (LOJISTAS) ---
+                            else:
+                                st.download_button(label="Baixar Relatório (PDF)", data=b"PDF",
+                                                   file_name="relatorio.pdf", mime="application/pdf", key=f"btn_pdf_op_{num_aba}")
+                                total_sua_loja = len(
+                                    df_filtro_aba[df_filtro_aba['Local/Referência'] == loja_alvo_prioridade]) if not is_reverso_ativa else 0
+                                total_concorrencia = len(
+                                    df_filtro_aba) - total_sua_loja
+                                texto_contador = f"Sua Loja: {total_sua_loja} • Concorrência: {total_concorrencia} • Total Geral: {len(df_filtro_aba)}" if not is_reverso_ativa else f"Oportunidades de Captação: {len(df_filtro_aba)}"
+                                st.markdown(
+                                    f"<div style='text-align: right; font-size: 15px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>{texto_contador}</div>", unsafe_allow_html=True)
+                                st.write("---")
+                                df_agrupado_mestre = df_filtro_aba.groupby(["O que Falta", "Categoria"]).agg(Volume_Total=("ID", "count"), Menor_Idade=(
+                                    "Dias", "min"), Foco_Dono=("É_Minha_Loja", "max")).sort_values(by=["Foco_Dono", "Volume_Total"], ascending=[False, False]).reset_index()
+                                for _, linha in df_agrupado_mestre.iterrows():
+                                    item_nome = linha['O que Falta']
+                                    volume = float(linha['Volume_Total'])
+                                    sou_alvo = int(linha['Foco_Dono'])
+                                    classe_tag, label_tag = ("tag-calor-media", f"🎯 REVERSO • {int(volume)} Pedidos") if is_reverso_ativa else (
+                                        ("tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos") if sou_alvo == 1 else ("tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"))
+                                    st.markdown(
+                                        f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
+                                    detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
+                                    for _, sub_linha in detalhes_item.iterrows():
+                                        sub_id = sub_linha['ID']
+                                        sub_local = sub_linha['Local/Referência']
+                                        contato_morador = sub_linha['Contato']
+                                        is_dono_vazio = (
+                                            sub_local == loja_alvo_prioridade) and not is_reverso_ativa
+                                        st.markdown(
+                                            f"{'🔥 **SEU ESTABELECIMENTO:** ' if is_dono_vazio else ('🎯 **REVERSO (Lead de Venda):** ' if is_reverso_ativa else '📍 **Captado no concorrente:** ')}{sub_local} ({sub_linha['Cidade']})")
+                                        if sub_linha['Observação']:
+                                            st.info(
+                                                f"💬 *Relato:* \"{sub_linha['Observação']}\"")
+                                        if contato_morador:
+                                            st.success(
+                                                f"📱 **Cliente Faminto!** WhatsApp: `{contato_morador}`")
+                                        else:
+                                            st.info(
+                                                "ℹ️ Registro anônimo sem contato direto (Vazio comercial para expandir mix)")
+                                        if not is_reverso_ativa and is_dono_vazio:
+                                            id_confirmacao = f"confirma_baixa_{sub_id}"
+                                            if id_confirmacao not in st.session_state:
+                                                st.session_state[id_confirmacao] = False
+                                            if not st.session_state[id_confirmacao]:
+                                                if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}_{num_aba}"):
+                                                    st.session_state[id_confirmacao] = True
+                                                    st.rerun()
+                                            else:
+                                                st.warning(
+                                                    "Confirmar reposição?")
+                                                col_b1, col_b2 = st.columns(2)
+                                                with col_b1:
+                                                    if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}_{num_aba}"):
+                                                        supabase.table("relatos_escassez").update(
+                                                            {"status": "Atendido"}).eq("id", sub_id).execute()
+                                                        st.success(
+                                                            "🎉 Concluído!")
+                                                        import time
+                                                        time.sleep(1)
+                                                        st.session_state[id_confirmacao] = False
+                                                        st.session_state.busca_ativa = False
+                                                        st.rerun()
+                                                with col_b2:
+                                                    if st.button("❌ Cancelar", key=f"btn_cancelar_{sub_id}_{num_aba}"):
+                                                        st.session_state[id_confirmacao] = False
+                                                        st.rerun()
+                                    st.markdown(
+                                        "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
+                        else:
+                            st.info(
+                                "ℹ️ Nenhum registro ativo encontrado para esta aba.")
