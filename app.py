@@ -1,96 +1,65 @@
-import streamlit as st
-import os
-import pandas as pd
-import datetime
-import hashlib
-from dotenv import load_dotenv
-from supabase import create_client, Client
-
-# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS (ANTI-NAMEERROR) ---
-botao_enviar = False
-termo_busca = ""
-filtro_frente = ""
-
-# --- CONEXÃO INTELIGENTE (LOCAL E NUVEM) ---
-caminho_atual = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(caminho_atual, ".env"))
-url = os.environ.get("SUPABASE_URL") or st.secrets.get("SUPABASE_URL")
-key = os.environ.get("SUPABASE_KEY") or st.secrets.get("SUPABASE_KEY")
-
-if not url or not key:
-    st.error("⚠️ As credenciais de conexão não foram encontradas.")
-    st.stop()
-supabase: Client = create_client(url, key)
-
-st.set_page_config(page_title="E o que falta?",
-                   page_icon="🔍", layout="centered")
-
-# --- CAPTURADOR INVISÍVEL DE PEGADA DIGITAL ANTI-FRAUDE ---
-
-
-def obter_pegada_digital():
-    try:
-        headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0].strip()
-        agente = headers.get("User-Agent", "Desconhecido")
-        return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
-    except:
-        return "pegada_generica_fallback"
-
-
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM ---
-st.markdown("""
-    <style>
-    .stApp { background-color: #121212 !important; color: #FFFFFF !important; }
-    .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] { color: #FFFFFF !important; }
-    .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
-        background-color: #00803B !important; color: #FFFFFF !important; font-weight: 800 !important;
-        border-radius: 12px !important; border: none !important; padding: 0.8rem 0.2rem !important;
-        font-size: 15px !important; transition: all 0.3s ease !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; width: 100% !important; display: block !important;
-    }
-    .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover { background-color: #005a24 !important; }
-    h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; white-space: nowrap !important; margin-bottom: 1.5rem !important; }
-    [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) { gap: 10px !important; flex-direction: row !important; flex-wrap: nowrap !important; }
-    .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input { background-color: #1E1E1E !important; color: #FFFFFF !important; border-radius: 10px !important; border: 1px solid #444444 !important; }
-    input::placeholder, textarea::placeholder { color: #888888 !important; font-style: italic !important; }
-    .bloco-lista-premium { background-color: #1E1E1E !important; padding: 1.2rem !important; border-radius: 10px !important; margin-bottom: 0.8rem !important; border: 1px solid #333333 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important; overflow: hidden !important; }
-    .tag-calor-alta { background-color: #ff3333 !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
-    .tag-calor-media { background-color: #ff9933 !important; color: black !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
-    .tag-calor-baixa { background-color: #3399ff !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
-    [data-testid="stForm"] { border: none !important; padding: 0px !important; }
-    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-    </style>
-""", unsafe_allow_html=True)
-
-if "tela_atual" not in st.session_state:
-    st.session_state.tela_atual = "home"
-if "token_valido" not in st.session_state:
-    st.session_state.token_valido = False
-if "perfil_cliente" not in st.session_state:
-    st.session_state.perfil_cliente = None
-if "busca_ativa" not in st.session_state:
-    st.session_state.busca_ativa = False
-if "dados_grafico" not in st.session_state:
-    st.session_state.dados_grafico = None
-if "aba_consumidor" not in st.session_state:
-    st.session_state.aba_consumidor = "menu_triagem"
-
-# --- TELA: HOME ---
-if st.session_state.tela_atual == "home":
+# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
+elif st.session_state.tela_atual == "consumidor":
+    col_nav1, col_nav2 = st.columns(2, gap="small")
+    with col_nav1:
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
+            st.session_state.tela_atual = "home"
+            st.rerun()
+    with col_nav2:
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
     st.title("🔍 E o que falta?")
-    st.markdown("##### *O termômetro de carências da nossa região.*")
-    st.write("---")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("📝 Sou Consumidor\n(Registrar Falta)", use_container_width=True, key="btn_ir_consumidor"):
-            st.session_state.tela_atual = "consumidor"
-            st.session_state.aba_consumidor = "menu_triagem"
+    if st.session_state.aba_consumidor == "menu_triagem":
+        st.markdown("##### 📍 Onde você está agora?")
+        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP - Centro",
+                                     key="input_regiao_via_unica", label_visibility="collapsed")
+        st.write(
+            "Escolha o tipo de ausência que você quer registrar no bairro ou comunidade:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
+            st.session_state.aba_consumidor = "produto"
             st.rerun()
-    with col2:
-        if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
-            st.session_state.tela_atual = "autenticacao"
+        st.write("")
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
+            st.session_state.aba_consumidor = "servico"
             st.rerun()
+        st.write("")
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
+            st.session_state.aba_consumidor = "infra"
+            st.rerun()
+    else:
+        if st.session_state.aba_consumidor == "produto":
+            st.markdown(
+                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias.*")
+            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X..."
+            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia..."
+            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto ou outra loja ofereça? (Opcional)", "Produto / Marca"
+        elif st.session_state.aba_consumidor == "servico":
+            st.markdown(
+                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
+            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro/comunidade?", "Ex: Sapataria, lavanderia..."
+            label_local, placeholder_local = "Em qual rua, travessa, faculdade ou ponto isso faz falta?", "Ex: Avenida Principal..."
+            label_contato, tipo_envio = "Quer ser avisado caso este serviço seja aberto ou oferecido? (Opcional)", "Serviço Local / Novo Estabelecimento"
+        else:
+            st.markdown(
+                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças públicas.*")
+            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação..."
+            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y..."
+            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+        st.write("")
+        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
+            item_solicitado = st.text_input(
+                label=label_item, placeholder=placeholder_item, key="input_item")
+            local_ocorrencia = st.text_input(
+                label=label_local, placeholder=placeholder_local, key="input_local")
+            observacao_usuario = st.text_area(
+                label="Mais detalhes (Opcional):", placeholder="Ex: Detalhe o ocorrido...", key="input_obs")
+            contato_usuario = st.text_input(
+                label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
+            st.write("")
+            botao_enviar = st.form_submit_button(
+                "Registrar Ocorrência", use_container_width=True)
         if botao_enviar:
             if item_solicitado and local_ocorrencia:
                 texto_usuario, local_usuario = item_solicitado.strip(
@@ -140,13 +109,13 @@ if st.session_state.tela_atual == "home":
                         if "/" in texto_regiao:
                             try:
                                 estado_detectado = texto_regiao.split(
-                                    "/").split("-").strip().upper()[:2]
+                                    "/")[1].split("-")[0].strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data["id"] if local_data.data and len(
+                        local_id = local_data.data[0]["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -244,13 +213,13 @@ elif st.session_state.tela_atual == "autenticacao":
             st.rerun()
         elif token_inserido != "":
             st.error("❌ Token inválido.")
-# --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
-elif st.session_state.tela_atual == "comerciante":
-    if not st.session_state.token_valido:
-        st.session_state.tela_atual = "home"
+
+        elif st.session_state.tela_atual == "comerciante":
+            if not st.session_state.token_valido:
+                st.session_state.tela_atual = "home"
         st.rerun()
-    if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com"):
-        st.session_state.tela_atual = "home"
+        if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com"):
+            st.session_state.tela_atual = "home"
         st.session_state.token_valido = False
         st.perfil_cliente = None
         st.session_state.busca_ativa = False
