@@ -1,3 +1,96 @@
+import streamlit as st
+import os
+import pandas as pd
+import datetime
+import hashlib
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS (ANTI-NAMEERROR) ---
+botao_enviar = False
+termo_busca = ""
+filtro_frente = ""
+
+# --- CONEXÃO INTELIGENTE (LOCAL E NUVEM) ---
+caminho_atual = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(caminho_atual, ".env"))
+url = os.environ.get("SUPABASE_URL") or st.secrets.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY") or st.secrets.get("SUPABASE_KEY")
+
+if not url or not key:
+    st.error("⚠️ As credenciais de conexão não foram encontradas.")
+    st.stop()
+supabase: Client = create_client(url, key)
+
+st.set_page_config(page_title="E o que falta?",
+                   page_icon="🔍", layout="centered")
+
+# --- CAPTURADOR INVISÍVEL DE PEGADA DIGITAL ANTI-FRAUDE ---
+
+
+def obter_pegada_digital():
+    try:
+        headers = st.context.headers
+        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",").strip()
+        agente = headers.get("User-Agent", "Desconhecido")
+        return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
+    except:
+        return "pegada_generica_fallback"
+
+
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM ---
+st.markdown("""
+    <style>
+    .stApp { background-color: #121212 !important; color: #FFFFFF !important; }
+    .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] { color: #FFFFFF !important; }
+    .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
+        background-color: #00803B !important; color: #FFFFFF !important; font-weight: 800 !important;
+        border-radius: 12px !important; border: none !important; padding: 0.8rem 0.2rem !important;
+        font-size: 15px !important; transition: all 0.3s ease !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; width: 100% !important; display: block !important;
+    }
+    .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover { background-color: #005a24 !important; }
+    h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; white-space: nowrap !important; margin-bottom: 1.5rem !important; }
+    [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) { gap: 10px !important; flex-direction: row !important; flex-wrap: nowrap !important; }
+    .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input { background-color: #1E1E1E !important; color: #FFFFFF !important; border-radius: 10px !important; border: 1px solid #444444 !important; }
+    input::placeholder, textarea::placeholder { color: #888888 !important; font-style: italic !important; }
+    .bloco-lista-premium { background-color: #1E1E1E !important; padding: 1.2rem !important; border-radius: 10px !important; margin-bottom: 0.8rem !important; border: 1px solid #333333 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important; overflow: hidden !important; }
+    .tag-calor-alta { background-color: #ff3333 !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
+    .tag-calor-media { background-color: #ff9933 !important; color: black !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
+    .tag-calor-baixa { background-color: #3399ff !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
+    [data-testid="stForm"] { border: none !important; padding: 0px !important; }
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
+
+if "tela_atual" not in st.session_state:
+    st.session_state.tela_atual = "home"
+if "token_valido" not in st.session_state:
+    st.session_state.token_valido = False
+if "perfil_cliente" not in st.session_state:
+    st.session_state.perfil_cliente = None
+if "busca_ativa" not in st.session_state:
+    st.session_state.busca_ativa = False
+if "dados_grafico" not in st.session_state:
+    st.session_state.dados_grafico = None
+if "aba_consumidor" not in st.session_state:
+    st.session_state.aba_consumidor = "menu_triagem"
+# --- TELA: HOME ---
+if st.session_state.tela_atual == "home":
+    st.title("🔍 E o que falta?")
+    st.markdown("##### *O termômetro de carências da nossa região.*")
+    st.write("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("📝 Sou Consumidor\n(Registrar Falta)", use_container_width=True, key="btn_ir_consumidor"):
+            st.session_state.tela_atual = "consumidor"
+            st.session_state.aba_consumidor = "menu_triagem"
+            st.rerun()
+    with col2:
+        if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
+            st.session_state.tela_atual = "autenticacao"
+            st.rerun()
+
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
@@ -109,7 +202,7 @@ elif st.session_state.tela_atual == "consumidor":
                         if "/" in texto_regiao:
                             try:
                                 estado_detectado = texto_regiao.split(
-                                    "/")[1].split("-")[0].strip().upper()[:2]
+                                    "/").split("-").strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
                         local_formatado = local_ocorrencia.strip().title()
@@ -214,12 +307,13 @@ elif st.session_state.tela_atual == "autenticacao":
         elif token_inserido != "":
             st.error("❌ Token inválido.")
 
-        elif st.session_state.tela_atual == "comerciante":
-            if not st.session_state.token_valido:
-                st.session_state.tela_atual = "home"
+# --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
+elif st.session_state.tela_atual == "comerciante":
+    if not st.session_state.token_valido:
+        st.session_state.tela_atual = "home"
         st.rerun()
-        if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com"):
-            st.session_state.tela_atual = "home"
+    if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com"):
+        st.session_state.tela_atual = "home"
         st.session_state.token_valido = False
         st.perfil_cliente = None
         st.session_state.busca_ativa = False
@@ -394,7 +488,9 @@ elif st.session_state.tela_atual == "autenticacao":
                 if not df_filtrado.empty:
                     df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                         lambda x: 1 if x == loja_alvo_prioridade else 0)
-                    if espectador_analitico:
+
+                    # --- INTERFACE 1: INTERFACE ANALÍTICA AGRUPADA (INVESTIDOR / GESTOR / JORNALISTA) ---
+                    if espectador_analitico and st.session_state.perfil_cliente != "admin":
                         st.markdown("#### 📈 Ranking de Oportunidades")
                         st.markdown(
                             f"<div style='text-align: right; font-size: 13px; color: #888888; margin-top:-35px; margin-bottom:15px;'>Total de Oportunidades: {len(df_filtrado)}</div>", unsafe_allow_html=True)
@@ -424,7 +520,9 @@ elif st.session_state.tela_atual == "autenticacao":
                                         f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
                             st.markdown(
                                 "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-                    else:
+
+                    # --- INTERFACE 2: INTERFACE OPERACIONAL AGRUPADA (LOJISTAS) ---
+                    elif st.session_state.perfil_cliente != "admin":
                         st.markdown("#### 📈 Detalhamento das Demandas Ativas")
                         total_sua_loja = len(
                             df_filtrado[df_filtrado['Local/Referência'] == loja_alvo_prioridade])
