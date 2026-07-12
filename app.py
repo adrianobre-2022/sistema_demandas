@@ -6,6 +6,11 @@ import hashlib
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS (ANTI-NAMEERROR) ---
+botao_enviar = False
+termo_busca = ""
+filtro_frente = ""
+
 # --- CONEXÃO INTELIGENTE (LOCAL E NUVEM) ---
 caminho_atual = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(caminho_atual, ".env"))
@@ -86,39 +91,6 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
-
-# --- TELA: FORMULÁRIO DO CONSUMIDOR ---
-elif st.session_state.tela_atual == "consumidor":
-    col_nav1, col_nav2 = st.columns(2, gap="small")
-    with col_nav1:
-        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
-            st.session_state.tela_atual = "home"
-            st.rerun()
-    with col_nav2:
-        if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
-                st.session_state.aba_consumidor = "menu_triagem"
-                st.rerun()
-
-    st.title("🔍 E o que falta?")
-
-    if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown("##### 📍 Onde você está agora?")
-        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP - Centro",
-                                     key="input_regiao_via_unica", label_visibility="collapsed")
-        st.write(
-            "Escolha o tipo de ausência que você quer registrar no bairro ou comunidade:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados, farmácias...)", use_container_width=True, key="triagem_prod"):
-            st.session_state.aba_consumidor = "produto"
-            st.rerun()
-        st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria, padaria...)", use_container_width=True, key="triagem_serv"):
-            st.session_state.aba_consumidor = "servico"
-            st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação, buracos no asfalto...)", use_container_width=True, key="triagem_infra"):
-            st.session_state.aba_consumidor = "infra"
-            st.rerun()
         if botao_enviar:
             if item_solicitado and local_ocorrencia:
                 texto_usuario, local_usuario = item_solicitado.strip(
@@ -126,8 +98,8 @@ elif st.session_state.tela_atual == "consumidor":
                 obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
                 palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
                                       "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
-                termos_politicos_proibidos = ["pec", "deputado", "senado", "senador", "presidente",
-                                              "governador", "partido", "impeachment", "voto", "eleição", "politica", "político"]
+                termos_politicos_proibidos = ["pec", "deputado", "senado", "senador",
+                                              "presidente", "governador", "partido", "impeachment", "voto", "eleição"]
                 excecoes_contexto = [
                     "saco de lixo", "sacos de lixo", "lixeira", "pá de lixo", "coleta de lixo"]
                 contem_bloqueio, mensagem_erro = False, ""
@@ -141,8 +113,8 @@ elif st.session_state.tela_atual == "consumidor":
                     if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
                         contem_bloqueio = True
                         mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva."
-                palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto", "médico",
-                                  "ônibus", "hospital", "bueiro", "segurança", "luz", "polícia", "posto de saúde"]
+                palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto",
+                                  "médico", "ônibus", "hospital", "bueiro", "segurança", "polícia"]
                 palavras_produto = ["leite", "fralda", "ração", "refrigerante",
                                     "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
                 erro_detectado = False
@@ -179,11 +151,11 @@ elif st.session_state.tela_atual == "consumidor":
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
                             segmento_detectado = "Geral"
-                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "bolo", "doce", "salgado", "padaria", "mercado", "hortifruti", "açougue"]):
+                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "padaria", "mercado"]):
                                 segmento_detectado = "Supermercado"
-                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "fisioterapia", "nutricionista", "clínica", "médico", "psicólogo", "dentista", "farmácia", "xarope"]):
+                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "clínica", "médico", "psicólogo", "dentista", "farmácia"]):
                                 segmento_detectado = "Saude"
-                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho", "petshop", "coleira"]):
+                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho", "petshop"]):
                                 segmento_detectado = "Petshop"
                             elif any(p in texto_usuario for p in ["manicure", "salão", "barbearia", "cabeleireiro", "estética", "barbeiro", "unha"]):
                                 segmento_detectado = "Beleza"
@@ -360,6 +332,8 @@ elif st.session_state.tela_atual == "comerciante":
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento para emitir a credencial.")
+    # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO ---
+    if st.session_state.perfil_cliente != "admin":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
             st.session_state.busca_ativa = True
             try:
@@ -397,6 +371,7 @@ elif st.session_state.tela_atual == "comerciante":
                                 "Serviço Local / Novo Estabelecimento" if ("Local" in cat_bruta or "Invest" in sub_seg) else "Produto / Marca")
                             dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
                                                 "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
+
                 dados_mock = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 4, "Observação": "Falta toda quarta.", "SubSegmento": "Supermercado", "Pegada": "hash1", "Contato": "11999999999"},
@@ -450,7 +425,7 @@ elif st.session_state.tela_atual == "comerciante":
                 if not df_filtrado.empty:
                     df_filtrado['É_Minha_Loja'] = df_filtrado['Local/Referência'].apply(
                         lambda x: 1 if x == loja_alvo_prioridade else 0)
-                    if espectador_analitico and st.session_state.perfil_cliente != "admin":
+                    if espectador_analitico:
                         st.markdown("#### 📈 Ranking de Oportunidades")
                         st.markdown(
                             f"<div style='text-align: right; font-size: 13px; color: #888888; margin-top:-35px; margin-bottom:15px;'>Total de Oportunidades: {len(df_filtrado)}</div>", unsafe_allow_html=True)
@@ -480,7 +455,7 @@ elif st.session_state.tela_atual == "comerciante":
                                         f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
                             st.markdown(
                                 "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-                    elif st.session_state.perfil_cliente != "admin":
+                    else:
                         st.markdown("#### 📈 Detalhamento das Demandas Ativas")
                         total_sua_loja = len(
                             df_filtrado[df_filtrado['Local/Referência'] == loja_alvo_prioridade])
