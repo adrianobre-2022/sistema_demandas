@@ -75,6 +75,8 @@ if "dados_grafico" not in st.session_state:
     st.session_state.dados_grafico = None
 if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
+if "regiao_cliente" not in st.session_state:
+    st.session_state.regiao_cliente = "São Paulo/SP"
 
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
@@ -195,20 +197,19 @@ elif st.session_state.tela_atual == "consumidor":
                     try:
                         hash_dispositivo = obter_pegada_digital()
                         regiao_salva = st.session_state.get(
-                            "input_regiao_via_unica", "São Paulo/SP - Centro")
-                        texto_regiao = regiao_salva.strip().title(
-                        ) if regiao_salva else "São Paulo/SP - Centro"
+                            "input_regiao_via_unica", "São Paulo/SP")
+                        texto_regiao = regiao_salva.strip().title() if regiao_salva else "São Paulo/SP"
                         estado_detectado = "SP"
                         if "/" in texto_regiao:
                             try:
                                 estado_detectado = texto_regiao.split(
-                                    "/").split("-").strip().upper()[:2]
+                                    "/")[1].split("-")[0].strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data["id"] if local_data.data and len(
+                        local_id = local_data.data[0]["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -264,44 +265,60 @@ elif st.session_state.tela_atual == "autenticacao":
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
     st.write("")
     if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido") or (token_inserido and not st.session_state.token_valido):
-        if token_inserido in ["COMERCIO10", "SUPER_VILA_77"]:
+        res_token = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq("token_acesso", token_inserido).execute(
+        ) if token_inserido not in ["COMERCIO10", "SAUDE20", "PET30", "BELEZA40", "INVEST20", "GESTOR30", "MIDIA40", "ADMIN99"] else None
+        if res_token and res_token.data and len(res_token.data) > 0:
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = res_token.data[0]["perfil_segmento"]
+            st.session_state.regiao_cliente = res_token.data[0]["regiao_atuacao"]
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_inserido == "COMERCIO10":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "comerciante"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "SAUDE20":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "saude"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "PET30":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "petshop"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "BELEZA40":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "beleza"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "INVEST20":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "investidor"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "GESTOR30":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "gestor"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "MIDIA40":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "jornalista"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "ADMIN99":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "admin"
+            st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido != "":
@@ -360,17 +377,21 @@ elif st.session_state.tela_atual == "comerciante":
                 "Nome do Estabelecimento Comercial / Cliente Real:", placeholder="Ex: Supermercado Xavier, Petshop Bairro Alto...")
             perfil_novo_comercio = st.selectbox("Perfil de Acesso Corporativo (Nível de Filtro):", [
                                                 "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
+            regiao_novo_comercio = st.text_input(
+                "Região/Cidade de Atuação (Filtro Geográfico):", placeholder="Ex: Carapicuíba/SP, Osasco/SP, São Paulo/SP...")
             st.write("")
             if st.form_submit_button("💼 Cadastrar Cliente e Emitir Token UUID"):
-                if nome_novo_comercio:
+                if nome_novo_comercio and regiao_novo_comercio:
                     try:
-                        novo_registro = supabase.table("clientes_b2b").insert(
-                            {"nome_estabelecimento": nome_novo_comercio.strip().title(), "perfil_segmento": perfil_novo_comercio}).execute()
+                        regiao_formatada = regiao_novo_comercio.strip().title() if "/" not in regiao_novo_comercio else regiao_novo_comercio.strip(
+                        ).split("/")[0].title() + "/" + regiao_novo_comercio.strip().split("/")[1].upper()
+                        novo_registro = supabase.table("clientes_b2b").insert({"nome_estabelecimento": nome_novo_comercio.strip(
+                        ).title(), "perfil_segmento": perfil_novo_comercio, "regiao_atuacao": regiao_formatada}).execute()
                         if novo_registro.data:
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
                             st.warning(
                                 "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
                     except Exception as error_db:
@@ -378,14 +399,22 @@ elif st.session_state.tela_atual == "comerciante":
                             f"⚠️ Falha na conexão com o banco: {str(error_db)}")
                 else:
                     st.warning(
-                        "⚠️ Preencha o nome do estabelecimento para emitir a credencial.")
-    # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO ---
+                        "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
+    # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO COM TRAVA POR CIDADES ---
     if st.session_state.perfil_cliente != "admin":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
             st.session_state.busca_ativa = True
             try:
-                resposta = supabase.table("relatos_escassez").select(
-                    "id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
+                # Captura a região padrão de cadastro do lojista (Garante a trava geográfica de performance)
+                regiao_alvo = st.session_state.get(
+                    "regiao_cliente", "São Paulo/SP")
+                cidade_filtro = regiao_alvo.split(
+                    "-")[0].strip() if "-" in regiao_alvo else regiao_alvo.strip()
+
+                # Executa a busca na nuvem trazendo apenas os dados que CONTÉM a cidade do lojista (Busca Parcial)
+                resposta = supabase.table("relatos_escassez").select("id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").ilike(
+                    "locais_destino.regiao_cidade", f"%{cidade_filtro}%").execute()
+
                 dados_limpos = []
                 agora = datetime.datetime.now(datetime.timezone.utc)
                 if resposta.data and len(resposta.data) > 0:
@@ -402,6 +431,7 @@ elif st.session_state.tela_atual == "comerciante":
                             dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
                                                 "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
 
+                # Dados Mock de laboratório injetados dinamicamente apenas se baterem com a cidade filtrada
                 dados_mock = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 4, "Observação": "Falta toda quarta.", "SubSegmento": "Supermercado", "Pegada": "hash1", "Contato": "11999999999"},
@@ -411,11 +441,12 @@ elif st.session_state.tela_atual == "comerciante":
                         "Cidade": "São Paulo/SP - Centro", "Dias": 2, "Observação": "Poste apagado.", "SubSegmento": "Zeladoria", "Pegada": "hash7", "Contato": ""}
                 ]
                 for m in dados_mock:
-                    if not any(d["O que Falta"].lower() == m["O que Falta"].lower() for d in dados_limpos):
-                        dados_limpos.append(m)
+                    if cidade_filtro.lower() in m["Cidade"].lower():
+                        if not any(d["O que Falta"].lower() == m["O que Falta"].lower() for d in dados_limpos):
+                            dados_limpos.append(m)
                 st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
             except Exception as e:
-                st.error(f"⚠️ Erro técnico: {str(e)}")
+                st.error(f"⚠️ Erro técnico de performance: {str(e)}")
         if st.session_state.busca_ativa and st.session_state.dados_grafico is not None:
             df = st.session_state.dados_grafico
             if not df.empty:
