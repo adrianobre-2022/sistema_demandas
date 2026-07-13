@@ -265,8 +265,14 @@ elif st.session_state.tela_atual == "autenticacao":
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
     st.write("")
     if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido") or (token_inserido and not st.session_state.token_valido):
-        res_token = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq("token_acesso", token_inserido).execute(
-        ) if token_inserido not in ["COMERCIO10", "SAUDE20", "PET30", "BELEZA40", "INVEST20", "GESTOR30", "MIDIA40", "ADMIN99"] else None
+        res_token = None
+        if token_inserido not in ["", "COMERCIO10", "SAUDE20", "PET30", "BELEZA40", "INVEST20", "GESTOR30", "MIDIA40", "ADMIN99"]:
+            try:
+                res_token = supabase.table("clientes_b2b").select(
+                    "perfil_segmento, regiao_atuacao").eq("token_acesso", token_inserido).execute()
+            except:
+                res_token = None
+
         if res_token and res_token.data and len(res_token.data) > 0:
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = res_token.data[0]["perfil_segmento"]
