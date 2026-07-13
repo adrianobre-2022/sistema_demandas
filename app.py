@@ -108,7 +108,7 @@ elif st.session_state.tela_atual == "consumidor":
     st.title("🔍 E o que falta?")
     if st.session_state.aba_consumidor == "menu_triagem":
         st.markdown("##### 📍 Onde você está agora?")
-        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP - Centro",
+        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP",
                                      key="input_regiao_via_unica", label_visibility="collapsed")
         st.write(
             "Escolha o tipo de ausência que você quer registrar no bairro ou comunidade:")
@@ -203,7 +203,7 @@ elif st.session_state.tela_atual == "consumidor":
                         if "/" in texto_regiao:
                             try:
                                 estado_detectado = texto_regiao.split(
-                                    "/")[1].split("-")[0].strip().upper()[:2]
+                                    "/")[1].strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
                         local_formatado = local_ocorrencia.strip().title()
@@ -384,14 +384,14 @@ elif st.session_state.tela_atual == "comerciante":
                 if nome_novo_comercio and regiao_novo_comercio:
                     try:
                         regiao_formatada = regiao_novo_comercio.strip().title() if "/" not in regiao_novo_comercio else regiao_novo_comercio.strip(
-                        ).split("/")[0].title() + "/" + regiao_novo_comercio.strip().split("/")[1].upper()
+                        ).split("/")[0].strip().title() + "/" + regiao_novo_comercio.strip().split("/")[1].strip().upper()
                         novo_registro = supabase.table("clientes_b2b").insert({"nome_estabelecimento": nome_novo_comercio.strip(
                         ).title(), "perfil_segmento": perfil_novo_comercio, "regiao_atuacao": regiao_formatada}).execute()
                         if novo_registro.data:
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
                             st.warning(
                                 "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
                     except Exception as error_db:
@@ -405,21 +405,21 @@ elif st.session_state.tela_atual == "comerciante":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
             st.session_state.busca_ativa = True
             try:
-                # Captura a região padrão de cadastro do lojista (Garante a trava geográfica de performance)
                 regiao_alvo = st.session_state.get(
                     "regiao_cliente", "São Paulo/SP")
                 cidade_filtro = regiao_alvo.split(
                     "-")[0].strip() if "-" in regiao_alvo else regiao_alvo.strip()
-
-                # Executa a busca na nuvem trazendo apenas os dados que CONTÉM a cidade do lojista (Busca Parcial)
-                resposta = supabase.table("relatos_escassez").select("id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").ilike(
-                    "locais_destino.regiao_cidade", f"%{cidade_filtro}%").execute()
+                resposta = supabase.table("relatos_escassez").select(
+                    "id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
 
                 dados_limpos = []
                 agora = datetime.datetime.now(datetime.timezone.utc)
                 if resposta.data and len(resposta.data) > 0:
                     for registro in resposta.data:
                         if registro.get("locais_destino"):
+                            loc_cidade = registro["locais_destino"]["regiao_cidade"]
+                            if cidade_filtro.lower() not in loc_cidade.lower():
+                                continue
                             sub_seg = str(registro.get(
                                 "sub_segmento", "Geral")).strip()
                             cat_bruta = str(registro.get(
@@ -428,10 +428,26 @@ elif st.session_state.tela_atual == "comerciante":
                                 "data_registro").replace("Z", "+00:00"))).days) if registro.get("data_registro") else 0
                             categoria_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_bruta or "Publico" in cat_bruta or "Infra" in cat_bruta or "Zeladoria" in sub_seg) else (
                                 "Serviço Local / Novo Estabelecimento" if ("Local" in cat_bruta or "Invest" in sub_seg) else "Produto / Marca")
-                            dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": registro["locais_destino"]["nome_exibicao"], "Cidade": registro["locais_destino"]["regiao_cidade"],
-                                                "Dias": idade_dias, "Observação": registro.get("observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
 
-                # Dados Mock de laboratório injetados dinamicamente apenas se baterem com a cidade filtrada
+                            # MASCARAMENTO JURÍDICO: Protege contra processos ocultando o nome nominal do concorrente
+                            nome_local_bruto = registro["locais_destino"]["nome_exibicao"]
+                            if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and nome_local_bruto != loja_alvo_prioridade:
+                                if sub_seg == "Supermercado":
+                                    nome_local_exibicao = "Mercado Concorrente da Região"
+                                elif sub_seg in ["Saude", "Saúde"]:
+                                    nome_local_exibicao = "Estabelecimento de Saúde Concorrente"
+                                elif sub_seg == "Petshop":
+                                    nome_local_exibicao = "Petshop Concorrente da Região"
+                                elif sub_seg == "Beleza":
+                                    nome_local_exibicao = "Salão / Clínica de Estética Concorrente"
+                                else:
+                                    nome_local_exibicao = "Estabelecimento Comercial Parceiro"
+                            else:
+                                nome_local_exibicao = nome_local_bruto
+
+                            dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": nome_local_exibicao, "Cidade": loc_cidade, "Dias": idade_dias, "Observação": registro.get(
+                                "observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
+
                 dados_mock = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 4, "Observação": "Falta toda quarta.", "SubSegmento": "Supermercado", "Pegada": "hash1", "Contato": "11999999999"},
@@ -443,7 +459,12 @@ elif st.session_state.tela_atual == "comerciante":
                 for m in dados_mock:
                     if cidade_filtro.lower() in m["Cidade"].lower():
                         if not any(d["O que Falta"].lower() == m["O que Falta"].lower() for d in dados_limpos):
-                            dados_limpos.append(m)
+                            if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and m["Local/Referência"] != loja_alvo_prioridade:
+                                m_copy = m.copy()
+                                m_copy["Local/Referência"] = "Estabelecimento Concorrente"
+                                dados_limpos.append(m_copy)
+                            else:
+                                dados_limpos.append(m)
                 st.session_state.dados_grafico = pd.DataFrame(dados_limpos)
             except Exception as e:
                 st.error(f"⚠️ Erro técnico de performance: {str(e)}")
