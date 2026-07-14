@@ -252,18 +252,81 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-# --- TELA: AUTENTICAÇÃO POR TOKEN ---
-elif st.session_state.tela_atual == "autenticacao":
-    if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
-        st.session_state.tela_atual = "home"
-        st.session_state.token_valido = False
-        st.rerun()
-    st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
-                unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 16px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Área Restrita para Comerciantes e Gestores</p>", unsafe_allow_html=True)
-    st.write("---")
-    token_inserido = st.text_input(
-        label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
+    # --- FORMULÁRIO DE AUTENTICAÇÃO INTEGRADO (REATIVA O CLIQUE DO ENTER) ---
+    with st.form(key="form_autenticacao_b2b", clear_on_submit=False):
+        token_inserido = st.text_input(
+            label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
+        st.write("")
+        botao_validar = st.form_submit_button(
+            "Validar Credenciais e Acessar", use_container_width=True)
+
+    if botao_validar and token_inserido:
+        token_limpo = token_inserido.strip()
+        if token_limpo == "COMERCIO10":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "comerciante"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "SAUDE20":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "saude"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "PET30":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "petshop"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "BELEZA40":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "beleza"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "INVEST20":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "investidor"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "GESTOR30":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "gestor"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "MIDIA40":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "jornalista"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "ADMIN99":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "admin"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo != "":
+            try:
+                busca_db = supabase.table("clientes_b2b").select(
+                    "perfil_segmento").eq("token_acesso", token_limpo).execute()
+                if busca_db and busca_db.data and len(busca_db.data) > 0:
+                    dados_linha = busca_db.data[0]
+                    st.session_state.perfil_cliente = dados_linha.get(
+                        "perfil_segmento", "comerciante")
+                    st.session_state.regiao_cliente = "São Paulo/SP"
+                    st.session_state.token_valido = True
+                    st.session_state.tela_atual = "comerciante"
+                    st.rerun()
+                else:
+                    st.error("❌ Token inválido.")
+            except Exception as e:
+                st.error("❌ Erro de conexão ou token mal formatado.")
+
     st.write("")
     if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido"):
         if token_inserido.strip() == "COMERCIO10":
@@ -552,19 +615,20 @@ elif st.session_state.tela_atual == "comerciante":
                         elif frente_ativa == "Serviços":
                             df_filtro_aba = df[df['Categoria'] ==
                                                "Serviço Local / Novo Estabelecimento"]
-                        elif frente_ativa == "Varejo" and not is_reverso_ativa:
+                        elif frente_ativa == "Varejo":
+                            # AMARRAÇÃO DE AFINIDADE: Blinda as abas do lojista (inclusive o Reverso) contra setores estranhos como Dentistas
                             if st.session_state.perfil_cliente == "comerciante":
-                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
-                                    df['SubSegmento'].str.contains("Super", case=False))]
+                                df_filtro_aba = df[df['SubSegmento'].str.contains(
+                                    "Supermercado|Geral", case=False, na=False)]
                             elif st.session_state.perfil_cliente == "saude":
-                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
-                                    df['SubSegmento'].str.contains("Saude|Saúde", case=False))]
+                                df_filtro_aba = df[df['SubSegmento'].str.contains(
+                                    "Saude|Saúde", case=False, na=False)]
                             elif st.session_state.perfil_cliente == "petshop":
-                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
-                                    df['SubSegmento'].str.contains("Pet", case=False))]
+                                df_filtro_aba = df[df['SubSegmento'].str.contains(
+                                    "Pet", case=False, na=False)]
                             elif st.session_state.perfil_cliente == "beleza":
-                                df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
-                                    df['SubSegmento'].str.contains("Beleza", case=False))]
+                                df_filtro_aba = df[df['SubSegmento'].str.contains(
+                                    "Beleza", case=False, na=False)]
                         if termo_busca:
                             df_filtro_aba = df_filtro_aba[df_filtro_aba['O que Falta'].str.contains(
                                 termo_busca, case=False) | df_filtro_aba['Local/Referência'].str.contains(termo_busca, case=False)]
@@ -573,17 +637,18 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba['É_Minha_Loja'] = df_filtro_aba['Local/Referência'].apply(
                                 lambda x: 1 if x == loja_alvo_prioridade else 0)
                             if espectador_analitico:
-                                # --- EMISSOR DE PDF REAL COMPATÍVEL PARA DISPOSITIVOS MÓVEIS (AUDITORIA) ---
+                                # --- EMISSOR DE PDF REAL E GEORREFERENCIADO PARA O PERFIL MÍDIA/GESTOR ---
                                 try:
                                     pdf_real = FPDF()
                                     pdf_real.add_page()
                                     pdf_real.set_font("Arial", size=12)
                                     pdf_real.cell(
-                                        200, 10, txt="Relatorio de Vazios Comerciais", ln=1, align="C")
+                                        200, 10, txt="Relatorio de Vazios Comerciais Regional", ln=1, align="C")
                                     pdf_real.cell(
                                         200, 10, txt="--------------------------------------------------", ln=2, align="C")
                                     for _, r in df_filtro_aba.iterrows():
-                                        txt_linha = f"- Item: {r['O que Falta']} | Local: {r['Local/Referência']}"
+                                        # FIÇÃO CORRIGIDA: Puxa o endereço dinâmico real de cada linha salvando no PDF
+                                        txt_linha = f"- Falta: {r['O que Falta']} | Localizacao: {r['Local/Referência']} ({r['Cidade']})"
                                         pdf_real.cell(190, 10, txt=txt_linha.encode(
                                             'latin-1', 'ignore').decode('latin-1'), ln=1)
                                     pdf_output = pdf_real.output(dest='S')
@@ -595,8 +660,6 @@ elif st.session_state.tela_atual == "comerciante":
                                     st.error(
                                         f"⚠️ Erro ao gerar PDF: {str(e_pdf)}")
 
-                                st.markdown(
-                                    f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
                                 st.write("---")
                                 df_agrupado_mestre = df_filtro_aba.groupby(["O que Falta", "Categoria"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                                     "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
