@@ -242,17 +242,33 @@ elif st.session_state.tela_atual == "consumidor":
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
+        # BUSCA AS BENFEITORIAS DIRETAMENTE NA NUVEM
         resolvidos = supabase.table("relatos_escassez").select(
-            "item_solicitado, locais_destino(nome_exibicao)").eq("status", "Atendido").limit(3).execute()
+            "item_solicitado, locais_destino(nome_exibicao)").eq("status", "Atendido").limit(10).execute()
         if resolvidos.data and len(resolvidos.data) > 0:
+            # TRANSFORMA EM DATAFRAME PARA FILTRAGEM RIGOROSA DE DUPLICIDADES VISUAIS
+            lista_impactos = []
             for item in resolvidos.data:
                 if item.get("locais_destino"):
-                    st.info(
-                        f"✅ **{item['locais_destino']['nome_exibicao']}** repôs o estoque: **{item['item_solicitado']}**!")
+                    lista_impactos.append({
+                        "item": item["item_solicitado"].strip().title(),
+                        "local": item["locais_destino"]["nome_exibicao"].strip().title()
+                    })
+            df_impactos = pd.DataFrame(lista_impactos)
+
+            # TRAVA ANTI-DUPLICIDADE: Remove linhas repetidas de forma absoluta antes de exibir na tela
+            df_impactos_limpo = df_impactos.drop_duplicates(
+                subset=["item", "local"])
+
+            # EXIBE APENAS OS 3 PRIMEIROS REGISTROS ÚNICOS E CONSOLIDADOS
+            for _, linha_imp in df_impactos_limpo.head(3).iterrows():
+                st.info(
+                    f"✅ **{linha_imp['local']}** repôs o estoque: **{linha_imp['item']}**!")
         else:
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
+
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
