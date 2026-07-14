@@ -638,9 +638,13 @@ elif st.session_state.tela_atual == "comerciante":
                                     st.markdown(
                                         f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {mestre_line["Alertas_Totais"]} relatos • Maior espera: {mestre_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
                                     detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
+                                    # TRAVA ANTI-DUPLICIDADE DE RELATO ANALÍTICO: Consolida depoimentos rigorosamente idênticos no mesmo ponto
+                                    detalhes_item_limpo = detalhes_item.drop_duplicates(
+                                        subset=["Cidade", "Local/Referência", "Observação"])
+
                                     st.write(
                                         "📍 **Localização e Detalhes das Ocorrências Coletadas:**")
-                                    for _, sub_item in detalhes_item.iterrows():
+                                    for _, sub_item in detalhes_item_limpo.iterrows():
                                         st.markdown(
                                             f"  * **{sub_item['Cidade']}** - *Ponto:* {sub_item['Local/Referência']}")
                                         if sub_item['Observação']:
@@ -648,6 +652,7 @@ elif st.session_state.tela_atual == "comerciante":
                                                 f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
                                     st.markdown(
                                         "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
+
                             # --- MODELO B: INTERFACE OPERACIONAL COMERCIAL (LOJISTAS) ---
                             else:
                                 # --- EMISSOR DE PDF REAL COMPATÍVEL PARA DISPOSITIVOS MÓVEIS (OPERACIONAL) ---
@@ -692,7 +697,11 @@ elif st.session_state.tela_atual == "comerciante":
                                     st.markdown(
                                         f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
                                     detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
-                                    for _, sub_linha in detalhes_item.iterrows():
+                                    # TRAVA ANTI-DUPLICIDADE OPERACIONAL: Garante que o lojista veja uma linha por ocorrência textual no mesmo endereço
+                                    detalhes_item_limpo = detalhes_item.drop_duplicates(
+                                        subset=["Cidade", "Local/Referência", "Observação", "Contato"])
+
+                                    for _, sub_linha in detalhes_item_limpo.iterrows():
                                         sub_id = sub_linha['ID']
                                         sub_local = sub_linha['Local/Referência']
                                         contato_morador = sub_linha['Contato']
