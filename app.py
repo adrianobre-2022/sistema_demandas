@@ -203,13 +203,13 @@ elif st.session_state.tela_atual == "consumidor":
                         if "/" in texto_regiao:
                             try:
                                 estado_detectado = texto_regiao.split(
-                                    "/")[1].strip().upper()[:2]
+                                    "/").strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data[0]["id"] if local_data.data and len(
+                        local_id = local_data.data["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -272,7 +272,6 @@ elif st.session_state.tela_atual == "autenticacao":
                     "perfil_segmento, regiao_atuacao").eq("token_acesso", token_inserido).execute()
             except:
                 res_token = None
-
         if res_token and res_token.data and len(res_token.data) > 0:
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = res_token.data[0]["perfil_segmento"]
@@ -435,7 +434,7 @@ elif st.session_state.tela_atual == "comerciante":
                             categoria_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_bruta or "Publico" in cat_bruta or "Infra" in cat_bruta or "Zeladoria" in sub_seg) else (
                                 "Serviço Local / Novo Estabelecimento" if ("Local" in cat_bruta or "Invest" in sub_seg) else "Produto / Marca")
 
-                            # MASCARAMENTO JURÍDICO: Protege contra processos ocultando o nome nominal do concorrente
+                            # MASCARAMENTO JURÍDICO: Oculta o nome por extenso de marcas concorrentes para evitar processos
                             nome_local_bruto = registro["locais_destino"]["nome_exibicao"]
                             if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and nome_local_bruto != loja_alvo_prioridade:
                                 if sub_seg == "Supermercado":
@@ -593,12 +592,17 @@ elif st.session_state.tela_atual == "comerciante":
                                         if sub_linha['Observação']:
                                             st.info(
                                                 f"💬 *Relato:* \"{sub_linha['Observação']}\"")
+
+                                        # MECÂNICA LGPD: Oculta o número real do celular do cliente atrás de um botão dinâmico de clique único
                                         if contato_morador:
-                                            st.success(
-                                                f"📱 **Cliente Faminto!** WhatsApp: `{contato_morador}`")
+                                            texto_mensagem_whatsapp = f"Olá! Vi através do portal 'E o que falta?' que você está procurando por '{item_nome}' na região. Nós temos disponível!"
+                                            import urllib.parse
+                                            link_whatsapp_dinamico = f"https://whatsapp.com{contato_morador.strip()}&text={urllib.parse.quote(texto_mensagem_whatsapp)}"
+                                            st.markdown(f'<a href="{link_whatsapp_dinamico}" target="_blank" style="text-decoration: none;"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar com Cliente no WhatsApp</button></a>', unsafe_allow_html=True)
                                         else:
                                             st.info(
                                                 "ℹ️ Registro anônimo sem contato direto (Vazio comercial para expandir mix)")
+
                                         if not is_reverso_ativa and is_dono_vazio:
                                             id_confirmacao = f"confirma_baixa_{sub_id}"
                                             if id_confirmacao not in st.session_state:
