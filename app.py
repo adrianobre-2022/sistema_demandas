@@ -1,3 +1,4 @@
+from fpdf import FPDF
 import streamlit as st
 import os
 import pandas as pd
@@ -588,8 +589,23 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba['É_Minha_Loja'] = df_filtro_aba['Local/Referência'].apply(
                                 lambda x: 1 if x == loja_alvo_prioridade else 0)
                             if espectador_analitico:
-                                st.download_button(label="Baixar Relatório de Vazios (PDF)", data=b"PDF_DUMMY",
-                                                   file_name="expansao.pdf", mime="application/pdf", key=f"btn_pdf_{num_aba}")
+                                # --- GERADOR DE PDF REAL E LEVE PARA DISPOSITIVOS MÓVEIS ---
+                                pdf_real = FPDF()
+                                pdf_real.add_page()
+                                pdf_real.set_font("Arial", size=12)
+                                pdf_real.cell(
+                                    200, 10, txt=f"Relatorio de Carencias - {st.session_state.regiao_cliente}", ln=1, align="C")
+                                pdf_real.cell(
+                                    200, 10, txt="--------------------------------------------------", ln=2, align="C")
+                                for _, r in df_filtro_aba.iterrows():
+                                    pdf_real.cell(
+                                        200, 10, txt=f"- Falta: {r['O que Falta']} em {r['Local/Referência']}", ln=3)
+                                pdf_bytes = pdf_real.output(
+                                    dest='S').encode('latin-1')
+
+                                st.download_button(label="Baixar Relatório (PDF Real)", data=pdf_bytes,
+                                                   file_name="relatorio_atualizado.pdf", mime="application/pdf", key=f"btn_pdf_real_{num_aba}")
+
                                 st.markdown(
                                     f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
                                 st.write("---")
