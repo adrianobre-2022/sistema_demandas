@@ -314,24 +314,19 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido.strip() != "":
-            try:
-                busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
-                    "token_acesso", token_inserido.strip()).execute()
-                if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    # O MAPA CORRETO: Pega o dicionário contido na posição zero
-                    dados_linha = busca_db.data[0]
-                    st.session_state.perfil_cliente = dados_linha.get(
-                        "perfil_segmento", "comerciante")
-                    st.session_state.regiao_cliente = dados_linha.get(
-                        "regiao_atuacao", "São Paulo/SP")
-                    st.session_state.token_valido = True
-                    st.session_state.tela_atual = "comerciante"
-                    st.rerun()
-                else:
-                    st.error("❌ Token inválido.")
-            except Exception as e:
-                st.error(f"❌ Erro de conexão ou token mal formatado.")
-
+            busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
+                "token_acesso", token_inserido.strip()).execute()
+            if busca_db and busca_db.data and len(busca_db.data) > 0:
+                dados_linha = busca_db.data[0]
+                st.session_state.perfil_cliente = dados_linha.get(
+                    "perfil_segmento", "comerciante")
+                st.session_state.regiao_cliente = dados_linha.get(
+                    "regiao_atuacao", "São Paulo/SP")
+                st.session_state.token_valido = True
+                st.session_state.tela_atual = "comerciante"
+                st.rerun()
+            else:
+                st.error("❌ Token inválido.")
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
