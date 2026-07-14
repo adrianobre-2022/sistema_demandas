@@ -371,7 +371,7 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
-    # --- INTERFACE MASTER ISOLADA: EXCLUSIVA DO ADMINISTRADOR MESTRE ---
+    # --- INTERFACE MASTER ISOLADA: EXCLUSIVA DO ADMINISTRADOR MESTRE (MÓDULO 3) ---
     if st.session_state.perfil_cliente == "admin":
         st.markdown("### 🛠️ Cadastro de Assinantes")
         st.markdown(
@@ -396,7 +396,7 @@ elif st.session_state.tela_atual == "comerciante":
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
                             st.warning(
                                 "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
                     except Exception as error_db:
@@ -405,6 +405,30 @@ elif st.session_state.tela_atual == "comerciante":
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
+
+        # --- TABELA DE CONTROLE MESTRE VISUAL (CONEXÃO DIRETA COM O BANCO REAL) ---
+        st.write("")
+        st.markdown("### 📊 Gerenciamento de Clientes Ativos")
+        try:
+            resposta_clientes = supabase.table("clientes_b2b").select(
+                "id, nome_estabelecimento, perfil_segmento, regiao_atuacao, token_acesso, created_at").order("created_at", descending=True).execute()
+            if resposta_clientes.data and len(resposta_clientes.data) > 0:
+                lista_b2b = []
+                for cli in resposta_clientes.data:
+                    lista_b2b.append({
+                        "Estabelecimento": cli["nome_estabelecimento"],
+                        "Perfil Filtro": cli["perfil_segmento"],
+                        "Região Sede": cli.get("regiao_atuacao", "São Paulo/SP"),
+                        "Token de Acesso (UUID)": cli["token_acesso"]
+                    })
+                df_b2b = pd.DataFrame(lista_b2b)
+                st.dataframe(df_b2b, use_container_width=True)
+            else:
+                st.info(
+                    "ℹ️ Nenhum assinante corporativo cadastrado na base até o momento.")
+        except Exception as err_grid:
+            st.error(
+                f"⚠️ Erro ao renderizar a grade de controle mestre: {str(err_grid)}")
     # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO COM TRAVA POR CIDADES ---
     if st.session_state.perfil_cliente != "admin":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
@@ -593,7 +617,6 @@ elif st.session_state.tela_atual == "comerciante":
                                             st.info(
                                                 f"💬 *Relato:* \"{sub_linha['Observação']}\"")
 
-                                        # MECÂNICA LGPD: Oculta o número real do celular do cliente atrás de um botão dinâmico de clique único
                                         if contato_morador:
                                             texto_mensagem_whatsapp = f"Olá! Vi através do portal 'E o que falta?' que você está procurando por '{item_nome}' na região. Nós temos disponível!"
                                             import urllib.parse
