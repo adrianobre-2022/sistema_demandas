@@ -265,7 +265,6 @@ elif st.session_state.tela_atual == "autenticacao":
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
     st.write("")
     if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido") or (token_inserido and not st.session_state.token_valido):
-        res_token = None
         # 1. Validação dos tokens estáticos padrões de laboratório
         if token_inserido == "COMERCIO10":
             st.session_state.token_valido = True
@@ -316,12 +315,13 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.tela_atual = "comerciante"
             st.rerun()
 
-        # 2. Validação dinâmica dos novos tokens UUID gravados na nuvem do Supabase
+        # 2. Validação dinâmica de novos tokens UUID da nuvem (Extração de Dicionário com Índice Zero)
         elif token_inserido != "":
             try:
                 busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
                     "token_acesso", token_inserido.strip()).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
+                    # SOLUÇÃO DEFINITIVA: Extrai o dicionário real de dentro da lista
                     dados_linha = busca_db.data[0]
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
@@ -334,7 +334,6 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except Exception as e:
                 st.error("❌ Token inválido.")
-
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
