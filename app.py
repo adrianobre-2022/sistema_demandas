@@ -264,64 +264,60 @@ elif st.session_state.tela_atual == "autenticacao":
     token_inserido = st.text_input(
         label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
     st.write("")
-    if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido") or (token_inserido and not st.session_state.token_valido):
-        # 1. Validação dos tokens estáticos padrões de laboratório
-        if token_inserido == "COMERCIO10":
+    if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido"):
+        if token_inserido.strip() == "COMERCIO10":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "comerciante"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "SAUDE20":
+        elif token_inserido.strip() == "SAUDE20":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "saude"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "PET30":
+        elif token_inserido.strip() == "PET30":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "petshop"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "BELEZA40":
+        elif token_inserido.strip() == "BELEZA40":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "beleza"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "INVEST20":
+        elif token_inserido.strip() == "INVEST20":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "investidor"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "GESTOR30":
+        elif token_inserido.strip() == "GESTOR30":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "gestor"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "MIDIA40":
+        elif token_inserido.strip() == "MIDIA40":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "jornalista"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-        elif token_inserido == "ADMIN99":
+        elif token_inserido.strip() == "ADMIN99":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "admin"
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
-
-        # 2. Validação dinâmica de novos tokens UUID da nuvem (Extração de Dicionário com Índice Zero)
-        elif token_inserido != "":
+        elif token_inserido.strip() != "":
             try:
                 busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
                     "token_acesso", token_inserido.strip()).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    # SOLUÇÃO DEFINITIVA: Extrai o dicionário real de dentro da lista
                     dados_linha = busca_db.data[0]
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
@@ -333,7 +329,8 @@ elif st.session_state.tela_atual == "autenticacao":
                 else:
                     st.error("❌ Token inválido.")
             except Exception as e:
-                st.error("❌ Token inválido.")
+                st.error(f"❌ Erro de conexão ou token mal formatado.")
+
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
