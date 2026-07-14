@@ -1,9 +1,10 @@
-from fpdf import FPDF
 import streamlit as st
 import os
 import pandas as pd
 import datetime
 import hashlib
+import io
+from fpdf import FPDF
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -210,7 +211,7 @@ elif st.session_state.tela_atual == "consumidor":
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data[0]["id"] if local_data.data and len(
+                        local_id = local_data.data["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -251,7 +252,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
@@ -329,7 +329,7 @@ elif st.session_state.tela_atual == "autenticacao":
                 else:
                     st.error("❌ Token inválido.")
             except Exception as e:
-                st.error("❌ Erro de autenticação. Verifique suas credenciais.")
+                st.error("❌ Erro de conexão ou token mal formatado.")
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -373,11 +373,8 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
-    # --- INTERFACE MASTER ISOLADA: EXCLUSIVA DO ADMINISTRADOR MESTRE ---
     if st.session_state.perfil_cliente == "admin":
         st.markdown("### 🛠️ Cadastro de Assinantes")
-        st.markdown(
-            "##### *Preencha os campos para emissão automática de tokens UUID na nuvem.*")
         id_formulario_admin = f"form_cadastro_admin_{datetime.datetime.now().strftime('%M%S')}"
         with st.form(key=id_formulario_admin, clear_on_submit=True):
             nome_novo_comercio = st.text_input(
@@ -399,16 +396,12 @@ elif st.session_state.tela_atual == "comerciante":
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
                                 f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
-                            st.warning(
-                                "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
                     except Exception as error_db:
                         st.error(
                             f"⚠️ Falha na conexão com o banco: {str(error_db)}")
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
-
-        # --- MÓDULO 3: TABELA DE CONTROLE MESTRE VISUAL (TOLERANTE A FALHAS) ---
         st.write("")
         st.markdown("### 📊 Gerenciamento de Clientes Ativos")
         try:
@@ -432,11 +425,8 @@ elif st.session_state.tela_atual == "comerciante":
             st.error(
                 f"⚠️ Erro ao renderizar a grade de controle mestre: {str(err_grid)}")
 
-        # --- MÓDULO 4: FÁBRICA DE NICHOS DINÂMICA (CENÁRIO B - CURADORIA DE ENTRADAS) ---
         st.write("")
         st.markdown("### 📥 Sugestões de Novos Nichos Coletados (Cenário B)")
-        st.markdown(
-            "##### *Aprovação e padronização das carências desconhecidas enviadas pela população.*")
         try:
             sugestoes_brutas = supabase.table("relatos_escassez").select(
                 "id, item_solicitado, sub_segmento").eq("sub_segmento", "Geral").limit(5).execute()
@@ -444,8 +434,6 @@ elif st.session_state.tela_atual == "comerciante":
                 for sug in sugestoes_brutas.data:
                     id_sug, item_sug = sug["id"], sug["item_solicitado"]
                     with st.expander(f"📥 Termo Coletado: \"{item_sug}\""):
-                        st.write(
-                            "Esse item foi classificado como 'Geral' pelo robô. Escolha o nicho correto para homologar:")
                         nicho_homologado = st.selectbox("Vincular ao Segmento Oficial:", [
                                                         "Supermercado", "Saude", "Petshop", "Beleza"], key=f"sel_nicho_{id_sug}")
                         nome_corrigido = st.text_input(
@@ -453,14 +441,12 @@ elif st.session_state.tela_atual == "comerciante":
                         if st.button("✅ Homologar e Ativar no Mercado", key=f"btn_homologar_{id_sug}"):
                             supabase.table("relatos_escassez").update({"item_solicitado": nome_corrigido.strip(
                             ).title(), "sub_segmento": nicho_homologado}).eq("id", id_sug).execute()
-                            st.success(
-                                "🎉 Item homologado com sucesso! Entrando na grade comercial.")
+                            st.success("🎉 Item homologado com sucesso!")
                             import time
                             time.sleep(1)
                             st.rerun()
             else:
-                st.write(
-                    "ℹ️ Nenhuma sugestão pendente de curadoria. O robô categorizou tudo perfeitamente!")
+                st.write("ℹ️ Nenhuma sugestão pendente de curadoria.")
         except Exception as err_nicho:
             st.write("ℹ️ Triagem de nichos pronta para indexação.")
     # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO COM TRAVA POR CIDADES ---
@@ -492,7 +478,6 @@ elif st.session_state.tela_atual == "comerciante":
                             categoria_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_bruta or "Publico" in cat_bruta or "Infra" in cat_bruta or "Zeladoria" in sub_seg) else (
                                 "Serviço Local / Novo Estabelecimento" if ("Local" in cat_bruta or "Invest" in sub_seg) else "Produto / Marca")
 
-                            # MASCARAMENTO JURÍDICO: Oculta o nome nominal do rival para evitar processos por difamação de marca
                             nome_local_bruto = registro["locais_destino"]["nome_exibicao"]
                             if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and nome_local_bruto != loja_alvo_prioridade:
                                 if sub_seg == "Supermercado":
@@ -568,7 +553,6 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba = df[df['Categoria'] ==
                                                "Serviço Local / Novo Estabelecimento"]
                         elif frente_ativa == "Varejo" and not is_reverso_ativa:
-                            # BARREIRA DE SEGURANÇA OPERACIONAL: Filtra e blinda a aba principal para exibir apenas produtos do próprio nicho do lojista
                             if st.session_state.perfil_cliente == "comerciante":
                                 df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
                                     df['SubSegmento'].str.contains("Super", case=False))]
@@ -589,22 +573,27 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba['É_Minha_Loja'] = df_filtro_aba['Local/Referência'].apply(
                                 lambda x: 1 if x == loja_alvo_prioridade else 0)
                             if espectador_analitico:
-                                # --- GERADOR DE PDF REAL E LEVE PARA DISPOSITIVOS MÓVEIS ---
-                                pdf_real = FPDF()
-                                pdf_real.add_page()
-                                pdf_real.set_font("Arial", size=12)
-                                pdf_real.cell(
-                                    200, 10, txt=f"Relatorio de Carencias - {st.session_state.regiao_cliente}", ln=1, align="C")
-                                pdf_real.cell(
-                                    200, 10, txt="--------------------------------------------------", ln=2, align="C")
-                                for _, r in df_filtro_aba.iterrows():
+                                # --- EMISSOR DE PDF REAL COMPATÍVEL PARA DISPOSITIVOS MÓVEIS (AUDITORIA) ---
+                                try:
+                                    pdf_real = FPDF()
+                                    pdf_real.add_page()
+                                    pdf_real.set_font("Arial", size=12)
                                     pdf_real.cell(
-                                        200, 10, txt=f"- Falta: {r['O que Falta']} em {r['Local/Referência']}", ln=3)
-                                pdf_bytes = pdf_real.output(
-                                    dest='S').encode('latin-1')
-
-                                st.download_button(label="Baixar Relatório (PDF Real)", data=pdf_bytes,
-                                                   file_name="relatorio_atualizado.pdf", mime="application/pdf", key=f"btn_pdf_real_{num_aba}")
+                                        200, 10, txt="Relatorio de Vazios Comerciais", ln=1, align="C")
+                                    pdf_real.cell(
+                                        200, 10, txt="--------------------------------------------------", ln=2, align="C")
+                                    for _, r in df_filtro_aba.iterrows():
+                                        txt_linha = f"- Item: {r['O que Falta']} | Local: {r['Local/Referência']}"
+                                        pdf_real.cell(190, 10, txt=txt_linha.encode(
+                                            'latin-1', 'ignore').decode('latin-1'), ln=1)
+                                    pdf_output = pdf_real.output(dest='S')
+                                    pdf_bytes = bytes(pdf_output) if isinstance(
+                                        pdf_output, bytes) else pdf_output.encode('latin-1')
+                                    st.download_button(label="Baixar Relatório de Vazios (PDF)", data=pdf_bytes,
+                                                       file_name="expansao.pdf", mime="application/pdf", key=f"btn_pdf_{num_aba}")
+                                except Exception as e_pdf:
+                                    st.error(
+                                        f"⚠️ Erro ao gerar PDF: {str(e_pdf)}")
 
                                 st.markdown(
                                     f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
@@ -634,8 +623,29 @@ elif st.session_state.tela_atual == "comerciante":
                                         "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
                             # --- MODELO B: INTERFACE OPERACIONAL COMERCIAL (LOJISTAS) ---
                             else:
-                                st.download_button(label="Baixar Relatório (PDF)", data=b"PDF",
-                                                   file_name="relatorio.pdf", mime="application/pdf", key=f"btn_pdf_op_{num_aba}")
+                                # --- EMISSOR DE PDF REAL COMPATÍVEL PARA DISPOSITIVOS MÓVEIS (OPERACIONAL) ---
+                                try:
+                                    pdf_operacional = FPDF()
+                                    pdf_operacional.add_page()
+                                    pdf_operacional.set_font("Arial", size=12)
+                                    pdf_operacional.cell(
+                                        200, 10, txt="Relatorio Operacional de Demandas", ln=1, align="C")
+                                    pdf_operacional.cell(
+                                        200, 10, txt="--------------------------------------------------", ln=2, align="C")
+                                    for _, r in df_filtro_aba.iterrows():
+                                        txt_linha_op = f"- Falta: {r['O que Falta']} | Ponto: {r['Local/Referência']}"
+                                        pdf_operacional.cell(190, 10, txt=txt_linha_op.encode(
+                                            'latin-1', 'ignore').decode('latin-1'), ln=1)
+                                    pdf_output_op = pdf_operacional.output(
+                                        dest='S')
+                                    pdf_bytes_op = bytes(pdf_output_op) if isinstance(
+                                        pdf_output_op, bytes) else pdf_output_op.encode('latin-1')
+                                    st.download_button(label="Baixar Relatório (PDF)", data=pdf_bytes_op,
+                                                       file_name="relatorio.pdf", mime="application/pdf", key=f"btn_pdf_op_{num_aba}")
+                                except Exception as e_pdf_op:
+                                    st.error(
+                                        f"⚠️ Erro ao gerar PDF: {str(e_pdf_op)}")
+
                                 total_sua_loja = len(
                                     df_filtro_aba[df_filtro_aba['Local/Referência'] == loja_alvo_prioridade]) if not is_reverso_ativa else 0
                                 total_concorrencia = len(
@@ -667,7 +677,6 @@ elif st.session_state.tela_atual == "comerciante":
                                             st.info(
                                                 f"💬 *Relato:* \"{sub_linha['Observação']}\"")
 
-                                        # MECÂNICA LGPD: Oculta o número real do celular do cliente atrás de um botão dinâmico de clique único
                                         if contato_morador:
                                             texto_mensagem_whatsapp = f"Olá! Vi através do portal 'E o que falta?' que você está procurando por '{item_nome}' na região. Nós temos disponível!"
                                             import urllib.parse
