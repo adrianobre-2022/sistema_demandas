@@ -266,26 +266,8 @@ elif st.session_state.tela_atual == "autenticacao":
     st.write("")
     if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido") or (token_inserido and not st.session_state.token_valido):
         res_token = None
-        if token_inserido not in ["", "COMERCIO10", "SAUDE20", "PET30", "BELEZA40", "INVEST20", "GESTOR30", "MIDIA40", "ADMIN99"]:
-            try:
-                busca_db = supabase.table("clientes_b2b").select(
-                    "perfil_segmento, regiao_atuacao").eq("token_acesso", token_inserido).execute()
-                if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    res_token = busca_db.data
-            except:
-                res_token = None
-
-        if res_token is not None:
-            st.session_state.token_valido = True
-            # CORREÇÃO CIRÚRGICA: Extrai o dicionário real de dentro da lista
-            dados_primeira_linha = res_token[0]
-            st.session_state.perfil_cliente = dados_primeira_linha.get(
-                "perfil_segmento", "comerciante")
-            st.session_state.regiao_cliente = dados_primeira_linha.get(
-                "regiao_atuacao", "São Paulo/SP")
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido == "COMERCIO10":
+        # 1. Validação dos tokens estáticos padrões de laboratório
+        if token_inserido == "COMERCIO10":
             st.session_state.token_valido = True
             st.session_state.perfil_cliente = "comerciante"
             st.session_state.regiao_cliente = "São Paulo/SP"
@@ -333,8 +315,26 @@ elif st.session_state.tela_atual == "autenticacao":
             st.session_state.regiao_cliente = "São Paulo/SP"
             st.session_state.tela_atual = "comerciante"
             st.rerun()
+
+        # 2. Validação dinâmica dos novos tokens UUID gravados na nuvem do Supabase
         elif token_inserido != "":
-            st.error("❌ Token inválido.")
+            try:
+                busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
+                    "token_acesso", token_inserido.strip()).execute()
+                if busca_db and busca_db.data and len(busca_db.data) > 0:
+                    dados_linha = busca_db.data[0]
+                    st.session_state.perfil_cliente = dados_linha.get(
+                        "perfil_segmento", "comerciante")
+                    st.session_state.regiao_cliente = dados_linha.get(
+                        "regiao_atuacao", "São Paulo/SP")
+                    st.session_state.token_valido = True
+                    st.session_state.tela_atual = "comerciante"
+                    st.rerun()
+                else:
+                    st.error("❌ Token inválido.")
+            except Exception as e:
+                st.error("❌ Token inválido.")
+
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
