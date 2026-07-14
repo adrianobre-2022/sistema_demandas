@@ -47,10 +47,11 @@ st.markdown("""
     .stApp { background-color: #121212 !important; color: #FFFFFF !important; }
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] { color: #FFFFFF !important; }
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
-        background-color: #00803B !important; color: #FFFFFF !important; font-weight: 800 !important;
-        border-radius: 12px !important; border: none !important; padding: 0.8rem 0.2rem !important;
-        font-size: 15px !important; transition: all 0.3s ease !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; width: 100% !important; display: block !important;
+        background-color: #00803B !important; color: #FFFFFF !important; font-weight: 900 !important;
+        border-radius: 12px !important; border: none !important; padding: 1.4rem 0.5rem !important;
+        font-size: 17px !important; transition: all 0.3s ease !important;
+        box-shadow: 0 6px 12px rgba(0,128,59,0.2) !important; width: 100% !important; display: block !important;
+        letter-spacing: 0.5px !important; text-transform: uppercase !important;
     }
     .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover { background-color: #005a24 !important; }
     h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; white-space: nowrap !important; margin-bottom: 1.5rem !important; }
@@ -272,7 +273,7 @@ elif st.session_state.tela_atual == "consumidor":
                 if linha_imp['nicho'] == "Supermercado":
                     icone, acao = "🛒 Varejo Alimentar:", "repos o estoque de"
                 elif linha_imp['nicho'] in ["Saude", "Saúde"]:
-                    icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe para a regiao o servico de"
+                    icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o servico de"
                 elif linha_imp['nicho'] == "Petshop":
                     icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
                 elif linha_imp['nicho'] == "Beleza":
@@ -280,9 +281,14 @@ elif st.session_state.tela_atual == "consumidor":
                 else:
                     icone, acao = "✨ Conquista Local:", "disponibilizou"
 
-                # Exibe a localização completa cadastrada no banco para dar realismo máximo ao consumidor
-                st.info(
-                    f"✅ **{icone}** O estabelecimento **{linha_imp['local']}** ({linha_imp['cidade_exibicao']}) {acao} **{linha_imp['item']}**!")
+                # DESIGN COMPACTO E DISCRETO: Encolhe a fonte e remove o destaque excessivo
+                st.markdown(f"""
+                    <div style='background-color: #1A1A1A; padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'>
+                        <span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>
+                            ✅ <b>{icone}</b> O estabelecimento {linha_imp['local']} ({linha_imp['cidade_exibicao']}) {acao} <b>{linha_imp['item']}</b>!
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
                 contador_exibidos += 1
         else:
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
