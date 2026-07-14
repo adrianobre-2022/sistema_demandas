@@ -242,28 +242,44 @@ elif st.session_state.tela_atual == "consumidor":
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
-        # BUSCA AS BENFEITORIAS DIRETAMENTE NA NUVEM
-        resolvidos = supabase.table("relatos_escassez").select(
-            "item_solicitado, locais_destino(nome_exibicao)").eq("status", "Atendido").limit(10).execute()
+        # BUSCA AS BENFEITORIAS RECENTES DIRETAMENTE NA NUVEM DO SUPABASE
+        resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao)").eq(
+            "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
         if resolvidos.data and len(resolvidos.data) > 0:
-            # TRANSFORMA EM DATAFRAME PARA FILTRAGEM RIGOROSA DE DUPLICIDADES VISUAIS
             lista_impactos = []
             for item in resolvidos.data:
                 if item.get("locais_destino"):
                     lista_impactos.append({
                         "item": item["item_solicitado"].strip().title(),
+                        "nicho": item.get("sub_segmento", "Geral").strip(),
                         "local": item["locais_destino"]["nome_exibicao"].strip().title()
                     })
             df_impactos = pd.DataFrame(lista_impactos)
 
-            # TRAVA ANTI-DUPLICIDADE: Remove linhas repetidas de forma absoluta antes de exibir na tela
-            df_impactos_limpo = df_impactos.drop_duplicates(
-                subset=["item", "local"])
+            # TRAVA DE DIVERSIDADE POR NICHO: Captura estritamente a conquista mais recente de cada setor diferente
+            df_impactos_variado = df_impactos.drop_duplicates(subset=["nicho"])
 
-            # EXIBE APENAS OS 3 PRIMEIROS REGISTROS ÚNICOS E CONSOLIDADOS
-            for _, linha_imp in df_impactos_limpo.head(3).iterrows():
+            # IMPRIME NA TELA EXATAMENTE OS 3 EXEMPLOS MAIS RECENTES E CATEGÓRICOS
+            contador_exibidos = 0
+            for _, linha_imp in df_impactos_variado.iterrows():
+                if contador_exibidos >= 3:
+                    break
+
+                # Adapta a frase dinamicamente para dar exemplos claros de engajamento ao morador
+                if linha_imp['nicho'] == "Supermercado":
+                    icone, acao = "🛒 Varejo Alimentar:", "repos o estoque de"
+                elif linha_imp['nicho'] in ["Saude", "Saúde"]:
+                    icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe para a regiao o servico de"
+                elif linha_imp['nicho'] == "Petshop":
+                    icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
+                elif linha_imp['nicho'] == "Beleza":
+                    icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
+                else:
+                    icone, acao = "✨ Conquista Local:", "disponibilizou"
+
                 st.info(
-                    f"✅ **{linha_imp['local']}** repôs o estoque: **{linha_imp['item']}**!")
+                    f"✅ **{icone}** O estabelecimento **{linha_imp['local']}** {acao} **{linha_imp['item']}**!")
+                contador_exibidos += 1
         else:
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
