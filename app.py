@@ -4,6 +4,7 @@ import pandas as pd
 import datetime
 import hashlib
 import io
+import urllib.parse
 from fpdf import FPDF
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -33,7 +34,7 @@ st.set_page_config(page_title="E o que falta?",
 def obter_pegada_digital():
     try:
         headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",").strip()
+        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0].strip()
         agente = headers.get("User-Agent", "Desconhecido")
         return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
     except:
@@ -205,13 +206,13 @@ elif st.session_state.tela_atual == "consumidor":
                         if "/" in texto_regiao:
                             try:
                                 estado_detectado = texto_regiao.split(
-                                    "/").strip().upper()[:2]
+                                    "/")[1].strip().upper()[:2]
                             except:
                                 estado_detectado = "SP"
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data["id"] if local_data.data and len(
+                        local_id = local_data.data[0]["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -252,7 +253,18 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-    # --- FORMULÁRIO DE AUTENTICAÇÃO INTEGRADO (REATIVA O CLIQUE DO ENTER) ---
+# --- TELA: AUTENTICAÇÃO POR TOKEN ---
+elif st.session_state.tela_atual == "autenticacao":
+    if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
+        st.session_state.tela_atual = "home"
+        st.session_state.token_valido = False
+        st.rerun()
+    st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
+                unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 16px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Área Restrita para Comerciantes e Gestores</p>", unsafe_allow_html=True)
+    st.write("---")
+
+    # --- FORMULÁRIO DE LOGIN COM SUPORTE PARA A TECLA ENTER ---
     with st.form(key="form_autenticacao_b2b", clear_on_submit=False):
         token_inserido = st.text_input(
             label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
@@ -313,79 +325,13 @@ elif st.session_state.tela_atual == "consumidor":
         elif token_limpo != "":
             try:
                 busca_db = supabase.table("clientes_b2b").select(
-                    "perfil_segmento").eq("token_acesso", token_limpo).execute()
+                    "perfil_segmento, regiao_atuacao").eq("token_acesso", token_limpo).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
                     dados_linha = busca_db.data[0]
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
-                    st.session_state.regiao_cliente = "São Paulo/SP"
-                    st.session_state.token_valido = True
-                    st.session_state.tela_atual = "comerciante"
-                    st.rerun()
-                else:
-                    st.error("❌ Token inválido.")
-            except Exception as e:
-                st.error("❌ Erro de conexão ou token mal formatado.")
-
-    st.write("")
-    if st.button("Validar Credenciais e Acessar", use_container_width=True, key="btn_validar_token_hibrido"):
-        if token_inserido.strip() == "COMERCIO10":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "comerciante"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "SAUDE20":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "saude"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "PET30":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "petshop"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "BELEZA40":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "beleza"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "INVEST20":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "investidor"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "GESTOR30":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "gestor"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "MIDIA40":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "jornalista"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() == "ADMIN99":
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = "admin"
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_inserido.strip() != "":
-            try:
-                busca_db = supabase.table("clientes_b2b").select("perfil_segmento").eq(
-                    "token_acesso", token_inserido.strip()).execute()
-                if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_linha = busca_db.data[0]
-                    st.session_state.perfil_cliente = dados_linha.get(
-                        "perfil_segmento", "comerciante")
-                    st.session_state.regiao_cliente = "São Paulo/SP"
+                    st.session_state.regiao_cliente = dados_linha.get(
+                        "regiao_atuacao", "São Paulo/SP")
                     st.session_state.token_valido = True
                     st.session_state.tela_atual = "comerciante"
                     st.rerun()
@@ -451,14 +397,14 @@ elif st.session_state.tela_atual == "comerciante":
                 if nome_novo_comercio and regiao_novo_comercio:
                     try:
                         regiao_formatada = regiao_novo_comercio.strip().title() if "/" not in regiao_novo_comercio else regiao_novo_comercio.strip(
-                        ).split("/").strip().title() + "/" + regiao_novo_comercio.strip().split("/").strip().upper()
+                        ).split("/")[0].strip().title() + "/" + regiao_novo_comercio.strip().split("/")[1].strip().upper()
                         novo_registro = supabase.table("clientes_b2b").insert({"nome_estabelecimento": nome_novo_comercio.strip(
                         ).title(), "perfil_segmento": perfil_novo_comercio, "regiao_atuacao": regiao_formatada}).execute()
                         if novo_registro.data:
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
                     except Exception as error_db:
                         st.error(
                             f"⚠️ Falha na conexão com o banco: {str(error_db)}")
@@ -647,7 +593,7 @@ elif st.session_state.tela_atual == "comerciante":
                                     pdf_real.cell(
                                         200, 10, txt="--------------------------------------------------", ln=2, align="C")
                                     for _, r in df_filtro_aba.iterrows():
-                                        # FIÇÃO CORRIGIDA: Puxa o endereço dinâmico real de cada linha salvando no PDF
+                                        # FIÇÃO CORRIGIDA: Puxa o endereço dinâmico real de cada linha salvando no PDF da Mídia
                                         txt_linha = f"- Falta: {r['O que Falta']} | Localizacao: {r['Local/Referência']} ({r['Cidade']})"
                                         pdf_real.cell(190, 10, txt=txt_linha.encode(
                                             'latin-1', 'ignore').decode('latin-1'), ln=1)
@@ -660,6 +606,8 @@ elif st.session_state.tela_atual == "comerciante":
                                     st.error(
                                         f"⚠️ Erro ao gerar PDF: {str(e_pdf)}")
 
+                                st.markdown(
+                                    f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
                                 st.write("---")
                                 df_agrupado_mestre = df_filtro_aba.groupby(["O que Falta", "Categoria"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
                                     "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
@@ -742,7 +690,6 @@ elif st.session_state.tela_atual == "comerciante":
 
                                         if contato_morador:
                                             texto_mensagem_whatsapp = f"Olá! Vi através do portal 'E o que falta?' que você está procurando por '{item_nome}' na região. Nós temos disponível!"
-                                            import urllib.parse
                                             link_whatsapp_dinamico = f"https://whatsapp.com{contato_morador.strip()}&text={urllib.parse.quote(texto_mensagem_whatsapp)}"
                                             st.markdown(f'<a href="{link_whatsapp_dinamico}" target="_blank" style="text-decoration: none;"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar com Cliente no WhatsApp</button></a>', unsafe_allow_html=True)
                                         else:
