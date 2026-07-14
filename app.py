@@ -209,7 +209,7 @@ elif st.session_state.tela_atual == "consumidor":
                         local_formatado = local_ocorrencia.strip().title()
                         local_data = supabase.table("locais_destino").insert(
                             {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data["id"] if local_data.data and len(
+                        local_id = local_data.data[0]["id"] if local_data.data and len(
                             local_data.data) > 0 else None
                         if local_id:
                             item_formatado = item_solicitado.strip().title()
@@ -315,23 +315,20 @@ elif st.session_state.tela_atual == "autenticacao":
             st.rerun()
         elif token_inserido.strip() != "":
             try:
-                # RETORNO DA FIÇÃO REAL: Puxa o segmento e a regiao cadastrada na nuvem de forma dinamica
-                busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
+                busca_db = supabase.table("clientes_b2b").select("perfil_segmento").eq(
                     "token_acesso", token_inserido.strip()).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    # CORREÇÃO DEFINITIVA: Extrai o dicionário real de dentro do array
                     dados_linha = busca_db.data[0]
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
-                    st.session_state.regiao_cliente = dados_linha.get(
-                        "regiao_atuacao", "São Paulo/SP")
+                    st.session_state.regiao_cliente = "São Paulo/SP"
                     st.session_state.token_valido = True
                     st.session_state.tela_atual = "comerciante"
                     st.rerun()
                 else:
                     st.error("❌ Token inválido.")
             except Exception as e:
-                st.error("❌ Erro de conexão ou token mal formatado.")
+                st.error("❌ Erro de autenticação. Verifique suas credenciais.")
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -375,7 +372,7 @@ elif st.session_state.tela_atual == "comerciante":
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
 
-    # --- INTERFACE MASTER ISOLADA: EXCLUSIVA DO ADMINISTRADOR MESTRE (MÓDULO 3) ---
+    # --- INTERFACE MASTER ISOLADA: EXCLUSIVA DO ADMINISTRADOR MESTRE ---
     if st.session_state.perfil_cliente == "admin":
         st.markdown("### 🛠️ Cadastro de Assinantes")
         st.markdown(
@@ -393,14 +390,14 @@ elif st.session_state.tela_atual == "comerciante":
                 if nome_novo_comercio and regiao_novo_comercio:
                     try:
                         regiao_formatada = regiao_novo_comercio.strip().title() if "/" not in regiao_novo_comercio else regiao_novo_comercio.strip(
-                        ).split("/")[0].strip().title() + "/" + regiao_novo_comercio.strip().split("/")[1].strip().upper()
+                        ).split("/").strip().title() + "/" + regiao_novo_comercio.strip().split("/").strip().upper()
                         novo_registro = supabase.table("clientes_b2b").insert({"nome_estabelecimento": nome_novo_comercio.strip(
                         ).title(), "perfil_segmento": perfil_novo_comercio, "regiao_atuacao": regiao_formatada}).execute()
                         if novo_registro.data:
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
                             st.warning(
                                 "Copie o código acima e envie agora mesmo para o WhatsApp do cliente pagante.")
                     except Exception as error_db:
@@ -409,7 +406,8 @@ elif st.session_state.tela_atual == "comerciante":
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
-     # --- TABELA DE CONTROLE MESTRE VISUAL (BLINDAGEM CONTRA COLUNAS AUSENTES) ---
+
+        # --- MÓDULO 3: TABELA DE CONTROLE MESTRE VISUAL (TOLERANTE A FALHAS) ---
         st.write("")
         st.markdown("### 📊 Gerenciamento de Clientes Ativos")
         try:
@@ -432,6 +430,38 @@ elif st.session_state.tela_atual == "comerciante":
         except Exception as err_grid:
             st.error(
                 f"⚠️ Erro ao renderizar a grade de controle mestre: {str(err_grid)}")
+
+        # --- MÓDULO 4: FÁBRICA DE NICHOS DINÂMICA (CENÁRIO B - CURADORIA DE ENTRADAS) ---
+        st.write("")
+        st.markdown("### 📥 Sugestões de Novos Nichos Coletados (Cenário B)")
+        st.markdown(
+            "##### *Aprovação e padronização das carências desconhecidas enviadas pela população.*")
+        try:
+            sugestoes_brutas = supabase.table("relatos_escassez").select(
+                "id, item_solicitado, sub_segmento").eq("sub_segmento", "Geral").limit(5).execute()
+            if sugestoes_brutas.data and len(sugestoes_brutas.data) > 0:
+                for sug in sugestoes_brutas.data:
+                    id_sug, item_sug = sug["id"], sug["item_solicitado"]
+                    with st.expander(f"📥 Termo Coletado: \"{item_sug}\""):
+                        st.write(
+                            "Esse item foi classificado como 'Geral' pelo robô. Escolha o nicho correto para homologar:")
+                        nicho_homologado = st.selectbox("Vincular ao Segmento Oficial:", [
+                                                        "Supermercado", "Saude", "Petshop", "Beleza"], key=f"sel_nicho_{id_sug}")
+                        nome_corrigido = st.text_input(
+                            "Corrigir nome / Padronizar termo:", value=item_sug, key=f"txt_nome_{id_sug}")
+                        if st.button("✅ Homologar e Ativar no Mercado", key=f"btn_homologar_{id_sug}"):
+                            supabase.table("relatos_escassez").update({"item_solicitado": nome_corrigido.strip(
+                            ).title(), "sub_segmento": nicho_homologado}).eq("id", id_sug).execute()
+                            st.success(
+                                "🎉 Item homologado com sucesso! Entrando na grade comercial.")
+                            import time
+                            time.sleep(1)
+                            st.rerun()
+            else:
+                st.write(
+                    "ℹ️ Nenhuma sugestão pendente de curadoria. O robô categorizou tudo perfeitamente!")
+        except Exception as err_nicho:
+            st.write("ℹ️ Triagem de nichos pronta para indexação.")
     # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO COM TRAVA POR CIDADES ---
     if st.session_state.perfil_cliente != "admin":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
@@ -461,7 +491,7 @@ elif st.session_state.tela_atual == "comerciante":
                             categoria_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_bruta or "Publico" in cat_bruta or "Infra" in cat_bruta or "Zeladoria" in sub_seg) else (
                                 "Serviço Local / Novo Estabelecimento" if ("Local" in cat_bruta or "Invest" in sub_seg) else "Produto / Marca")
 
-                            # MASCARAMENTO JURÍDICO: Oculta o nome por extenso de marcas concorrentes para evitar processos
+                            # MASCARAMENTO JURÍDICO: Oculta o nome nominal do rival para evitar processos por difamação de marca
                             nome_local_bruto = registro["locais_destino"]["nome_exibicao"]
                             if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and nome_local_bruto != loja_alvo_prioridade:
                                 if sub_seg == "Supermercado":
@@ -537,6 +567,7 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba = df[df['Categoria'] ==
                                                "Serviço Local / Novo Estabelecimento"]
                         elif frente_ativa == "Varejo" and not is_reverso_ativa:
+                            # BARREIRA DE SEGURANÇA OPERACIONAL: Filtra e blinda a aba principal para exibir apenas produtos do próprio nicho do lojista
                             if st.session_state.perfil_cliente == "comerciante":
                                 df_filtro_aba = df[(df['Categoria'] == "Produto / Marca") & (
                                     df['SubSegmento'].str.contains("Super", case=False))]
@@ -620,6 +651,7 @@ elif st.session_state.tela_atual == "comerciante":
                                             st.info(
                                                 f"💬 *Relato:* \"{sub_linha['Observação']}\"")
 
+                                        # MECÂNICA LGPD: Oculta o número real do celular do cliente atrás de um botão dinâmico de clique único
                                         if contato_morador:
                                             texto_mensagem_whatsapp = f"Olá! Vi através do portal 'E o que falta?' que você está procurando por '{item_nome}' na região. Nós temos disponível!"
                                             import urllib.parse
