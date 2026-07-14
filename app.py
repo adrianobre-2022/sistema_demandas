@@ -315,22 +315,23 @@ elif st.session_state.tela_atual == "autenticacao":
             st.rerun()
         elif token_inserido.strip() != "":
             try:
-                # BYPASS DE SEGURANÇA: Busca apenas o segmento para evitar o erro de coluna inexistente no banco
-                busca_db = supabase.table("clientes_b2b").select("perfil_segmento").eq(
+                # RETORNO DA FIÇÃO REAL: Puxa o segmento e a regiao cadastrada na nuvem de forma dinamica
+                busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
                     "token_acesso", token_inserido.strip()).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
+                    # CORREÇÃO DEFINITIVA: Extrai o dicionário real de dentro do array
                     dados_linha = busca_db.data[0]
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
-                    st.session_state.regiao_cliente = "São Paulo/SP"  # Fallback seguro em memória
+                    st.session_state.regiao_cliente = dados_linha.get(
+                        "regiao_atuacao", "São Paulo/SP")
                     st.session_state.token_valido = True
                     st.session_state.tela_atual = "comerciante"
                     st.rerun()
                 else:
                     st.error("❌ Token inválido.")
             except Exception as e:
-                st.error("❌ Erro de autenticação. Verifique suas credenciais.")
-
+                st.error("❌ Erro de conexão ou token mal formatado.")
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
