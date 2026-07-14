@@ -405,21 +405,20 @@ elif st.session_state.tela_atual == "comerciante":
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
-
-        # --- TABELA DE CONTROLE MESTRE VISUAL (CORREÇÃO DE SINTAXE PYTHON) ---
+     # --- TABELA DE CONTROLE MESTRE VISUAL (BLINDAGEM CONTRA COLUNAS AUSENTES) ---
         st.write("")
         st.markdown("### 📊 Gerenciamento de Clientes Ativos")
         try:
             resposta_clientes = supabase.table("clientes_b2b").select(
-                "id, nome_estabelecimento, perfil_segmento, regiao_atuacao, token_acesso, created_at").order("created_at", desc=True).execute()
+                "*").order("created_at", desc=True).execute()
             if resposta_clientes.data and len(resposta_clientes.data) > 0:
                 lista_b2b = []
                 for cli in resposta_clientes.data:
                     lista_b2b.append({
-                        "Estabelecimento": cli["nome_estabelecimento"],
-                        "Perfil Filtro": cli["perfil_segmento"],
-                        "Região Sede": cli.get("regiao_atuacao", "São Paulo/SP"),
-                        "Token de Acesso (UUID)": cli["token_acesso"]
+                        "Estabelecimento": cli.get("nome_estabelecimento", "Sem Nome"),
+                        "Perfil Filtro": cli.get("perfil_segmento", "comerciante"),
+                        "Região Sede": cli.get("regiao_atuacao") or cli.get("regiao") or "São Paulo/SP",
+                        "Token de Acesso (UUID)": cli.get("token_acesso", "Sem Token")
                     })
                 df_b2b = pd.DataFrame(lista_b2b)
                 st.dataframe(df_b2b, use_container_width=True)
