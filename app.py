@@ -268,14 +268,19 @@ elif st.session_state.tela_atual == "autenticacao":
         res_token = None
         if token_inserido not in ["", "COMERCIO10", "SAUDE20", "PET30", "BELEZA40", "INVEST20", "GESTOR30", "MIDIA40", "ADMIN99"]:
             try:
-                res_token = supabase.table("clientes_b2b").select(
+                busca_db = supabase.table("clientes_b2b").select(
                     "perfil_segmento, regiao_atuacao").eq("token_acesso", token_inserido).execute()
+                if busca_db and busca_db.data and len(busca_db.data) > 0:
+                    res_token = busca_db.data[0]
             except:
                 res_token = None
-        if res_token and res_token.data and len(res_token.data) > 0:
+
+        if res_token:
             st.session_state.token_valido = True
-            st.session_state.perfil_cliente = res_token.data[0]["perfil_segmento"]
-            st.session_state.regiao_cliente = res_token.data[0]["regiao_atuacao"]
+            st.session_state.perfil_cliente = res_token.get(
+                "perfil_segmento", "comerciante")
+            st.session_state.regiao_cliente = res_token.get(
+                "regiao_atuacao", "São Paulo/SP")
             st.session_state.tela_atual = "comerciante"
             st.rerun()
         elif token_inserido == "COMERCIO10":
@@ -328,6 +333,7 @@ elif st.session_state.tela_atual == "autenticacao":
             st.rerun()
         elif token_inserido != "":
             st.error("❌ Token inválido.")
+
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
