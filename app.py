@@ -277,6 +277,7 @@ elif st.session_state.tela_atual == "autenticacao":
 
         if res_token is not None:
             st.session_state.token_valido = True
+            # CORREÇÃO CIRÚRGICA: Extrai o dicionário real de dentro da lista
             dados_primeira_linha = res_token[0]
             st.session_state.perfil_cliente = dados_primeira_linha.get(
                 "perfil_segmento", "comerciante")
