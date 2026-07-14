@@ -47,11 +47,10 @@ st.markdown("""
     .stApp { background-color: #121212 !important; color: #FFFFFF !important; }
     .stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] { color: #FFFFFF !important; }
     .stButton>button, .stFormSubmitButton>button, [data-testid="stDownloadButton"]>button {
-        background-color: #00803B !important; color: #FFFFFF !important; font-weight: 900 !important;
-        border-radius: 12px !important; border: none !important; padding: 1.4rem 0.5rem !important;
-        font-size: 17px !important; transition: all 0.3s ease !important;
-        box-shadow: 0 6px 12px rgba(0,128,59,0.2) !important; width: 100% !important; display: block !important;
-        letter-spacing: 0.5px !important; text-transform: uppercase !important;
+        background-color: #00803B !important; color: #FFFFFF !important; font-weight: 800 !important;
+        border-radius: 12px !important; border: none !important; padding: 0.8rem 0.2rem !important;
+        font-size: 15px !important; transition: all 0.3s ease !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; width: 100% !important; display: block !important;
     }
     .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover { background-color: #005a24 !important; }
     h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; white-space: nowrap !important; margin-bottom: 1.5rem !important; }
