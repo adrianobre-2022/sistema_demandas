@@ -256,10 +256,11 @@ elif st.session_state.tela_atual == "consumidor":
                     })
             df_impactos = pd.DataFrame(lista_impactos)
 
-            # TRAVA DE DIVERSIDADE DUPLA: Remove nichos repetidos E impede o mesmo local de aparecer duas vezes na mesma exibição
-            df_impactos_variado = df_impactos.drop_duplicates(subset=["nicho"])
-            df_impactos_final = df_impactos_variado.drop_duplicates(subset=[
+            # FILTRAGEM INTELIGENTE INVERTIDA: Primeiro elimina ruas repetidas para abrir espaço para novos endereços
+            df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
                                                                     "local"])
+            df_impactos_final = df_impactos_locais_unicos.drop_duplicates(subset=[
+                                                                          "nicho"])
 
             # IMPRIME NA TELA EXATAMENTE OS EXEMPLOS MAIS RECENTES, VARIADOS E SEM REPETIÇÃO DE LOJAS
             contador_exibidos = 0
@@ -285,7 +286,6 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
-
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
