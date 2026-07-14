@@ -318,7 +318,7 @@ elif st.session_state.tela_atual == "autenticacao":
                 busca_db = supabase.table("clientes_b2b").select("perfil_segmento, regiao_atuacao").eq(
                     "token_acesso", token_inserido.strip()).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    # EXTRAÇÃO CIRÚRGICA COMPLETA: Pega o dicionário real com índice zero
+                    # O MAPA CORRETO: Pega o dicionário contido na posição zero
                     dados_linha = busca_db.data[0]
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
@@ -331,6 +331,7 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except Exception as e:
                 st.error(f"❌ Erro de conexão ou token mal formatado.")
+
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -431,7 +432,6 @@ elif st.session_state.tela_atual == "comerciante":
         except Exception as err_grid:
             st.error(
                 f"⚠️ Erro ao renderizar a grade de controle mestre: {str(err_grid)}")
-
     # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO COM TRAVA POR CIDADES ---
     if st.session_state.perfil_cliente != "admin":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
