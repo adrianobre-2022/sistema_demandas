@@ -81,6 +81,33 @@ if "aba_consumidor" not in st.session_state:
 if "regiao_cliente" not in st.session_state:
     st.session_state.regiao_cliente = "São Paulo/SP"
 
+# --- CORTINA DE FUMAÇA E PROTEÇÃO DE PATENTE (ANTI-CURIOSOS) ---
+if "seguranca_master" not in st.session_state:
+    st.session_state.seguranca_master = False
+
+if not st.session_state.seguranca_master:
+    st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>🔍 Sistema em Manutenção</h3>",
+                unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 14px; color: #666666;'>Acesso restrito à equipe de engenharia e auditoria interna.</p>", unsafe_allow_html=True)
+    st.write("---")
+
+    with st.form(key="form_protecao_patente", clear_on_submit=False):
+        senha_desenvolvimento = st.text_input(
+            label="Chave de Homologação Comercial:", type="password", placeholder="Insira a credencial confidencial...")
+        st.write("")
+        botao_destravar_lab = st.form_submit_button(
+            "Acessar Ambiente de Testes", use_container_width=True)
+
+    if botao_destravar_lab:
+        if senha_desenvolvimento.strip() == "carencias2026":
+            st.session_state.seguranca_master = True
+            st.rerun()
+        else:
+            st.error(
+                "❌ Credencial de engenharia incorreta. Acesso bloqueado por segurança.")
+    st.stop()  # Tranca o script aqui e impede qualquer leitura de código abaixo por usuários externos
+
+
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 E o que falta?")
