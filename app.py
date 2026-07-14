@@ -406,12 +406,12 @@ elif st.session_state.tela_atual == "comerciante":
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
 
-        # --- TABELA DE CONTROLE MESTRE VISUAL (CONEXÃO DIRETA COM O BANCO REAL) ---
+        # --- TABELA DE CONTROLE MESTRE VISUAL (CORREÇÃO DE SINTAXE PYTHON) ---
         st.write("")
         st.markdown("### 📊 Gerenciamento de Clientes Ativos")
         try:
             resposta_clientes = supabase.table("clientes_b2b").select(
-                "id, nome_estabelecimento, perfil_segmento, regiao_atuacao, token_acesso, created_at").order("created_at", descending=True).execute()
+                "id, nome_estabelecimento, perfil_segmento, regiao_atuacao, token_acesso, created_at").order("created_at", desc=True).execute()
             if resposta_clientes.data and len(resposta_clientes.data) > 0:
                 lista_b2b = []
                 for cli in resposta_clientes.data:
@@ -429,6 +429,7 @@ elif st.session_state.tela_atual == "comerciante":
         except Exception as err_grid:
             st.error(
                 f"⚠️ Erro ao renderizar a grade de controle mestre: {str(err_grid)}")
+
     # --- PROCESSAMENTO GLOBAL DE DADOS REAL / SIMULADO COM TRAVA POR CIDADES ---
     if st.session_state.perfil_cliente != "admin":
         if not st.session_state.busca_ativa or st.session_state.dados_grafico is None:
