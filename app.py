@@ -242,8 +242,8 @@ elif st.session_state.tela_atual == "consumidor":
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
-        # BUSCA AS BENFEITORIAS RECENTES DIRETAMENTE NA NUVEM DO SUPABASE
-        resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao)").eq(
+        # BYPASS DE PERFORMANCE: Busca as 20 benfeitorias mais recentes do ecossistema geral na nuvem
+        resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
             "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
         if resolvidos.data and len(resolvidos.data) > 0:
             lista_impactos = []
@@ -252,11 +252,12 @@ elif st.session_state.tela_atual == "consumidor":
                     lista_impactos.append({
                         "item": item["item_solicitado"].strip().title(),
                         "nicho": item.get("sub_segmento", "Geral").strip(),
-                        "local": item["locais_destino"]["nome_exibicao"].strip().title()
+                        "local": item["locais_destino"]["nome_exibicao"].strip().title(),
+                        "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()
                     })
             df_impactos = pd.DataFrame(lista_impactos)
 
-            # FILTRAGEM INTELIGENTE INVERTIDA: Primeiro elimina ruas repetidas para abrir espaço para novos endereços
+            # DUPLO ISOLAMENTO RIGOROSO: Garante ruas 100% diferentes e nichos alternados na tela
             df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
                                                                     "local"])
             df_impactos_final = df_impactos_locais_unicos.drop_duplicates(subset=[
@@ -279,13 +280,15 @@ elif st.session_state.tela_atual == "consumidor":
                 else:
                     icone, acao = "✨ Conquista Local:", "disponibilizou"
 
+                # Exibe a localização completa cadastrada no banco para dar realismo máximo ao consumidor
                 st.info(
-                    f"✅ **{icone}** O estabelecimento **{linha_imp['local']}** {acao} **{linha_imp['item']}**!")
+                    f"✅ **{icone}** O estabelecimento **{linha_imp['local']}** ({linha_imp['cidade_exibicao']}) {acao} **{linha_imp['item']}**!")
                 contador_exibidos += 1
         else:
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
+
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
