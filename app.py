@@ -256,16 +256,17 @@ elif st.session_state.tela_atual == "consumidor":
                     })
             df_impactos = pd.DataFrame(lista_impactos)
 
-            # TRAVA DE DIVERSIDADE POR NICHO: Captura estritamente a conquista mais recente de cada setor diferente
+            # TRAVA DE DIVERSIDADE DUPLA: Remove nichos repetidos E impede o mesmo local de aparecer duas vezes na mesma exibição
             df_impactos_variado = df_impactos.drop_duplicates(subset=["nicho"])
+            df_impactos_final = df_impactos_variado.drop_duplicates(subset=[
+                                                                    "local"])
 
-            # IMPRIME NA TELA EXATAMENTE OS 3 EXEMPLOS MAIS RECENTES E CATEGÓRICOS
+            # IMPRIME NA TELA EXATAMENTE OS EXEMPLOS MAIS RECENTES, VARIADOS E SEM REPETIÇÃO DE LOJAS
             contador_exibidos = 0
-            for _, linha_imp in df_impactos_variado.iterrows():
+            for _, linha_imp in df_impactos_final.iterrows():
                 if contador_exibidos >= 3:
                     break
 
-                # Adapta a frase dinamicamente para dar exemplos claros de engajamento ao morador
                 if linha_imp['nicho'] == "Supermercado":
                     icone, acao = "🛒 Varejo Alimentar:", "repos o estoque de"
                 elif linha_imp['nicho'] in ["Saude", "Saúde"]:
@@ -284,6 +285,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
     except:
         pass
+
 # --- TELA: AUTENTICAÇÃO POR TOKEN ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
