@@ -206,8 +206,8 @@ elif st.session_state.tela_atual == "consumidor":
                         segmento_detectado = "Beleza"
 
                     texto_obs = observacao_usuario.strip() if observacao_usuario else None
-                    supabase.table("relatos_escassez").insert({"local_id": local_id, "item_solicitado": item_solicitado.strip().title(), "tipo_carencia": tipo_envio, "status": "Pendente", "contato_aviso": contato_usuario.strip(
-                    ) if contato_usuario else None, "observacao_detalhe": texto_obs, "sub_segmento": segmento_detectado, "pegada_digital": hash_dispositivo}).execute()
+                    supabase.table("relatos_escassez").insert({"local_id": local_id, "item_solicitado": item_solicitado.strip().title(
+                    ), "tipo_carencia": tipo_envio, "status": "Pendente", "sub_segmento": segmento_detectado, "pegada_digital": hash_dispositivo, "observacao_detalhe": texto_obs}).execute()
                     st.success("✅ Falta sinalizada com sucesso!")
                     import time
                     time.sleep(1.2)
@@ -336,7 +336,7 @@ elif st.session_state.tela_atual == "autenticacao":
                 busca_db = supabase.table("clientes_b2b").select(
                     "*").eq("token_acesso", token_limpo).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_linha = busca_db.data[0]
+                    dados_linha = busca_db.data
                     if dados_linha.get("status_pagamento") == "Cancelado":
                         st.error(
                             "❌ Token suspenso. Entre em contato com a administração.")
@@ -654,34 +654,37 @@ elif st.session_state.tela_atual == "comerciante":
                                 st.info(
                                     "🔒 Download de PDFs indisponível no seu plano atual. Faça o upgrade para ativar.")
 
-                            st.markdown(
-                                f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
-                            st.write("---")
-                            df_agrupado_mestre = df_filtro_aba.groupby(["O que Falta", "Categoria"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
-                                "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
-                            for _, mestre_line in df_agrupado_mestre.iterrows():
-                                item_nome = mestre_line['O que Falta']
-                                clientes = int(mestre_line['Clientes_Unicos'])
-                                classe_tag = "tag-calor-alta" if clientes >= 5 else (
-                                    "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
-                                label_tag = f"🔥 CRÍTICO • {clientes} CPFs" if clientes >= 5 else (
-                                    f"⚠️ OPORTUNIDADE • {clientes} CPFs" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF")
+                            # --- SEÇÃO ANALÍTICA: AGORA EXCLUSIVA PARA OS PERFIS ANALÍTICOS (MÍDIA/INVESTIDOR/GESTOR) ---
+                            if espectador_analitico:
                                 st.markdown(
-                                    f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {mestre_line["Alertas_Totais"]} relatos • Maior espera: {mestre_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
-
-                                detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
-                                detalhes_item_limpo = detalhes_item.drop_duplicates(
-                                    subset=["Cidade", "Local/Referência", "Observação"])
-                                st.write(
-                                    "📍 **Localização e Detalhes das Ocorrências Coletadas:**")
-                                for _, sub_item in detalhes_item_limpo.iterrows():
+                                    f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_filtro_aba)}</div>", unsafe_allow_html=True)
+                                st.write("---")
+                                df_agrupado_mestre = df_filtro_aba.groupby(["O que Falta", "Categoria"]).agg(Clientes_Unicos=("Pegada", "nunique"), Alertas_Totais=(
+                                    "ID", "count"), Maior_Espera=("Dias", "max")).sort_values(by="Clientes_Unicos", ascending=False).reset_index()
+                                for _, mestre_line in df_agrupado_mestre.iterrows():
+                                    item_nome = mestre_line['O que Falta']
+                                    clientes = int(
+                                        mestre_line['Clientes_Unicos'])
+                                    classe_tag = "tag-calor-alta" if clientes >= 5 else (
+                                        "tag-calor-media" if clientes >= 2 else "tag-calor-baixa")
+                                    label_tag = f"🔥 CRÍTICO • {clientes} CPFs" if clientes >= 5 else (
+                                        f"⚠️ OPORTUNIDADE • {clientes} CPFs" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF")
                                     st.markdown(
-                                        f"  * **{sub_item['Cidade']}** - *Ponto:* {sub_item['Local/Referência']}")
-                                    if sub_item['Observação']:
+                                        f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {mestre_line["Alertas_Totais"]} relatos • Maior espera: {mestre_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
+
+                                    detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
+                                    detalhes_item_limpo = detalhes_item.drop_duplicates(
+                                        subset=["Cidade", "Local/Referência", "Observação"])
+                                    st.write(
+                                        "📍 **Localização e Detalhes das Ocorrências Coletadas:**")
+                                    for _, sub_item in detalhes_item_limpo.iterrows():
                                         st.markdown(
-                                            f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
-                                st.markdown(
-                                    "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
+                                            f"  * **{sub_item['Cidade']}** - *Ponto:* {sub_item['Local/Referência']}")
+                                        if sub_item['Observação']:
+                                            st.markdown(
+                                                f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
+                                    st.markdown(
+                                        "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
                             # --- MODELO B: INTERFACE OPERACIONAL COMERCIAL (LOJISTAS) ---
                             else:
                                 # --- EMISSOR DE PDF REAL COMPATÍVEL (OPERACIONAL) ---
@@ -752,7 +755,7 @@ elif st.session_state.tela_atual == "comerciante":
                                             st.markdown(f'<a href="{link_whatsapp_dinamico}" target="_blank" style="text-decoration: none;"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar com Cliente no WhatsApp</button></a>', unsafe_allow_html=True)
                                         elif contato_morador and not pode_usar_whatsapp:
                                             st.warning(
-                                                "🔒 O recurso de captação ativa via WhatsApp está bloqueado administrativamente para o seu token por pendência financeira.")
+                                                "🔒 O recurso de captação activa via WhatsApp está bloqueado administrativamente para o seu token por pendência financeira.")
                                         else:
                                             st.info(
                                                 "ℹ️ Registro anônimo sem contato direto (Vazio comercial para expandir mix)")
