@@ -34,7 +34,7 @@ st.set_page_config(page_title="E o que falta?",
 def obter_pegada_digital():
     try:
         headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",").strip()
+        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0].strip()
         agente = headers.get("User-Agent", "Desconhecido")
         return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
     except:
@@ -66,7 +66,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- INICIALIZAÇÃO DE SESSÕES UNIVERSAIS ---
+# --- INICIALIZAÇÃO DE SESSÕES UNIVERSAIS DO SISTEMA ---
 if "seguranca_master" not in st.session_state:
     st.session_state.seguranca_master = False
 if "tela_atual" not in st.session_state:
@@ -83,6 +83,8 @@ if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
 if "regiao_cliente" not in st.session_state:
     st.session_state.regiao_cliente = "São Paulo/SP"
+if "filtro_regiao_dinamico" not in st.session_state:
+    st.session_state.filtro_regiao_dinamico = None
 
 # --- 🔐 TRAVA: CORTINA DE FUMAÇA ANTI-ESPIONAGEM COM CHAVE MASTER ---
 if not st.session_state.seguranca_master:
@@ -133,10 +135,10 @@ elif st.session_state.tela_atual == "consumidor":
     st.title("🔍 E o que falta?")
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown("##### 📍 Onde você está agora?")
-        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP",
+        st.markdown("##### 📍 Região/Cidade da falta:")
+        regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP ou Osasco/SP",
                                      key="input_regiao_via_unica", label_visibility="collapsed")
-        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        st.write("Escolha o tipo de ausência que você quer sinalizar:")
         if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
@@ -174,7 +176,7 @@ elif st.session_state.tela_atual == "consumidor":
             contato_usuario = st.text_input(
                 label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
             botao_enviar = st.form_submit_button(
-                "Registrar Ocorrência", use_container_width=True)
+                "🔍 SINALIZAR ESTA FALTA", use_container_width=True)
 
         if botao_enviar and item_solicitado and local_ocorrencia:
             try:
@@ -204,7 +206,7 @@ elif st.session_state.tela_atual == "consumidor":
                     texto_obs = observacao_usuario.strip() if observacao_usuario else None
                     supabase.table("relatos_escassez").insert({"local_id": local_id, "item_solicitado": item_solicitado.strip().title(), "tipo_carencia": tipo_envio, "status": "Pendente", "contato_aviso": contato_usuario.strip(
                     ) if contato_usuario else None, "observacao_detalhe": texto_obs, "sub_segmento": segmento_detectado, "pegada_digital": hash_dispositivo}).execute()
-                    st.success("✅ Registro computado com anonimato!")
+                    st.success("✅ Falta sinalizada com sucesso!")
                     import time
                     time.sleep(1.2)
                     st.session_state.aba_consumidor = "menu_triagem"
@@ -213,7 +215,7 @@ elif st.session_state.tela_atual == "consumidor":
             except Exception as e:
                 st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
 
-    # --- 🏆 SEÇÃO: IMPACTOS RECENTES NO BAIRRO (DUPLO ISOLAMENTO RIGOROSO) ---
+    # --- 🏆 SEÇÃO: IMPACTOS RECENTES NO BAIRRO (DUPLO ISOLAMENTO COMBINADO) ---
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
@@ -227,7 +229,6 @@ elif st.session_state.tela_atual == "consumidor":
                     ), "local": item["locais_destino"]["nome_exibicao"].strip().title(), "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()})
             df_impactos = pd.DataFrame(lista_impactos)
 
-            # FILTRAGEM INVERTIDA INTELIGENTE: Primeiro limpa ruas repetidas, depois nichos repetidos (Sempre enche as 3 vagas com variedade real)
             df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
                                                                     "local"])
             df_impactos_final = df_impactos_locais_unicos.drop_duplicates(subset=[
@@ -345,7 +346,6 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except Exception as e:
                 st.error("❌ Erro de conexão ou token mal formatado.")
-
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -385,6 +385,21 @@ elif st.session_state.tela_atual == "comerciante":
             "##### 🏛️ *Nível de Acesso: Gestão Pública (Foco em Infraestrutura)*")
 
     st.write("---")
+
+    # SELETOR DE CIDADES DINÂMICO PARA TESTES: Permite alternar instantaneamente para analisar os dados pulverizados
+    if st.session_state.perfil_cliente != "admin":
+        regioes_disponiveis_teste = ["São Paulo/SP",
+                                     "Carapicuíba/SP", "Osasco/SP", "Barueri/SP"]
+        regiao_padrao_index = regioes_disponiveis_teste.index(
+            st.session_state.regiao_cliente) if st.session_state.regiao_cliente in regioes_disponiveis_teste else 0
+
+        regiao_selecionada_painel = st.selectbox("📍 Analisar Região / Cidade (Filtro Dinâmico):",
+                                                 options=regioes_disponiveis_teste, index=regiao_padrao_index, key="select_filtro_geografico_b2b")
+        if regiao_selecionada_painel != st.session_state.regiao_cliente:
+            st.session_state.regiao_cliente = regiao_selecionada_painel
+            st.session_state.busca_ativa = False
+            st.rerun()
+
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
     if st.session_state.perfil_cliente == "admin":
@@ -393,23 +408,21 @@ elif st.session_state.tela_atual == "comerciante":
         with st.form(key=id_formulario_admin, clear_on_submit=True):
             nome_novo_comercio = st.text_input(
                 "Nome do Estabelecimento Comercial / Cliente Real:", placeholder="Ex: Supermercado Xavier, Petshop Bairro Alto...")
-            perfil_novo_comercio = st.selectbox("Perfil de Acesso Corporativo (Nível de Filtro):", [
+            perfil_novo_comercio = st.selectbox("Perfil de Acesso Corporativo:", [
                                                 "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
             regiao_novo_comercio = st.text_input(
-                "Região/Cidade de Atuação (Filtro Geográfico):", placeholder="Ex: Carapicuíba/SP, Osasco/SP, São Paulo/SP...")
+                "Região/Cidade de Atuação:", placeholder="Ex: Carapicuíba/SP, Osasco/SP, São Paulo/SP...")
             st.write("")
             if st.form_submit_button("💼 Cadastrar Cliente e Emitir Token UUID"):
                 if nome_novo_comercio and regiao_novo_comercio:
                     try:
-                        regiao_formatada = regiao_novo_comercio.strip().title() if "/" not in regiao_novo_comercio else regiao_novo_comercio.strip(
-                        ).split("/")[0].strip().title() + "/" + regiao_novo_comercio.strip().split("/")[1].strip().upper()
                         novo_registro = supabase.table("clientes_b2b").insert({"nome_estabelecimento": nome_novo_comercio.strip(
-                        ).title(), "perfil_segmento": perfil_novo_comercio, "regiao_atuacao": regiao_formatada}).execute()
+                        ).title(), "perfil_segmento": perfil_novo_comercio, "regiao_atuacao": regiao_novo_comercio.strip()}).execute()
                         if novo_registro.data:
                             st.success(
                                 "🎉 Cliente cadastrado com sucesso absoluto na nuvem!")
                             st.info(
-                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data[0]['token_acesso']}`")
+                                f"🔑 **TOKEN PRIVADO GERADO:** `{novo_registro.data['token_acesso']}`")
                     except Exception as error_db:
                         st.error(
                             f"⚠️ Falha na conexão com o banco: {str(error_db)}")
@@ -428,7 +441,7 @@ elif st.session_state.tela_atual == "comerciante":
                     lista_b2b.append({
                         "Estabelecimento": cli.get("nome_estabelecimento", "Sem Nome"),
                         "Perfil Filtro": cli.get("perfil_segmento", "comerciante"),
-                        "Região Sede": cli.get("regiao_atuacao") or cli.get("regiao") or "São Paulo/SP",
+                        "Região Sede": cli.get("regiao_atuacao") or "São Paulo/SP",
                         "Token de Acesso (UUID)": cli.get("token_acesso", "Sem Token")
                     })
                 df_b2b = pd.DataFrame(lista_b2b)
