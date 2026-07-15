@@ -196,7 +196,7 @@ elif st.session_state.tela_atual == "consumidor":
                 st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
         except:
             pass
-            else:
+    else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown("### 📦 Produto / Marca")
             label_item, placeholder_item = "Qual produto ou marca falta?", "Ex: Leite condensado marca X..."
@@ -236,7 +236,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_data = supabase.table("locais_destino").insert(
                     {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
-                local_id = local_data.data[0]["id"] if local_data.data and len(
+                local_id = local_data.data["id"] if local_data.data and len(
                     local_data.data) > 0 else None
 
                 if local_id:
@@ -262,7 +262,6 @@ elif st.session_state.tela_atual == "consumidor":
                     st.rerun()
             except Exception as e:
                 st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
-
 # --- TELA: AUTENTICAÇÃO POR TOKEN (REATIVAÇÃO DO ENTER) ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
