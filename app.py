@@ -9,7 +9,7 @@ from fpdf import FPDF
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS ---
+# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS (ANTI-NAMEERROR) ---
 botao_enviar = False
 termo_busca = ""
 loja_alvo_prioridade = "Mercadinho Do Bairro"
@@ -83,8 +83,6 @@ if "aba_consumidor" not in st.session_state:
     st.session_state.aba_consumidor = "menu_triagem"
 if "regiao_cliente" not in st.session_state:
     st.session_state.regiao_cliente = "São Paulo/SP"
-if "filtro_regiao_dinamico" not in st.session_state:
-    st.session_state.filtro_regiao_dinamico = None
 
 # --- 🔐 TRAVA: CORTINA DE FUMAÇA ANTI-ESPIONAGEM COM CHAVE MASTER ---
 if not st.session_state.seguranca_master:
@@ -215,7 +213,7 @@ elif st.session_state.tela_atual == "consumidor":
             except Exception as e:
                 st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
 
-    # --- 🏆 SEÇÃO: IMPACTOS RECENTES NO BAIRRO (DUPLO ISOLAMENTO COMBINADO) ---
+    # --- 🏆 SEÇÃO ÚNICA E FIXA: IMPACTOS RECENTES NO BAIRRO (APENAS NA TELA DO MORADOR) ---
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
@@ -334,7 +332,7 @@ elif st.session_state.tela_atual == "autenticacao":
                 busca_db = supabase.table("clientes_b2b").select(
                     "perfil_segmento, regiao_atuacao").eq("token_acesso", token_limpo).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_linha = busca_db.data[0]
+                    dados_linha = busca_db.data
                     st.session_state.perfil_cliente = dados_linha.get(
                         "perfil_segmento", "comerciante")
                     st.session_state.regiao_cliente = dados_linha.get(
@@ -386,13 +384,11 @@ elif st.session_state.tela_atual == "comerciante":
 
     st.write("---")
 
-    # SELETOR DE CIDADES DINÂMICO PARA TESTES: Permite alternar instantaneamente para analisar os dados pulverizados
     if st.session_state.perfil_cliente != "admin":
         regioes_disponiveis_teste = ["São Paulo/SP",
                                      "Carapicuíba/SP", "Osasco/SP", "Barueri/SP"]
         regiao_padrao_index = regioes_disponiveis_teste.index(
             st.session_state.regiao_cliente) if st.session_state.regiao_cliente in regioes_disponiveis_teste else 0
-
         regiao_selecionada_painel = st.selectbox("📍 Analisar Região / Cidade (Filtro Dinâmico):",
                                                  options=regioes_disponiveis_teste, index=regiao_padrao_index, key="select_filtro_geografico_b2b")
         if regiao_selecionada_painel != st.session_state.regiao_cliente:
@@ -402,6 +398,7 @@ elif st.session_state.tela_atual == "comerciante":
 
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
+
     if st.session_state.perfil_cliente == "admin":
         st.markdown("### 🛠️ Cadastro de Assinantes")
         id_formulario_admin = f"form_cadastro_admin_{datetime.datetime.now().strftime('%M%S')}"
@@ -429,7 +426,6 @@ elif st.session_state.tela_atual == "comerciante":
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
-
         st.write("")
         st.markdown("### 📊 Gerenciamento de Clientes Ativos")
         try:
@@ -527,7 +523,7 @@ elif st.session_state.tela_atual == "comerciante":
                 dados_mock = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 4, "Observação": "Falta toda quarta.", "SubSegmento": "Supermercado", "Pegada": "hash1", "Contato": "11999999999"},
-                    {"ID": 994, "O que Falta": "Lavanderia Expressa Auto-Serviço", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Das Palmeiras",
+                    {"ID": 994, "O que Falta": "Lavanderia Expressa Auto-Servico", "Categoria": "Serviço Local / Novo Estabelecimento", "Local/Referência": "Avenida Das Palmeiras",
                         "Cidade": "São Paulo/SP - Tatuapé", "Dias": 45, "Observação": "Prédios novos sem serviço.", "SubSegmento": "Investimento", "Pegada": "hash4", "Contato": ""},
                     {"ID": 997, "O que Falta": "Manutenção De Iluminação Pública", "Categoria": "Serviço Público / Infraestrutura", "Local/Referência": "Rua das Flores, 40",
                         "Cidade": "São Paulo/SP - Centro", "Dias": 2, "Observação": "Poste apagado.", "SubSegmento": "Zeladoria", "Pegada": "hash7", "Contato": ""}
@@ -648,7 +644,7 @@ elif st.session_state.tela_atual == "comerciante":
                                             f"  * **{sub_item['Cidade']}** - *Ponto:* {sub_item['Local/Referência']}")
                                         if sub_item['Observação']:
                                             st.markdown(
-                                                f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
+                                                f"  * 💬 *Relato:* \"{sub_item['Observação']}\"")
                                     st.markdown(
                                         "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
                             # --- MODELO B: INTERFACE OPERACIONAL COMERCIAL (LOJISTAS) ---
