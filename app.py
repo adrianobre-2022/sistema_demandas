@@ -150,7 +150,53 @@ elif st.session_state.tela_atual == "consumidor":
         if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA", use_container_width=True, key="triagem_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
-    else:
+
+        # --- 🏆 SEÇÃO ÚNICA E FIXA: IMPACTOS RECENTES NO BAIRRO (TRAVADA APENAS NA TRIAGEM) ---
+        st.write("")
+        st.markdown("### 🏆 Impactos Recentes no Bairro")
+        try:
+            resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
+                "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
+            if resolvidos.data and len(resolvidos.data) > 0:
+                lista_impactos = []
+                for item in resolvidos.data:
+                    if item.get("locais_destino"):
+                        lista_impactos.append({"item": item["item_solicitado"].strip().title(), "nicho": item.get("sub_segmento", "Geral").strip(
+                        ), "local": item["locais_destino"]["nome_exibicao"].strip().title(), "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()})
+                df_impactos = pd.DataFrame(lista_impactos)
+                df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
+                                                                        "local"])
+                df_impactos_final = df_impactos_locais_unicos.drop_duplicates(subset=[
+                                                                              "nicho"])
+
+                contador_exibidos = 0
+                for _, linha_imp in df_impactos_final.iterrows():
+                    if contador_exibidos >= 3:
+                        break
+                    if linha_imp['nicho'] == "Supermercado":
+                        icone, acao = "🛒 Varejo Alimentar:", "repos o estoque de"
+                    elif linha_imp['nicho'] in ["Saude", "Saúde"]:
+                        icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o servico de"
+                    elif linha_imp['nicho'] == "Petshop":
+                        icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
+                    elif linha_imp['nicho'] == "Beleza":
+                        icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
+                    else:
+                        icone, acao = "✨ Conquista Local:", "disponibilizou"
+
+                    st.markdown(f"""
+                        <div style='background-color: #1A1A1A; padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'>
+                            <span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>
+                                ✅ <b>{icone}</b> O estabelecimento {linha_imp['local']} ({linha_imp['cidade_exibicao']}) {acao} <b>{linha_imp['item']}</b>!
+                            </span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    contador_exibidos += 1
+            else:
+                st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
+        except:
+            pass
+            else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown("### 📦 Produto / Marca")
             label_item, placeholder_item = "Qual produto ou marca falta?", "Ex: Leite condensado marca X..."
@@ -190,7 +236,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_data = supabase.table("locais_destino").insert(
                     {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
-                local_id = local_data.data["id"] if local_data.data and len(
+                local_id = local_data.data[0]["id"] if local_data.data and len(
                     local_data.data) > 0 else None
 
                 if local_id:
@@ -217,52 +263,6 @@ elif st.session_state.tela_atual == "consumidor":
             except Exception as e:
                 st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
 
-    # --- 🏆 SEÇÃO ÚNICA E FIXA: IMPACTOS RECENTES NO BAIRRO ---
-    st.write("")
-    st.markdown("### 🏆 Impactos Recentes no Bairro")
-    try:
-        resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
-            "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
-        if resolvidos.data and len(resolvidos.data) > 0:
-            lista_impactos = []
-            for item in resolvidos.data:
-                if item.get("locais_destino"):
-                    lista_impactos.append({"item": item["item_solicitado"].strip().title(), "nicho": item.get("sub_segmento", "Geral").strip(
-                    ), "local": item["locais_destino"]["nome_exibicao"].strip().title(), "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()})
-            df_impactos = pd.DataFrame(lista_impactos)
-
-            df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
-                                                                    "local"])
-            df_impactos_final = df_impactos_locais_unicos.drop_duplicates(subset=[
-                                                                          "nicho"])
-
-            contador_exibidos = 0
-            for _, linha_imp in df_impactos_final.iterrows():
-                if contador_exibidos >= 3:
-                    break
-                if linha_imp['nicho'] == "Supermercado":
-                    icone, acao = "🛒 Varejo Alimentar:", "repos o estoque de"
-                elif linha_imp['nicho'] in ["Saude", "Saúde"]:
-                    icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o servico de"
-                elif linha_imp['nicho'] == "Petshop":
-                    icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
-                elif linha_imp['nicho'] == "Beleza":
-                    icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
-                else:
-                    icone, acao = "✨ Conquista Local:", "disponibilizou"
-
-                st.markdown(f"""
-                    <div style='background-color: #1A1A1A; padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'>
-                        <span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>
-                            ✅ <b>{icone}</b> O estabelecimento {linha_imp['local']} ({linha_imp['cidade_exibicao']}) {acao} <b>{linha_imp['item']}</b>!
-                        </span>
-                    </div>
-                """, unsafe_allow_html=True)
-                contador_exibidos += 1
-        else:
-            st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
-    except:
-        pass
 # --- TELA: AUTENTICAÇÃO POR TOKEN (REATIVAÇÃO DO ENTER) ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
