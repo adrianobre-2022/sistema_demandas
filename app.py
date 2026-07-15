@@ -9,12 +9,12 @@ from fpdf import FPDF
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS (ANTI-NAMEERROR) ---
+# --- DECLARAÇÃO DE VARIÁVEIS UNIVERSAIS PRIVADAS ---
 botao_enviar = False
 termo_busca = ""
-filtro_frente = ""
+loja_alvo_prioridade = "Mercadinho Do Bairro"
 
-# --- CONEXÃO INTELIGENTE (LOCAL E NUVEM) ---
+# --- CONEXÃO INTELIGENTE COM O SUPABASE ---
 caminho_atual = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(caminho_atual, ".env"))
 url = os.environ.get("SUPABASE_URL") or st.secrets.get("SUPABASE_URL")
@@ -34,14 +34,14 @@ st.set_page_config(page_title="E o que falta?",
 def obter_pegada_digital():
     try:
         headers = st.context.headers
-        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",")[0].strip()
+        ip = headers.get("X-Forwarded-For", "127.0.0.1").split(",").strip()
         agente = headers.get("User-Agent", "Desconhecido")
         return hashlib.sha256(f"{ip}-{agente}".encode('utf-8')).hexdigest()
     except:
         return "pegada_generica_fallback"
 
 
-# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM ---
+# --- CUSTOMIZAÇÃO ESTÉTICA PREMIUM COESIVA E MOBILE-FRIENDLY ---
 st.markdown("""
     <style>
     .stApp { background-color: #121212 !important; color: #FFFFFF !important; }
@@ -53,11 +53,11 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important; width: 100% !important; display: block !important;
     }
     .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover { background-color: #005a24 !important; }
-    h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; width: 100% !important; white-space: nowrap !important; margin-bottom: 1.5rem !important; }
+    h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; margin-bottom: 1.5rem !important; }
     [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) { gap: 10px !important; flex-direction: row !important; flex-wrap: nowrap !important; }
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input { background-color: #1E1E1E !important; color: #FFFFFF !important; border-radius: 10px !important; border: 1px solid #444444 !important; }
     input::placeholder, textarea::placeholder { color: #888888 !important; font-style: italic !important; }
-    .bloco-lista-premium { background-color: #1E1E1E !important; padding: 1.2rem !important; border-radius: 10px !important; margin-bottom: 0.8rem !important; border: 1px solid #333333 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important; overflow: hidden !important; }
+    .bloco-lista-premium { background-color: #1E1E1E !important; padding: 1.2rem !important; border-radius: 10px !important; margin-bottom: 0.8rem !important; border: 1px solid #333333 !important; }
     .tag-calor-alta { background-color: #ff3333 !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
     .tag-calor-media { background-color: #ff9933 !important; color: black !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
     .tag-calor-baixa { background-color: #3399ff !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
@@ -66,6 +66,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- INICIALIZAÇÃO DE SESSÕES UNIVERSAIS ---
+if "seguranca_master" not in st.session_state:
+    st.session_state.seguranca_master = False
 if "tela_atual" not in st.session_state:
     st.session_state.tela_atual = "home"
 if "token_valido" not in st.session_state:
@@ -81,33 +84,24 @@ if "aba_consumidor" not in st.session_state:
 if "regiao_cliente" not in st.session_state:
     st.session_state.regiao_cliente = "São Paulo/SP"
 
-# --- CORTINA DE FUMAÇA E PROTEÇÃO DE PATENTE (ANTI-CURIOSOS) ---
-if "seguranca_master" not in st.session_state:
-    st.session_state.seguranca_master = False
-
+# --- 🔐 TRAVA: CORTINA DE FUMAÇA ANTI-ESPIONAGEM COM CHAVE MASTER ---
 if not st.session_state.seguranca_master:
     st.markdown("<h3 style='text-align: center; color: #aaaaaa;'>🔍 Sistema em Manutenção</h3>",
                 unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 14px; color: #666666;'>Acesso restrito à equipe de engenharia e auditoria interna.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 14px; color: #666666;'>Ambiente restrito à equipe de homologação interna.</p>", unsafe_allow_html=True)
     st.write("---")
-
     with st.form(key="form_protecao_patente", clear_on_submit=False):
         senha_desenvolvimento = st.text_input(
-            label="Chave de Homologação Comercial:", type="password", placeholder="Insira a credencial confidencial...")
-        st.write("")
+            label="Chave de Homologação:", type="password", placeholder="Insira a credencial...")
         botao_destravar_lab = st.form_submit_button(
             "Acessar Ambiente de Testes", use_container_width=True)
-
     if botao_destravar_lab:
         if senha_desenvolvimento.strip() == "carencias2026":
             st.session_state.seguranca_master = True
             st.rerun()
         else:
-            st.error(
-                "❌ Credencial de engenharia incorreta. Acesso bloqueado por segurança.")
-    st.stop()  # Tranca o script aqui e impede qualquer leitura de código abaixo por usuários externos
-
-
+            st.error("❌ Credencial de engenharia incorreta.")
+    st.stop()
 # --- TELA: HOME ---
 if st.session_state.tela_atual == "home":
     st.title("🔍 E o que falta?")
@@ -123,6 +117,7 @@ if st.session_state.tela_atual == "home":
         if st.button("📊 Sou Comerciante / Gestor\n(Acessar Painel)", use_container_width=True, key="btn_ir_comerciante"):
             st.session_state.tela_atual = "autenticacao"
             st.rerun()
+
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
     col_nav1, col_nav2 = st.columns(2, gap="small")
@@ -136,42 +131,38 @@ elif st.session_state.tela_atual == "consumidor":
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
     st.title("🔍 E o que falta?")
+
     if st.session_state.aba_consumidor == "menu_triagem":
         st.markdown("##### 📍 Onde você está agora?")
         regiao_final = st.text_input(label="Localizacao", placeholder="Ex: São Paulo/SP",
                                      key="input_regiao_via_unica", label_visibility="collapsed")
-        st.write(
-            "Escolha o tipo de ausência que você quer registrar no bairro ou comunidade:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA\n(Falta nas gôndolas de mercados...)", use_container_width=True, key="triagem_prod"):
+        st.write("Escolha o tipo de ausência que você quer registrar no bairro:")
+        if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="triagem_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
-        st.write("")
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL\n(Falta de lavanderia, sapataria...)", use_container_width=True, key="triagem_serv"):
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL", use_container_width=True, key="triagem_serv"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
-        st.write("")
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA\n(Falha na iluminação...)", use_container_width=True, key="triagem_infra"):
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA", use_container_width=True, key="triagem_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
     else:
         if st.session_state.aba_consumidor == "produto":
-            st.markdown(
-                "### 📦 Produto / Marca\n##### *Mapeando falhas de estoque e gôndolas vazias.*")
-            label_item, placeholder_item = "Qual produto ou marca você buscou e não encontrou?", "Ex: Leite condensado marca X..."
-            label_local, placeholder_local = "Em qual estabelecimento isso ocorreu?", "Ex: Nome do mercado, farmácia..."
-            label_contato, tipo_envio = "Quer ser avisado caso o estoque seja reposto ou outra loja ofereça? (Opcional)", "Produto / Marca"
+            st.markdown("### 📦 Produto / Marca")
+            label_item, placeholder_item = "Qual produto ou marca falta?", "Ex: Leite condensado marca X..."
+            label_local, placeholder_local = "Em qual estabelecimento?", "Ex: Nome do mercado..."
+            label_contato, tipo_envio = "Quer ser avisado na reposição? (Opcional)", "Produto / Marca"
         elif st.session_state.aba_consumidor == "servico":
-            st.markdown(
-                "### 🏪 Novo Comércio / Serviço\n##### *Mapeando oportunidades de novos negócios e conveniência.*")
-            label_item, placeholder_item = "Qual tipo de comércio ou serviço falta neste bairro/comunidade?", "Ex: Sapataria, lavanderia..."
-            label_local, placeholder_local = "Em qual rua, travessa, faculdade ou ponto isso faz falta?", "Ex: Avenida Principal..."
-            label_contato, tipo_envio = "Quer ser avisado caso este serviço seja aberto ou oferecido? (Opcional)", "Serviço Local / Novo Estabelecimento"
+            st.markdown("### 🏪 Novo Comércio / Serviço")
+            label_item, placeholder_item = "Qual comércio falta no bairro?", "Ex: Sapataria, lavanderia..."
+            label_local, placeholder_local = "Em qual rua ou ponto?", "Ex: Avenida Principal..."
+            label_contato, tipo_envio = "Quer ser avisado na abertura? (Opcional)", "Serviço Local / Novo Estabelecimento"
         else:
-            st.markdown(
-                "### 🏛️ Infraestrutura / Zeladoria\n##### *Mapeando melhorias urbanas e cobranças públicas.*")
-            label_item, placeholder_item = "Qual carência de infraestrutura/manutenção você identificou?", "Ex: Falha na iluminação..."
-            label_local, placeholder_local = "Qual o ponto de referência ou localidade exata?", "Ex: Posto de saúde do bairro Y..."
-            label_contato, tipo_envio = "Quer ser avisado caso esta manutenção pública seja realizada? (Opcional)", "Serviço Público / Infraestrutura"
+            st.markdown("### 🏛️ Infraestrutura / Zeladoria")
+            label_item, placeholder_item = "Qual problema de infraestrutura público?", "Ex: Falha na iluminação..."
+            label_local, placeholder_local = "Qual o ponto de referência?", "Ex: Posto de saúde do bairro Y..."
+            label_contato, tipo_envio = "Quer ser avisado na conclusão? (Opcional)", "Serviço Público / Infraestrutura"
+
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
             item_solicitado = st.text_input(
@@ -182,120 +173,70 @@ elif st.session_state.tela_atual == "consumidor":
                 label="Mais detalhes (Opcional):", placeholder="Ex: Detalhe o ocorrido...", key="input_obs")
             contato_usuario = st.text_input(
                 label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
-            st.write("")
             botao_enviar = st.form_submit_button(
                 "Registrar Ocorrência", use_container_width=True)
-        if botao_enviar:
-            if item_solicitado and local_ocorrencia:
-                texto_usuario, local_usuario = item_solicitado.strip(
-                ).lower(), local_ocorrencia.strip().lower()
-                obs_texto = observacao_usuario.strip().lower() if observacao_usuario else ""
-                palavras_ofensivas = ["porra", "caralho", "puta", "merda", "bosta",
-                                      "vai tomar", "fudeu", "ladrão", "roubo", "safado", "vagabundo"]
-                termos_politicos_proibidos = ["pec", "deputado", "senado", "senador",
-                                              "presidente", "governador", "partido", "impeachment", "voto", "eleição"]
-                excecoes_contexto = [
-                    "saco de lixo", "sacos de lixo", "lixeira", "pá de lixo", "coleta de lixo"]
-                contem_bloqueio, mensagem_erro = False, ""
-                if any(p in texto_usuario for p in palavras_ofensivas) or any(p in local_usuario for p in palavras_ofensivas) or any(p in obs_texto for p in palavras_ofensivas):
-                    contem_bloqueio = True
-                    mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva."
-                if any(p in texto_usuario for p in termos_politicos_proibidos) or any(p in local_usuario for p in termos_politicos_proibidos) or any(p in obs_texto for p in termos_politicos_proibidos):
-                    contem_bloqueio = True
-                    mensagem_erro = "⚠️ O portal é focado estritamente em zeladoria e carências locais."
-                if "lixo" in texto_usuario or "lixo" in local_usuario:
-                    if not any(e in texto_usuario for e in excecoes_contexto) and not any(e in local_usuario for e in excecoes_contexto):
-                        contem_bloqueio = True
-                        mensagem_erro = "⚠️ O sistema identificou termos impróprios ou linguagem ofensiva."
-                palavras_infra = ["rua", "praça", "iluminação", "poste", "asfalto",
-                                  "médico", "ônibus", "hospital", "bueiro", "segurança", "polícia"]
-                palavras_produto = ["leite", "fralda", "ração", "refrigerante",
-                                    "cerveja", "sabão", "remédio", "arroz", "feijão", "café", "açúcar"]
-                erro_detectado = False
-                if contem_bloqueio:
-                    st.error(mensagem_erro)
-                    erro_detectado = True
-                elif tipo_envio == "Produto / Marca" and any(p in texto_usuario for p in palavras_infra):
-                    st.error(
-                        "⚠️ Ops! Parece um problema de Infraestrutura Pública. Modifique no menu principal.")
-                    erro_detectado = True
-                elif tipo_envio == "Serviço Local / Novo Estabelecimento" and any(p in texto_usuario for p in palavras_produto):
-                    st.error(
-                        "⚠️ Ops! Parece a falta de um produto de mercado. Modifique no menu principal.")
-                    erro_detectado = True
-                if not erro_detectado:
-                    try:
-                        hash_dispositivo = obter_pegada_digital()
-                        regiao_salva = st.session_state.get(
-                            "input_regiao_via_unica", "São Paulo/SP")
-                        texto_regiao = regiao_salva.strip().title() if regiao_salva else "São Paulo/SP"
-                        estado_detectado = "SP"
-                        if "/" in texto_regiao:
-                            try:
-                                estado_detectado = texto_regiao.split(
-                                    "/")[1].strip().upper()[:2]
-                            except:
-                                estado_detectado = "SP"
-                        local_formatado = local_ocorrencia.strip().title()
-                        local_data = supabase.table("locais_destino").insert(
-                            {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": estado_detectado}).execute()
-                        local_id = local_data.data[0]["id"] if local_data.data and len(
-                            local_data.data) > 0 else None
-                        if local_id:
-                            item_formatado = item_solicitado.strip().title()
-                            segmento_detectado = "Geral"
-                            if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "refrigerante", "cerveja", "sabão", "pão", "padaria", "mercado"]):
-                                segmento_detectado = "Supermercado"
-                            elif any(p in texto_usuario for p in ["remédio", "fisioterapeuta", "clínica", "médico", "psicólogo", "dentista", "farmácia"]):
-                                segmento_detectado = "Saude"
-                            elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "veterinária", "tosa", "banho", "petshop"]):
-                                segmento_detectado = "Petshop"
-                            elif any(p in texto_usuario for p in ["manicure", "salão", "barbearia", "cabeleireiro", "estética", "barbeiro", "unha"]):
-                                segmento_detectado = "Beleza"
-                            texto_obs = observacao_usuario.strip() if observacao_usuario else None
-                            supabase.table("relatos_escassez").insert({"local_id": local_id, "item_solicitado": item_formatado, "tipo_carencia": tipo_envio, "status": "Pendente", "contato_aviso": contato_usuario.strip(
-                            ) if contato_usuario else None, "detalhes_adicionais": texto_obs, "observacao_detalhe": texto_obs, "sub_segmento": segmento_detectado, "pegada_digital": hash_dispositivo}).execute()
-                            st.success(
-                                "✅ Registro computado com anonimato garantido!")
-                            import time
-                            time.sleep(1.5)
-                            st.session_state.aba_consumidor = "menu_triagem"
-                            st.session_state.tela_atual = "home"
-                            st.rerun()
-                    except Exception as e:
-                        st.error(f"⚠️ Erro técnico detalhado: {str(e)}")
-            else:
-                st.warning("⚠️ Por favor, preencha os campos obrigatórios.")
+
+        if botao_enviar and item_solicitado and local_ocorrencia:
+            try:
+                hash_dispositivo = obter_pegada_digital()
+                regiao_salva = st.session_state.get(
+                    "input_regiao_via_unica", "São Paulo/SP")
+                texto_regiao = regiao_salva.strip().title() if regiao_salva else "São Paulo/SP"
+                local_formatado = local_ocorrencia.strip().title()
+
+                local_data = supabase.table("locais_destino").insert(
+                    {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
+                local_id = local_data.data["id"] if local_data.data and len(
+                    local_data.data) > 0 else None
+
+                if local_id:
+                    segmento_detectado = "Geral"
+                    texto_usuario = item_solicitado.strip().lower()
+                    if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "pão", "mercado"]):
+                        segmento_detectado = "Supermercado"
+                    elif any(p in texto_usuario for p in ["remédio", "médico", "dentista", "farmácia"]):
+                        segmento_detectado = "Saude"
+                    elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "petshop"]):
+                        segmento_detectado = "Petshop"
+                    elif any(p in texto_usuario for p in ["manicure", "salão", "cabeleireiro", "estética"]):
+                        segmento_detectado = "Beleza"
+
+                    texto_obs = observacao_usuario.strip() if observacao_usuario else None
+                    supabase.table("relatos_escassez").insert({"local_id": local_id, "item_solicitado": item_solicitado.strip().title(), "tipo_carencia": tipo_envio, "status": "Pendente", "contato_aviso": contato_usuario.strip(
+                    ) if contato_usuario else None, "observacao_detalhe": texto_obs, "sub_segmento": segmento_detectado, "pegada_digital": hash_dispositivo}).execute()
+                    st.success("✅ Registro computado com anonimato!")
+                    import time
+                    time.sleep(1.2)
+                    st.session_state.aba_consumidor = "menu_triagem"
+                    st.session_state.tela_atual = "home"
+                    st.rerun()
+            except Exception as e:
+                st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
+
+    # --- 🏆 SEÇÃO: IMPACTOS RECENTES NO BAIRRO (DUPLO ISOLAMENTO RIGOROSO) ---
     st.write("")
     st.markdown("### 🏆 Impactos Recentes no Bairro")
     try:
-        # BYPASS DE PERFORMANCE: Busca as 20 benfeitorias mais recentes do ecossistema geral na nuvem
         resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
             "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
         if resolvidos.data and len(resolvidos.data) > 0:
             lista_impactos = []
             for item in resolvidos.data:
                 if item.get("locais_destino"):
-                    lista_impactos.append({
-                        "item": item["item_solicitado"].strip().title(),
-                        "nicho": item.get("sub_segmento", "Geral").strip(),
-                        "local": item["locais_destino"]["nome_exibicao"].strip().title(),
-                        "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()
-                    })
+                    lista_impactos.append({"item": item["item_solicitado"].strip().title(), "nicho": item.get("sub_segmento", "Geral").strip(
+                    ), "local": item["locais_destino"]["nome_exibicao"].strip().title(), "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()})
             df_impactos = pd.DataFrame(lista_impactos)
 
-            # DUPLO ISOLAMENTO RIGOROSO: Garante ruas 100% diferentes e nichos alternados na tela
+            # FILTRAGEM INVERTIDA INTELIGENTE: Primeiro limpa ruas repetidas, depois nichos repetidos (Sempre enche as 3 vagas com variedade real)
             df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
                                                                     "local"])
             df_impactos_final = df_impactos_locais_unicos.drop_duplicates(subset=[
                                                                           "nicho"])
 
-            # IMPRIME NA TELA EXATAMENTE OS EXEMPLOS MAIS RECENTES, VARIADOS E SEM REPETIÇÃO DE LOJAS
             contador_exibidos = 0
             for _, linha_imp in df_impactos_final.iterrows():
                 if contador_exibidos >= 3:
                     break
-
                 if linha_imp['nicho'] == "Supermercado":
                     icone, acao = "🛒 Varejo Alimentar:", "repos o estoque de"
                 elif linha_imp['nicho'] in ["Saude", "Saúde"]:
@@ -307,7 +248,6 @@ elif st.session_state.tela_atual == "consumidor":
                 else:
                     icone, acao = "✨ Conquista Local:", "disponibilizou"
 
-                # DESIGN COMPACTO E DISCRETO: Encolhe a fonte e remove o destaque excessivo
                 st.markdown(f"""
                     <div style='background-color: #1A1A1A; padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'>
                         <span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>
@@ -317,11 +257,10 @@ elif st.session_state.tela_atual == "consumidor":
                 """, unsafe_allow_html=True)
                 contador_exibidos += 1
         else:
-            st.write("ℹ️ Nenhuma benfeitoria registrada nos últimos dias.")
+            st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
     except:
         pass
-
-# --- TELA: AUTENTICAÇÃO POR TOKEN ---
+# --- TELA: AUTENTICAÇÃO POR TOKEN (REATIVAÇÃO DO ENTER) ---
 elif st.session_state.tela_atual == "autenticacao":
     if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
         st.session_state.tela_atual = "home"
@@ -332,7 +271,6 @@ elif st.session_state.tela_atual == "autenticacao":
     st.markdown("<p style='text-align: center; font-size: 16px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Área Restrita para Comerciantes e Gestores</p>", unsafe_allow_html=True)
     st.write("---")
 
-    # --- FORMULÁRIO DE LOGIN COM SUPORTE PARA A TECLA ENTER ---
     with st.form(key="form_autenticacao_b2b", clear_on_submit=False):
         token_inserido = st.text_input(
             label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
@@ -407,6 +345,7 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except Exception as e:
                 st.error("❌ Erro de conexão ou token mal formatado.")
+
 # --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
 elif st.session_state.tela_atual == "comerciante":
     if not st.session_state.token_valido:
@@ -421,7 +360,6 @@ elif st.session_state.tela_atual == "comerciante":
         st.rerun()
     st.markdown("<h1 style='text-align: center; margin-bottom: 0px !important;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
-    loja_alvo_prioridade = "Mercadinho Do Bairro" if st.session_state.perfil_cliente == "comerciante" else ""
     espectador_analitico = st.session_state.perfil_cliente in [
         "investidor", "gestor", "jornalista"]
 
@@ -439,7 +377,7 @@ elif st.session_state.tela_atual == "comerciante":
             "##### 💼 *Nível de Acesso: Investidor e Expansão (Vazios Comerciais)*")
     elif st.session_state.perfil_cliente == "jornalista":
         st.markdown(
-            "##### 📰 *Nível de Acesso: Imprensa e Jornalismo Regional (Dados Consolidados)*")
+            "##### 📰 *Nível de Acesso: Imprensa Regional (Dados Consolidados)*")
     elif st.session_state.perfil_cliente == "admin":
         st.markdown("<p style='text-align: center; font-size: 24px; font-weight: 600; color: #aaaaaa !important; margin-top: 5px; margin-bottom: 25px;'>Painel de Controle Mestre</p>", unsafe_allow_html=True)
     else:
@@ -449,7 +387,6 @@ elif st.session_state.tela_atual == "comerciante":
     st.write("---")
     termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
                                 placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
-
     if st.session_state.perfil_cliente == "admin":
         st.markdown("### 🛠️ Cadastro de Assinantes")
         id_formulario_admin = f"form_cadastro_admin_{datetime.datetime.now().strftime('%M%S')}"
@@ -479,6 +416,7 @@ elif st.session_state.tela_atual == "comerciante":
                 else:
                     st.warning(
                         "⚠️ Preencha o nome do estabelecimento e a região para emitir a credencial.")
+
         st.write("")
         st.markdown("### 📊 Gerenciamento de Clientes Ativos")
         try:
@@ -536,7 +474,7 @@ elif st.session_state.tela_atual == "comerciante":
                 cidade_filtro = regiao_alvo.split(
                     "-")[0].strip() if "-" in regiao_alvo else regiao_alvo.strip()
                 resposta = supabase.table("relatos_escassez").select(
-                    "id, item_solicitado, tipo_carencia, data_registro, status, detalhes_adicionais, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
+                    "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
 
                 dados_limpos = []
                 agora = datetime.datetime.now(datetime.timezone.utc)
@@ -571,7 +509,7 @@ elif st.session_state.tela_atual == "comerciante":
                                 nome_local_exibicao = nome_local_bruto
 
                             dados_limpos.append({"ID": registro["id"], "O que Falta": registro["item_solicitado"].strip().title(), "Categoria": categoria_limpa, "Local/Referência": nome_local_exibicao, "Cidade": loc_cidade, "Dias": idade_dias, "Observação": registro.get(
-                                "observacao_detalhe") or registro.get("detalhes_adicionais") or "", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
+                                "observacao_detalhe") or "Sem detalhes.", "SubSegmento": sub_seg, "Pegada": registro.get("pegada_digital") or f"anon_{registro['id']}", "Contato": registro.get("contato_aviso") or ""})
 
                 dados_mock = [
                     {"ID": 991, "O que Falta": "Leite Desnatado Parmalat 1L", "Categoria": "Produto / Marca", "Local/Referência": "Mercadinho Do Bairro",
@@ -630,7 +568,6 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba = df[df['Categoria'] ==
                                                "Serviço Local / Novo Estabelecimento"]
                         elif frente_ativa == "Varejo":
-                            # AMARRAÇÃO DE AFINIDADE: Blinda as abas do lojista (inclusive o Reverso) contra setores estranhos como Dentistas
                             if st.session_state.perfil_cliente == "comerciante":
                                 df_filtro_aba = df[df['SubSegmento'].str.contains(
                                     "Supermercado|Geral", case=False, na=False)]
@@ -651,7 +588,6 @@ elif st.session_state.tela_atual == "comerciante":
                             df_filtro_aba['É_Minha_Loja'] = df_filtro_aba['Local/Referência'].apply(
                                 lambda x: 1 if x == loja_alvo_prioridade else 0)
                             if espectador_analitico:
-                                # --- EMISSOR DE PDF REAL E GEORREFERENCIADO PARA O PERFIL MÍDIA/GESTOR ---
                                 try:
                                     pdf_real = FPDF()
                                     pdf_real.add_page()
@@ -661,7 +597,6 @@ elif st.session_state.tela_atual == "comerciante":
                                     pdf_real.cell(
                                         200, 10, txt="--------------------------------------------------", ln=2, align="C")
                                     for _, r in df_filtro_aba.iterrows():
-                                        # FIÇÃO CORRIGIDA: Puxa o endereço dinâmico real de cada linha salvando no PDF da Mídia
                                         txt_linha = f"- Falta: {r['O que Falta']} | Localizacao: {r['Local/Referência']} ({r['Cidade']})"
                                         pdf_real.cell(190, 10, txt=txt_linha.encode(
                                             'latin-1', 'ignore').decode('latin-1'), ln=1)
@@ -689,11 +624,10 @@ elif st.session_state.tela_atual == "comerciante":
                                         f"⚠️ OPORTUNIDADE • {clientes} CPFs" if clientes >= 2 else f"🔹 INICIAL • {clientes} CPF")
                                     st.markdown(
                                         f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Demanda de {mestre_line["Alertas_Totais"]} relatos • Maior espera: {mestre_line["Maior_Espera"]} dias</div></div>', unsafe_allow_html=True)
+
                                     detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
-                                    # TRAVA ANTI-DUPLICIDADE DE RELATO ANALÍTICO: Consolida depoimentos rigorosamente idênticos no mesmo ponto
                                     detalhes_item_limpo = detalhes_item.drop_duplicates(
                                         subset=["Cidade", "Local/Referência", "Observação"])
-
                                     st.write(
                                         "📍 **Localização e Detalhes das Ocorrências Coletadas:**")
                                     for _, sub_item in detalhes_item_limpo.iterrows():
@@ -704,7 +638,6 @@ elif st.session_state.tela_atual == "comerciante":
                                                 f"    * 💬 *Relato:* \"{sub_item['Observação']}\"")
                                     st.markdown(
                                         "<hr style='border-top: 1px dashed #333; margin: 1rem 0;'/>", unsafe_allow_html=True)
-
                             # --- MODELO B: INTERFACE OPERACIONAL COMERCIAL (LOJISTAS) ---
                             else:
                                 # --- EMISSOR DE PDF REAL COMPATÍVEL PARA DISPOSITIVOS MÓVEIS (OPERACIONAL) ---
@@ -748,8 +681,8 @@ elif st.session_state.tela_atual == "comerciante":
                                         ("tag-calor-alta", f"🎯 SEU MERCADO • {int(volume)} Pedidos") if sou_alvo == 1 else ("tag-calor-baixa", f"🌍 CONCORRÊNCIA • {int(volume)} Pedidos"))
                                     st.markdown(
                                         f'<div class="bloco-lista-premium"><span class="{classe_tag}">{label_tag}</span><b style="color: #FFFFFF; font-size: 16px;">📦 {item_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["Menor_Idade"]} dias</div></div>', unsafe_allow_html=True)
+
                                     detalhes_item = df_filtro_aba[df_filtro_aba['O que Falta'] == item_nome]
-                                    # TRAVA ANTI-DUPLICIDADE OPERACIONAL: Garante que o lojista veja uma linha por ocorrência textual no mesmo endereço
                                     detalhes_item_limpo = detalhes_item.drop_duplicates(
                                         subset=["Cidade", "Local/Referência", "Observação", "Contato"])
 
