@@ -86,13 +86,13 @@ if "regiao_cliente" not in st.session_state:
 
 # --- 🔐 TRAVA: CORTINA DE FUMAÇA ANTI-ESPIONAGEM COM CHAVE MASTER ---
 if not st.session_state.seguranca_master:
-    st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
+    st.markdown("<h3 style='text-align: center; color: #ff3333; margin-top: 50px;'>⚠️ Sistema em Manutenção</h3>",
                 unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 14px; color: #aaaaaa;'>Ambiente restrito à equipe de homologação interna.</p>", unsafe_allow_html=True)
     st.write("---")
     with st.form(key="form_protecao_patente", clear_on_submit=False):
         senha_desenvolvimento = st.text_input(
-            label="Chave de Homologação Comercial:", type="password", placeholder="Insira a credencial...")
+            label="Chave de Engenharia:", type="password", placeholder="Insira a credencial...")
         botao_destravar_lab = st.form_submit_button(
             "Acessar Ambiente de Testes", use_container_width=True)
     if botao_destravar_lab:
