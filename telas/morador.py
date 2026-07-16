@@ -164,21 +164,21 @@ def renderizar(supabase):
                        "Ex: Leite condensado..."
             l_l, p_l = "Em qual mercado?", \
                        "Ex: Nome do mercado..."
-            l_c, t_e = "Avisar na reposição? (Opcional)", \
+            l_c, t_e = "🔔 Ativar chance de aviso na reposição? (Opcional)", \
                        "Produto / Marca"
         elif aba == "servico":
             l_i, p_i = "Qual comércio falta?", \
                        "Ex: Sapataria, lavanderia..."
             l_l, p_l = "Em qual rua ou ponto?", \
                        "Ex: Avenida Principal..."
-            l_c, t_e = "Avisar na abertura? (Opcional)", \
+            l_c, t_e = "🔔 Ativar chance de aviso na abertura? (Opcional)", \
                        "Serviço Local"
         elif aba == "infra":
             l_i, p_i = "Qual o problema público?", \
                        "Ex: Falha na iluminação..."
             l_l, p_l = "Qual a referência?", \
                        "Ex: Posto de saúde do bairro Y..."
-            l_c, t_e = "Avisar na conclusão? (Opcional)", \
+            l_c, t_e = "🔔 Ativar chance de aviso na conclusão? (Opcional)", \
                        "Serviço Público / Infraestrutura"
 
         st.write("")
@@ -186,17 +186,19 @@ def renderizar(supabase):
             key="formulario_dinamico_consumidor",
             clear_on_submit=False
         ):
+            # AUTOFOCUS=TRUE: Força o cursor a abrir piscando direto aqui
             item_solicitado = st.text_input(
                 label=l_i, placeholder=p_i,
-                key="input_item"
+                key="input_item", autofocus=True
             )
             local_ocorrencia = st.text_input(
                 label=l_l, placeholder=p_l,
                 key="input_local"
             )
+            # VERSÃO HÍBRIDA BLINDADA: Condicionada à informação do lojista
             contato_usuario = st.text_input(
                 label=l_c,
-                placeholder="Ex: Seu e-mail ou WhatsApp...",
+                placeholder="Insira WhatsApp ou e-mail para tentarmos te avisar, caso o comerciante informe.",
                 key="input_contato"
             )
             observacao_usuario = None

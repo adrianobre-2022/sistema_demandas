@@ -471,17 +471,13 @@ def renderizar(supabase):
                 .dados_grafico
             if not df.empty:
                 if p_cli == "comerciante":
-                    n_abas = ["📦 Varejo",
-                              "🎯 Reverso"]
+                    n_abas = ["📦 Varejo", "🎯 Marketplace Reverso"]
                 elif p_cli == "saude":
-                    n_abas = ["📦 Saúde",
-                              "🎯 Reverso"]
+                    n_abas = ["📦 Saúde", "🎯 Marketplace Reverso"]
                 elif p_cli == "petshop":
-                    n_abas = ["📦 Pet",
-                              "🎯 Reverso"]
+                    n_abas = ["📦 Pet", "🎯 Marketplace Reverso"]
                 elif p_cli == "beleza":
-                    n_abas = ["📦 Estética",
-                              "🎯 Reverso"]
+                    n_abas = ["📦 Estética", "🎯 Marketplace Reverso"]
                 elif p_cli == "investidor":
                     n_abas = ["💼 Novos Negócios"]
                 elif p_cli == "jornalista":
@@ -575,13 +571,20 @@ def renderizar(supabase):
                                     f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_f_aba)}</div>", unsafe_allow_html=True)
                                 df_agr = df_f_aba.groupby(["O que Falta", "Categoria"]).agg(C_Unicos=("Pegada", "nunique"), A_Totais=(
                                     "ID", "count"), M_Espera=("Dias", "max")).sort_values(by="C_Unicos", ascending=False).reset_index()
-                                for _, m_line in df_agr.iterrows():
-                                    i_nome = m_line['O que Falta']
-                                    clis = int(m_line['C_Unicos'])
-                                    c_tag = "tag-calor-alta" if clis >= 5 else (
-                                        "tag-calor-media" if clis >= 2 else "tag-calor-baixa")
+                                for _, linha in df_agr.iterrows():
+                                    i_nome = linha['O que Falta']
+                                    s_alvo = int(linha['F_Dono'])
+
+                                    # CORREÇÃO DA PÍLULA: Garante cor laranja fixa na aba do Reverso
+                                    if is_rev:
+                                        c_tag = "tag-calor-media"
+                                        l_tag = "🎯 REVERSO"
+                                    else:
+                                        c_tag = "tag-calor-alta" if s_alvo == 1 else "tag-calor-baixa"
+                                        l_tag = "🎯 SEU MERCADO" if s_alvo == 1 else "🌍 CONCORRÊNCIA"
+
                                     st.markdown(
-                                        f'<div class="bloco-lista-premium"><span class="{c_tag}">🔥 CRÍTICO • {clis} CPFs</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ {m_line["A_Totais"]} relatos • Espera: {m_line["M_Espera"]} dias</div></div>', unsafe_allow_html=True)
+                                        f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
                                     for _, s_it in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["CidadeCompleta", "Local/Referência", "Observação"]).iterrows():
                                         st.markdown(
                                             f"  * **{s_it['CidadeCompleta']}** - *Ponto:* {s_it['Local/Referência']}")
