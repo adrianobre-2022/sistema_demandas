@@ -186,16 +186,15 @@ def renderizar(supabase):
             key="formulario_dinamico_consumidor",
             clear_on_submit=False
         ):
-            # AUTOFOCUS=TRUE: Força o cursor a abrir piscando direto aqui
+            # REMOVIDO AUTOFOCUS: Evita a quebra por parâmetro inexistente
             item_solicitado = st.text_input(
                 label=l_i, placeholder=p_i,
-                key="input_item", autofocus=True
+                key="input_item"
             )
             local_ocorrencia = st.text_input(
                 label=l_l, placeholder=p_l,
                 key="input_local"
             )
-            # VERSÃO HÍBRIDA BLINDADA: Condicionada à informação do lojista
             contato_usuario = st.text_input(
                 label=l_c,
                 placeholder="Insira WhatsApp ou e-mail para tentarmos te avisar, caso o comerciante informe.",
@@ -214,7 +213,6 @@ def renderizar(supabase):
                 "🔍 SINALIZAR ESTA FALTA",
                 use_container_width=True
             )
-
         if botao_enviar and item_solicitado and \
            local_ocorrencia:
             try:
