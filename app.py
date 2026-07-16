@@ -62,11 +62,9 @@ st.markdown("""
     .tag-calor-baixa { background-color: #3399ff !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
     [data-testid="stForm"] { border: none !important; padding: 0px !important; }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-
-    /* Alinhamento horizontal forçado para os botões de navegação minimalistas no mobile */
-    .nav-container-mobile { display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 20px; }
-    .nav-link-mobile { color: #aaaaaa !important; text-decoration: none; font-size: 14px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background-color: #1E1E1E; border: 1px solid #333333; }
-    .nav-link-mobile:hover { color: #ffffff !important; background-color: #252525; }
+    
+    /* Alinhamento horizontal forçado em Row nativa para mobile com gap simétrico */
+    [data-testid="stHorizontalBlock"]:has(button[key*="nav_row_btn"]) { gap: 12px !important; flex-direction: row !important; flex-wrap: nowrap !important; margin-bottom: 15px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -125,24 +123,16 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # Barra de Navegação Minimalista Row para Mobile (Protegendo o visual de quebras e espremimento lateral)
-    st.markdown("""
-        <div class="nav-container-mobile">
-            <a href="?nav=home" class="nav-link-mobile" onclick="window.location.reload();">🏠 Voltar para Home</a>
-            <a href="?nav=categoria" class="nav-link-mobile" onclick="window.location.reload();">🗂️ Outra Categoria</a>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Capturador invisível de clique nas tags HTML de navegação mobile
-    query_params = st.query_params
-    if query_params.get("nav") == "home":
-        st.query_params.clear()
-        st.session_state.tela_atual = "home"
-        st.rerun()
-    if query_params.get("nav") == "categoria":
-        st.query_params.clear()
-        st.session_state.aba_consumidor = "menu_triagem"
-        st.rerun()
+    # Barra de Navegação Inquebrável com Botões Nativos alinhados em Row Horizontal para Mobile
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("🏠 Voltar para Home", key="nav_row_btn_home", use_container_width=True):
+            st.session_state.tela_atual = "home"
+            st.rerun()
+    with col_nav2:
+        if st.button("🗂️ Outra Categoria", key="nav_row_btn_cat", use_container_width=True):
+            st.session_state.aba_consumidor = "menu_triagem"
+            st.rerun()
 
     st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
@@ -173,7 +163,10 @@ elif st.session_state.tela_atual == "consumidor":
                 lista_impactos = []
                 for item in resolvidos.data:
                     if item.get("locais_destino"):
-                        lista_impactos.append({"item": item["item_solicitado"].strip().title(), "nicho": item.get("sub_segmento", "Geral").strip(
+                        # Remove a numeração artificial das benfeitorias exibidas na vitrine
+                        item_limpo_vitrine = str(item["item_solicitado"]).rstrip(
+                            " 0123456789").strip().title()
+                        lista_impactos.append({"item": item_limpo_vitrine, "nicho": item.get("sub_segmento", "Geral").strip(
                         ), "local": item["locais_destino"]["nome_exibicao"].strip().title(), "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()})
                 df_impactos = pd.DataFrame(lista_impactos)
                 df_impactos_locais_unicos = df_impactos.drop_duplicates(subset=[
@@ -208,7 +201,6 @@ elif st.session_state.tela_atual == "consumidor":
                 st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
         except:
             pass
-
     else:
         if st.session_state.aba_consumidor == "produto":
             st.markdown("### 📦 Produto / Marca")
@@ -219,7 +211,7 @@ elif st.session_state.tela_atual == "consumidor":
             st.markdown("### 🏪 Novo Comércio / Serviço")
             label_item, placeholder_item = "Qual comércio falta no bairro?", "Ex: Sapataria, lavanderia..."
             label_local, placeholder_local = "Em qual rua ou ponto?", "Ex: Avenida Principal..."
-            label_contato, tipo_envio = "Quer ser avisado na acendimento? (Opcional)", "Serviço Local / Novo Estabelecimento"
+            label_contato, tipo_envio = "Quer ser avisado na abertura? (Opcional)", "Serviço Local / Novo Estabelecimento"
         else:
             st.markdown("### 🏛️ Infraestrutura / Zeladoria")
             label_item, placeholder_item = "Qual problema de infraestrutura público?", "Ex: Falha na iluminação..."
@@ -235,7 +227,7 @@ elif st.session_state.tela_atual == "consumidor":
             contato_usuario = st.text_input(
                 label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
 
-            # SOLUÇÃO DE USABILIDADE RETRÁTIL: Envelopamento elegante para poupar rolagem vertical no mobile
+            # SOLUÇÃO DE USABILIDADE RETRÁTIL: Economia massiva de espaço vertical na tela do smartphone
             observacao_usuario = None
             with st.expander("➕ Adicionar mais detalhes e observações (Opcional)"):
                 observacao_usuario = st.text_area(
@@ -254,7 +246,7 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_data = supabase.table("locais_destino").insert(
                     {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
-                local_id = local_data.data[0]["id"] if local_data.data and len(
+                local_id = local_data.data["id"] if local_data.data and len(
                     local_data.data) > 0 else None
 
                 if local_id:
@@ -354,7 +346,7 @@ elif st.session_state.tela_atual == "autenticacao":
                 busca_db = supabase.table("clientes_b2b").select(
                     "*").eq("token_acesso", token_limpo).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_linha = busca_db.data[0]
+                    dados_linha = busca_db.data
                     if dados_linha.get("status_pagamento") == "Cancelado":
                         st.error(
                             "❌ Token suspenso. Entre em contato com a administração.")
@@ -491,7 +483,7 @@ elif st.session_state.tela_atual == "comerciante":
                     id_sug, item_sug = sug["id"], sug["item_solicitado"]
                     with st.expander(f"📥 Termo Coletado: \"{item_sug}\""):
                         nicho_homologado = st.selectbox("Vincular ao Segmento Oficial:", [
-                                                        "Supermercado", "Saúda", "Petshop", "Beleza"], key=f"sel_nicho_{id_sug}")
+                                                        "Supermercado", "Saúde", "Petshop", "Beleza"], key=f"sel_nicho_{id_sug}")
                         nome_corrigido = st.text_input(
                             "Corrigir nome / Padronizar termo:", value=item_sug, key=f"txt_nome_{id_sug}")
                         if st.button("✅ Homologar e Ativar no Mercado", key=f"btn_homologar_{id_sug}"):
@@ -507,7 +499,6 @@ elif st.session_state.tela_atual == "comerciante":
             pass
     # --- PROCESSAMENTO GLOBAL COM FILTRAGEM AUTOMÁTICA EM CASCATA EMITIDA PELO BANCO ---
     if st.session_state.perfil_cliente != "admin":
-        # 1. Puxa os dados brutos da nuvem para mapear os locais cadastrados em tempo real
         try:
             resposta_bruta = supabase.table("relatos_escassez").select(
                 "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
@@ -523,7 +514,6 @@ elif st.session_state.tela_atual == "comerciante":
                         loc_completo = str(
                             reg["locais_destino"]["regiao_cidade"]).strip()
 
-                        # Quebra a string "Cidade/UF - Bairro" de forma segura
                         if " - " in loc_completo:
                             cidade_raiz, bairro_raiz = loc_completo.split(
                                 " - ", 1)
@@ -546,6 +536,11 @@ elif st.session_state.tela_atual == "comerciante":
                         categoria_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_bruta or "Publico" in cat_bruta or "Infra" in cat_bruta or "Zeladoria" in sub_seg) else (
                             "Serviço Local / Novo Estabelecimento" if ("Local" in cat_bruta or "Invest" in sub_seg) else "Produto / Marca")
 
+                        # TRATAMENTO DE STRING: Expuga números simulados do final para entregar a marca limpa e real ao lojista
+                        item_bruto_nome = str(reg["item_solicitado"])
+                        item_limpo_sem_num = item_bruto_nome.rstrip(
+                            " 0123456789").strip().title()
+
                         nome_local_bruto = reg["locais_destino"]["nome_exibicao"]
                         if st.session_state.perfil_cliente in ["comerciante", "saude", "petshop", "beleza"] and nome_local_bruto != loja_alvo_prioridade:
                             if sub_seg == "Supermercado":
@@ -561,34 +556,40 @@ elif st.session_state.tela_atual == "comerciante":
                         else:
                             nome_local_exibicao = nome_local_bruto
 
-                        dados_brutos_limpos.append({
-                            "ID": reg["id"], "O que Falta": reg["item_solicitado"].strip().title(), "Categoria": categoria_limpa,
+                        dados_limpos.append({
+                            "ID": reg["id"], "O que Falta": item_limpo_sem_num, "Categoria": categoria_limpa,
                             "Local/Referência": nome_local_exibicao, "CidadeRaiz": cidade_raiz, "Bairro": bairro_raiz,
                             "CidadeCompleta": loc_completo, "Dias": idade_dias, "Observação": reg.get("observacao_detalhe") or "Sem detalhes.",
                             "SubSegmento": sub_seg, "Pegada": reg.get("pegada_digital") or f"anon_{reg['id']}", "Contato": reg.get("contato_aviso") or ""
                         })
 
-            # --- RENDERIZAÇÃO DOS 2 FILTROS GEOGRÁFICOS EM CASCATA EXTRAÍDOS DO BANCO ---
-            lista_cidades_filtro = sorted(list(cidades_detectadas)) if cidades_detectadas else [
-                "São Paulo/SP", "Carapicuíba/SP", "Osasco/SP", "Barueri/SP"]
+            # --- INTERFACE DOS SELETORES GEOGRÁFICOS EM CASCATA EXTRAÍDOS DO BANCO ---
+            lista_cidades_filtro = [
+                "[ Mostrar Todas as Cidades ]"] + sorted(list(cidades_detectadas))
             cidade_selecionada = st.selectbox(
                 "📍 1. Selecionar Cidade (Global):", options=lista_cidades_filtro, key="b2b_cidade_auto")
 
-            lista_bairros_filtro = [" Mostrar Todos os Bairros "] + \
-                sorted(list(bairros_por_cidade.get(cidade_selecionada, set())))
-            bairro_selecionado = st.selectbox(
-                "🏘️ 2. Refinar por Bairro Específico:", options=lista_bairros_filtro, key="b2b_bairro_auto")
+            if cidade_selecionada == "[ Mostrar Todas as Cidades ]":
+                bairro_selecionado = st.selectbox("🏘️ 2. Refinar por Bairro Específico:", options=[
+                                                  "--- Selecione uma Cidade Primeiro ---"], disabled=True, key="b2b_bairro_auto")
+            else:
+                lista_bairros_filtro = [" Mostrar Todos os Bairros "] + sorted(
+                    list(bairros_por_cidade.get(cidade_selecionada, set())))
+                bairro_selecionado = st.selectbox(
+                    "🏘️ 2. Refinar por Bairro Específico:", options=lista_bairros_filtro, key="b2b_bairro_auto")
 
-            # --- FILTRAGEM FINAL DOS DADOS EM MEMÓRIA ---
-            df_total = pd.DataFrame(dados_brutos_limpos) if dados_brutos_limpos else pd.DataFrame(columns=[
+            # --- FILTRAGEM FINAL EM MEMÓRIA ---
+            df_total = pd.DataFrame(dados_limpos) if dados_limpos else pd.DataFrame(columns=[
                 "ID", "O que Falta", "Categoria", "Local/Referência", "CidadeRaiz", "Bairro", "CidadeCompleta", "Dias", "Observação", "SubSegmento", "Pegada", "Contato"])
 
             if not df_total.empty:
-                df_filtrado = df_total[df_total['CidadeRaiz']
-                                       == cidade_selecionada]
-                if bairro_selecionado != " Mostrar Todos os Bairros ":
-                    df_filtrado = df_filtrado[df_filtrado['Bairro']
-                                              == bairro_selecionado]
+                df_filtrado = df_total
+                if cidade_selecionada != "[ Mostrar Todas as Cidades ]":
+                    df_filtrado = df_filtrado[df_filtrado['CidadeRaiz']
+                                              == cidade_selecionada]
+                    if bairro_selecionado != " Mostrar Todos os Bairros ":
+                        df_filtrado = df_filtrado[df_filtrado['Bairro']
+                                                  == bairro_selecionado]
                 st.session_state.dados_grafico = df_filtrado
             else:
                 st.session_state.dados_grafico = df_total
@@ -787,7 +788,7 @@ elif st.session_state.tela_atual == "comerciante":
                                                 "🔒 O recurso de captação activa via WhatsApp está bloqueado administrativamente para o seu token por pendência financeira.")
                                         else:
                                             st.info(
-                                                "ℹ️ Registro anônimo sem contato direto (Vazio comercial para expandir mix)")
+                                                "ℹ silence: Registro anônimo sem contato direto")
 
                                         if not is_reverso_ativa and is_dono_vazio:
                                             id_confirmacao = f"confirma_baixa_{sub_id}"
