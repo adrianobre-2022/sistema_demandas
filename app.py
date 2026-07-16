@@ -54,6 +54,7 @@ st.markdown("""
     }
     .stButton>button:hover, .stFormSubmitButton>button:hover, [data-testid="stDownloadButton"]>button:hover { background-color: #005a24 !important; }
     h1 { font-size: 34px !important; font-weight: 900 !important; text-align: center !important; margin-bottom: 0px !important; }
+    [data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) { gap: 10px !important; flex-direction: row !important; flex-wrap: nowrap !important; }
     .stTextInput input, .stTextArea textarea, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input { background-color: #1E1E1E !important; color: #FFFFFF !important; border-radius: 10px !important; border: 1px solid #444444 !important; }
     input::placeholder, textarea::placeholder { color: #888888 !important; font-style: italic !important; }
     .bloco-lista-premium { background-color: #1E1E1E !important; padding: 1.2rem !important; border-radius: 10px !important; margin-bottom: 0.8rem !important; border: 1px solid #333333 !important; }
@@ -62,9 +63,6 @@ st.markdown("""
     .tag-calor-baixa { background-color: #3399ff !important; color: white !important; padding: 0.2rem 0.6rem !important; border-radius: 6px !important; font-weight: bold !important; font-size: 12px !important; float: right !important; }
     [data-testid="stForm"] { border: none !important; padding: 0px !important; }
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-    
-    /* Alinhamento horizontal forçado em Row nativa para mobile com gap simétrico */
-    [data-testid="stHorizontalBlock"]:has(button[key*="nav_row_btn"]) { gap: 12px !important; flex-direction: row !important; flex-wrap: nowrap !important; margin-bottom: 15px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -123,16 +121,18 @@ if st.session_state.tela_atual == "home":
 
 # --- TELA: FORMULÁRIO DO CONSUMIDOR ---
 elif st.session_state.tela_atual == "consumidor":
-    # Barra de Navegação Inquebrável com Botões Nativos alinhados em Row Horizontal para Mobile
-    col_nav1, col_nav2 = st.columns(2)
+    # Configuração antiga de botões verdes simétricos que preenchem todo o espaço do layout
+    col_nav1, col_nav2 = st.columns(2, gap="small")
     with col_nav1:
-        if st.button("🏠 Voltar para Home", key="nav_row_btn_home", use_container_width=True):
+        if st.button("🏠 Ir para Home", key="nav_home_simetrico", use_container_width=True):
             st.session_state.tela_atual = "home"
             st.rerun()
     with col_nav2:
-        if st.button("🗂️ Outra Categoria", key="nav_row_btn_cat", use_container_width=True):
-            st.session_state.aba_consumidor = "menu_triagem"
-            st.rerun()
+        # TRAVA DE USABILIDADE: O botão 'Mudar Categoria' só aparece se o usuário já estiver DENTRO de um formulário preenchendo dados
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_categoria_simetrico", use_container_width=True):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
 
     st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
@@ -163,7 +163,6 @@ elif st.session_state.tela_atual == "consumidor":
                 lista_impactos = []
                 for item in resolvidos.data:
                     if item.get("locais_destino"):
-                        # Remove a numeração artificial das benfeitorias exibidas na vitrine
                         item_limpo_vitrine = str(item["item_solicitado"]).rstrip(
                             " 0123456789").strip().title()
                         lista_impactos.append({"item": item_limpo_vitrine, "nicho": item.get("sub_segmento", "Geral").strip(
@@ -246,8 +245,8 @@ elif st.session_state.tela_atual == "consumidor":
 
                 local_data = supabase.table("locais_destino").insert(
                     {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
-                local_id = local_data.data["id"] if local_data.data and len(
-                    local_data.data) > 0 else None
+                local_id = local_data.data[0]["id"] if (
+                    local_data and local_data.data and len(local_data.data) > 0) else None
 
                 if local_id:
                     segmento_detectado = "Geral"
@@ -346,7 +345,7 @@ elif st.session_state.tela_atual == "autenticacao":
                 busca_db = supabase.table("clientes_b2b").select(
                     "*").eq("token_acesso", token_limpo).execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_linha = busca_db.data
+                    dados_linha = busca_db.data[0]
                     if dados_linha.get("status_pagamento") == "Cancelado":
                         st.error(
                             "❌ Token suspenso. Entre em contato com a administração.")
@@ -367,63 +366,172 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except Exception as e:
                 st.error("❌ Erro de conexão ou token mal formatado.")
-# --- TELA: PAINEL DE DECISÃO ESTRATÉGICA (B2B) ---
-elif st.session_state.tela_atual == "comerciante":
-    if not st.session_state.token_valido:
-        st.session_state.tela_atual = "home"
-        st.rerun()
-    if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com"):
+    else:
+        if st.session_state.aba_consumidor == "produto":
+            st.markdown("### 📦 Produto / Marca")
+            label_item, placeholder_item = "Qual produto ou marca falta?", "Ex: Leite condensado marca X..."
+            label_local, placeholder_local = "Em qual estabelecimento?", "Ex: Nome do mercado..."
+            label_contato, tipo_envio = "Quer ser avisado na reposição? (Opcional)", "Produto / Marca"
+        elif st.session_state.aba_consumidor == "servico":
+            st.markdown("### 🏪 Novo Comércio / Serviço")
+            label_item, placeholder_item = "Qual comércio falta no bairro?", "Ex: Sapataria, lavanderia..."
+            label_local, placeholder_local = "Em qual rua ou ponto?", "Ex: Avenida Principal..."
+            label_contato, tipo_envio = "Quer ser avisado na abertura? (Opcional)", "Serviço Local / Novo Estabelecimento"
+        else:
+            st.markdown("### 🏛️ Infraestrutura / Zeladoria")
+            label_item, placeholder_item = "Qual problema de infraestrutura público?", "Ex: Falha na iluminação..."
+            label_local, placeholder_local = "Qual o ponto de referência?", "Ex: Posto de saúde do bairro Y..."
+            label_contato, tipo_envio = "Quer ser avisado na conclusão? (Opcional)", "Serviço Público / Infraestrutura"
+
+        st.write("")
+        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
+            item_solicitado = st.text_input(
+                label=label_item, placeholder=placeholder_item, key="input_item")
+            local_ocorrencia = st.text_input(
+                label=label_local, placeholder=placeholder_local, key="input_local")
+            contato_usuario = st.text_input(
+                label=label_contato, placeholder="Ex: Seu e-mail ou WhatsApp...", key="input_contato")
+
+            # SOLUÇÃO DE USABILIDADE RETRÁTIL: Economia massiva de espaço vertical na tela do smartphone
+            observacao_usuario = None
+            with st.expander("➕ Adicionar mais detalhes e observações (Opcional)"):
+                observacao_usuario = st.text_area(
+                    label="Detalhes adicionais:", placeholder="Ex: Detalhe o ocorrido aqui...", key="input_obs")
+
+            botao_enviar = st.form_submit_button(
+                "🔍 SINALIZAR ESTA FALTA", use_container_width=True)
+
+        if botao_enviar and item_solicitado and local_ocorrencia:
+            try:
+                hash_dispositivo = obter_pegada_digital()
+                regiao_salva = st.session_state.get(
+                    "input_regiao_via_unica", "São Paulo/SP - Centro")
+                texto_regiao = regiao_salva.strip() if regiao_salva else "São Paulo/SP - Centro"
+                local_formatado = local_ocorrencia.strip().title()
+
+                local_data = supabase.table("locais_destino").insert(
+                    {"nome_exibicao": local_formatado, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
+                local_id = local_data.data[0]["id"] if (
+                    local_data and local_data.data and len(local_data.data) > 0) else None
+
+                if local_id:
+                    segmento_detectado = "Geral"
+                    texto_usuario = item_solicitado.strip().lower()
+                    if any(p in texto_usuario for p in ["leite", "arroz", "feijão", "café", "açúcar", "pão", "mercado", "óleo"]):
+                        segmento_detectado = "Supermercado"
+                    elif any(p in texto_usuario for p in ["remédio", "médico", "dentista", "farmácia", "clínica"]):
+                        segmento_detectado = "Saúde"
+                    elif any(p in texto_usuario for p in ["ração", "pet", "cachorro", "gato", "petshop"]):
+                        segmento_detectado = "Petshop"
+                    elif any(p in texto_usuario for p in ["manicure", "salão", "cabeleireiro", "estética"]):
+                        segmento_detectado = "Beleza"
+
+                    texto_obs = observacao_usuario.strip() if observacao_usuario else None
+                    supabase.table("relatos_escassez").insert({"local_id": local_id, "item_solicitado": item_solicitado.strip().title(), "tipo_carencia": tipo_envio, "status": "Pendente",
+                                                               "sub_segmento": segmento_detectado, "pegada_digital": hash_dispositivo, "observacao_detalhe": texto_obs, "contato_aviso": contato_usuario.strip() if contato_usuario else None}).execute()
+                    st.success("✅ Falta sinalizada com sucesso!")
+                    import time
+                    time.sleep(1.2)
+                    st.session_state.aba_consumidor = "menu_triagem"
+                    st.session_state.tela_atual = "home"
+                    st.rerun()
+            except Exception as e:
+                st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
+
+# --- TELA: AUTENTICAÇÃO POR TOKEN (REATIVAÇÃO DO ENTER) ---
+elif st.session_state.tela_atual == "autenticacao":
+    if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
         st.session_state.tela_atual = "home"
         st.session_state.token_valido = False
-        st.perfil_cliente = None
-        st.session_state.busca_ativa = False
-        st.session_state.dados_grafico = None
         st.rerun()
     st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
-    espectador_analitico = st.session_state.perfil_cliente in [
-        "investidor", "gestor", "jornalista"]
-
     st.write("---")
 
-    termo_busca = st.text_input(label="Refinar por palavra-chave ou estabelecimento (Opcional):",
-                                placeholder="Digite para filtrar a lista abaixo...", key="input_busca_painel")
+    with st.form(key="form_autenticacao_b2b", clear_on_submit=False):
+        token_inserido = st.text_input(
+            label="Token de Acesso:", type="password", placeholder="Digite seu token de acesso...")
+        st.write("")
+        botao_validar = st.form_submit_button(
+            "Validar Credenciais e Acessar", use_container_width=True)
 
-    if st.session_state.perfil_cliente == "admin":
-        st.markdown(
-            "<h3 style='text-align: center;'>🛠️ Cadastro de Assinantes (ERP)</h3>", unsafe_allow_html=True)
-        id_formulario_admin = f"form_cadastro_admin_{datetime.datetime.now().strftime('%M%S')}"
-        with st.form(key=id_formulario_admin, clear_on_submit=True):
-            nome_novo_comercio = st.text_input(
-                "Nome do Estabelecimento Comercial:", placeholder="Ex: Supermercado Xavier...")
-            perfil_novo_comercio = st.selectbox("Perfil de Acesso Corporativo:", [
-                                                "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
-            regiao_novo_comercio = st.text_input(
-                "Região/Cidade de Atuação:", placeholder="Ex: São Paulo/SP - Centro...")
-            st.write("")
-            if st.form_submit_button("💼 Cadastrar Lojista e Gerar Credenciais"):
-                if nome_novo_comercio and regiao_novo_comercio:
-                    try:
-                        novo_registro = supabase.table("clientes_b2b").insert({
-                            "nome_estabelecimento": nome_novo_comercio.strip().title(),
-                            "perfil_segmento": perfil_novo_comercio,
-                            "regiao_atuacao": regiao_novo_comercio.strip(),
-                            "status_pagamento": "Ativo",
-                            "recurso_marketplace_reverso": True,
-                            "recurso_whatsapp": True,
-                            "recurso_pdf": True
-                        }).execute()
-                        if novo_registro.data:
-                            st.success(
-                                "🎉 Cliente cadastrado com sucesso na nuvem!")
-                            st.info(
-                                f"🔑 **TOKEN UUID EMITIDO:** `{novo_registro.data['token_acesso']}`")
-                    except Exception as error_db:
+    if botao_validar and token_inserido:
+        token_limpo = token_inserido.strip()
+        if token_limpo == "COMERCIO10":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "comerciante"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "SAUDE20":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "saude"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "PET30":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "petshop"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "BELEZA40":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "beleza"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "INVEST20":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "investidor"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "GESTOR30":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "gestor"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "MIDIA40":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "jornalista"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo == "ADMIN99":
+            st.session_state.token_valido = True
+            st.session_state.perfil_cliente = "admin"
+            st.session_state.regiao_cliente = "São Paulo/SP"
+            st.session_state.tela_atual = "comerciante"
+            st.rerun()
+        elif token_limpo != "":
+            try:
+                busca_db = supabase.table("clientes_b2b").select(
+                    "*").eq("token_acesso", token_limpo).execute()
+                if busca_db and busca_db.data and len(busca_db.data) > 0:
+                    dados_linha = busca_db.data[0]
+                    if dados_linha.get("status_pagamento") == "Cancelado":
                         st.error(
-                            f"⚠️ Falha na conexão com o banco: {str(error_db)}")
+                            "❌ Token suspenso. Entre em contato com a administração.")
+                    else:
+                        st.session_state.perfil_cliente = dados_linha.get(
+                            "perfil_segmento", "comerciante")
+                        st.session_state.regiao_cliente = dados_linha.get(
+                            "regiao_atuacao", "São Paulo/SP")
+                        st.session_state.recursos_liberados = {
+                            "reverso": dados_linha.get("recurso_marketplace_reverso", True),
+                            "whatsapp": dados_linha.get("recurso_whatsapp", True),
+                            "pdf": dados_linha.get("recurso_pdf", True)
+                        }
+                        st.session_state.token_valido = True
+                        st.session_state.tela_atual = "comerciante"
+                        st.rerun()
                 else:
-                    st.warning("⚠️ Preencha os campos obrigatórios.")
+                    st.error("❌ Token inválido.")
+            except Exception as e:
+                st.error("❌ Erro de conexão ou token mal formatado.")
         st.write("")
         st.markdown(
             "<h3 style='text-align: center;'>📊 Central de Recursos e Controle Financeiro</h3>", unsafe_allow_html=True)
@@ -556,7 +664,7 @@ elif st.session_state.tela_atual == "comerciante":
                         else:
                             nome_local_exibicao = nome_local_bruto
 
-                        dados_limpos.append({
+                        dados_brutos_limpos.append({
                             "ID": reg["id"], "O que Falta": item_limpo_sem_num, "Categoria": categoria_limpa,
                             "Local/Referência": nome_local_exibicao, "CidadeRaiz": cidade_raiz, "Bairro": bairro_raiz,
                             "CidadeCompleta": loc_completo, "Dias": idade_dias, "Observação": reg.get("observacao_detalhe") or "Sem detalhes.",
@@ -579,7 +687,7 @@ elif st.session_state.tela_atual == "comerciante":
                     "🏘️ 2. Refinar por Bairro Específico:", options=lista_bairros_filtro, key="b2b_bairro_auto")
 
             # --- FILTRAGEM FINAL EM MEMÓRIA ---
-            df_total = pd.DataFrame(dados_limpos) if dados_limpos else pd.DataFrame(columns=[
+            df_total = pd.DataFrame(dados_brutos_limpos) if dados_brutos_limpos else pd.DataFrame(columns=[
                 "ID", "O que Falta", "Categoria", "Local/Referência", "CidadeRaiz", "Bairro", "CidadeCompleta", "Dias", "Observação", "SubSegmento", "Pegada", "Contato"])
 
             if not df_total.empty:
@@ -788,7 +896,7 @@ elif st.session_state.tela_atual == "comerciante":
                                                 "🔒 O recurso de captação activa via WhatsApp está bloqueado administrativamente para o seu token por pendência financeira.")
                                         else:
                                             st.info(
-                                                "ℹ silence: Registro anônimo sem contato direto")
+                                                "ℹ️ Registro anônimo sem contato direto")
 
                                         if not is_reverso_ativa and is_dono_vazio:
                                             id_confirmacao = f"confirma_baixa_{sub_id}"
