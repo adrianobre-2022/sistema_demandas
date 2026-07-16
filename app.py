@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import datetime
 from core.database import (
     inicializar_supabase,
