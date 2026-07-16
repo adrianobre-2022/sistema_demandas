@@ -10,6 +10,10 @@ def renderizar(supabase):
     termo_busca = st.session_state.get(
         "termo_busca_temp", ""
     )
+    p_cli = st.session_state.perfil_cliente
+    espectador_analitico = p_cli in [
+        "investidor", "gestor", "jornalista"
+    ]
 
     if st.button(
         "⬅️ Sair do Painel (Logoff)",
@@ -36,19 +40,14 @@ def renderizar(supabase):
         "de carências da nossa região.</p>",
         unsafe_allow_html=True
     )
-    espectador_analitico = \
-        st.session_state.perfil_cliente in [
-            "investidor", "gestor", "jornalista"
-        ]
     st.write("---")
     termo_busca = st.text_input(
-        label="Refinar por palavra-chave ou "
-              "estabelecimento (Opcional):",
+        label="Refinar por palavra-chave:",
         placeholder="Digite para filtrar...",
         key="input_busca_painel"
     )
 
-    if st.session_state.perfil_cliente == "admin":
+    if p_cli == "admin":
         st.markdown(
             "<h3 style='text-align: center;'"
             ">🛠️ Cadastro de Assinantes (ERP)"
@@ -336,7 +335,8 @@ def renderizar(supabase):
                                 "Zeladoria" in sub_seg) \
                             else (
                                 "Serviço Local / "
-                                "Novo Estabelecimento"
+                                "Novo"
+                                " Estabelecimento"
                                 if ("Local" in cat_b or
                                     "Invest" in sub_seg)
                                 else "Produto / Marca"
@@ -347,8 +347,6 @@ def renderizar(supabase):
                          .strip().title()
                         n_local_b = \
                             reg["locais_destino"]["nome_exibicao"]
-                        p_cli = st.session_state\
-                            .perfil_cliente
                         if p_cli in [
                             "comerciante", "saude",
                             "petshop", "beleza"
@@ -369,7 +367,7 @@ def renderizar(supabase):
                                     "Salão Concorrente"
                             else:
                                 n_local_ex = \
-                                    "Estabelecimento Parceiro"
+                                    "Parceiro Comercial"
                         else:
                             n_local_ex = \
                                 n_local_b
@@ -410,6 +408,8 @@ def renderizar(supabase):
                 options=l_cidades,
                 key="b2b_cidade_auto"
             )
+            if city_sel := cidade_sel:
+                pass
             if cidade_sel == \
                "[ Mostrar Todas as Cidades ]":
                 bairro_sel = st.selectbox(
@@ -471,13 +471,17 @@ def renderizar(supabase):
                 .dados_grafico
             if not df.empty:
                 if p_cli == "comerciante":
-                    n_abas = ["📦 Varejo", "🎯 Marketplace Reverso"]
+                    n_abas = ["📦 Varejo",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "saude":
-                    n_abas = ["📦 Saúde", "🎯 Marketplace Reverso"]
+                    n_abas = ["📦 Saúde",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "petshop":
-                    n_abas = ["📦 Pet", "🎯 Marketplace Reverso"]
+                    n_abas = ["📦 Pet",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "beleza":
-                    n_abas = ["📦 Estética", "🎯 Marketplace Reverso"]
+                    n_abas = ["📦 Estética",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "investidor":
                     n_abas = ["💼 Novos Negócios"]
                 elif p_cli == "jornalista":
@@ -495,7 +499,7 @@ def renderizar(supabase):
                             else ("Serviços"
                                   if "Negócios" in n_aba_atv
                                   else "Varejo")
-                        is_rev = "Reverso" \
+                        is_rev = "Marketplace Reverso" \
                             in n_aba_atv
                         if is_rev and not \
                            st.session_state\
@@ -571,20 +575,13 @@ def renderizar(supabase):
                                     f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_f_aba)}</div>", unsafe_allow_html=True)
                                 df_agr = df_f_aba.groupby(["O que Falta", "Categoria"]).agg(C_Unicos=("Pegada", "nunique"), A_Totais=(
                                     "ID", "count"), M_Espera=("Dias", "max")).sort_values(by="C_Unicos", ascending=False).reset_index()
-                                for _, linha in df_agr.iterrows():
-                                    i_nome = linha['O que Falta']
-                                    s_alvo = int(linha['F_Dono'])
-
-                                    # CORREÇÃO DA PÍLULA: Garante cor laranja fixa na aba do Reverso
-                                    if is_rev:
-                                        c_tag = "tag-calor-media"
-                                        l_tag = "🎯 REVERSO"
-                                    else:
-                                        c_tag = "tag-calor-alta" if s_alvo == 1 else "tag-calor-baixa"
-                                        l_tag = "🎯 SEU MERCADO" if s_alvo == 1 else "🌍 CONCORRÊNCIA"
-
+                                for _, m_line in df_agr.iterrows():
+                                    i_nome = m_line['O que Falta']
+                                    clis = int(m_line['C_Unicos'])
+                                    c_tag = "tag-calor-alta" if clis >= 5 else (
+                                        "tag-calor-media" if clis >= 2 else "tag-calor-baixa")
                                     st.markdown(
-                                        f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
+                                        f'<div class="bloco-lista-premium"><span class="{c_tag}">🔥 CRÍTICO • {clis} CPFs</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ {m_line["A_Totais"]} relatos • Espera: {m_line["M_Espera"]} dias</div></div>', unsafe_allow_html=True)
                                     for _, s_it in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["CidadeCompleta", "Local/Referência", "Observação"]).iterrows():
                                         st.markdown(
                                             f"  * **{s_it['CidadeCompleta']}** - *Ponto:* {s_it['Local/Referência']}")
@@ -627,10 +624,12 @@ def renderizar(supabase):
                                 for _, linha in df_agr.iterrows():
                                     i_nome = linha['O que Falta']
                                     s_alvo = int(linha['F_Dono'])
-                                    c_tag = "tag-calor-alta" if (
-                                        s_alvo == 1 and not is_rev) else "tag-calor-baixa"
-                                    l_tag = "🎯 SEU MERCADO" if (
-                                        s_alvo == 1 and not is_rev) else "🌍 CONCORRÊNCIA"
+                                    if is_rev:
+                                        c_tag = "tag-calor-media"
+                                        l_tag = "🎯 REVERSO"
+                                    else:
+                                        c_tag = "tag-calor-alta" if s_alvo == 1 else "tag-calor-baixa"
+                                        l_tag = "🎯 SEU MERCADO" if s_alvo == 1 else "🌍 CONCORRÊNCIA"
                                     st.markdown(
                                         f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
                                     for _, s_l in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["CidadeCompleta", "Local/Referência", "Observação", "Contato"]).iterrows():
