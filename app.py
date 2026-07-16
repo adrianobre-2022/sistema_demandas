@@ -72,7 +72,11 @@ if not st.session_state.seguranca_master:
             use_container_width=True
         )
     if botao_destravar_lab:
-        if senha_desenvolvimento.strip() == "carencias2026":
+        # BUSCA A SENHA DE FORMA SEGURA NAS VARIÁVEIS DE AMBIENTE
+        senha_correta = os.environ.get("CHAVE_ENGENHARIA") or \
+            st.secrets.get("CHAVE_ENGENHARIA")
+
+        if senha_desenvolvimento.strip() == senha_correta:
             st.session_state.seguranca_master = True
             st.rerun()
         else:
