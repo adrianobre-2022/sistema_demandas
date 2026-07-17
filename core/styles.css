@@ -7,24 +7,6 @@
     color: #FFFFFF !important;
 }
 
-/* INTERFACE GERAL DE ENTRADAS DE DADOS (PROTEGE CAMPOS DE SENHA E O OLHO) */
-.stTextInput input, .stTextArea textarea, div[data-baseweb="input"] {
-    background-color: #1E1E1E !important;
-    color: #FFFFFF !important;
-    border-radius: 10px !important;
-    border: 1px solid #444444 !important;
-    width: 100% !important;
-}
-
-/* GARANTE QUE O BOTÃO INTERNO DO "OLHO" DA SENHA FIQUE INTACTO E INVISÍVEL */
-div[data-baseweb="input"] button {
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: #aaaaaa !important;
-    width: auto !important;
-}
-
 /* IDENTIDADE VISUAL DOS BOTÕES PRINCIPAIS DE CADASTRO E DA HOME (VERDE VIBRANTE) */
 button[key*="btn_ir_"], 
 .stFormSubmitButton>button,
