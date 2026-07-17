@@ -21,7 +21,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- INJEÇÃO DO DESIGN VISUAL MESTRE E TESTE NEUTRO ---
+# --- INJEÇÃO DO DESIGN VISUAL MESTRE E COMPILADO ---
 try:
     with open("core/styles.css", "r", encoding="utf-8") as f:
         st.markdown(
@@ -31,40 +31,41 @@ try:
 except:
     pass
 
-# FORÇA A COR CINZA NEUTRA NOS BOTÕES DE RETORNO DO TOPO DO APP
-# FORÇA BRUTA VISUAL: Captura qualquer botão do topo removendo a identidade verde
-# ANCORAGEM ESTRUTURAL: Força o cinza neutro em botões dentro de colunas do topo
+# FORÇA A COR CINZA NEUTRA APENAS NOS BOTÕES UTILITÁRIOS POR CHAVE EXCLUSIVA
 st.markdown("""
     <style>
-    div[data-testid="stColumn"] button,
-    div[data-testid="stColumn"] .stButton > button,
-    div[data-testid="stHorizontalBlock"] button {
+    button[key*="nativo_v"], 
+    button[key*="nativo_c"],
+    button[key*="btn_voltar_aut_nativo"],
+    button[key*="btn_voltar_com"] {
         background-color: #262626 !important;
         color: #aaaaaa !important;
         border: 1px solid #444444 !important;
         box-shadow: none !important;
         background-image: none !important;
+        width: 100% !important;
+        display: block !important;
     }
-    div[data-testid="stColumn"] button:hover,
-    div[data-testid="stColumn"] .stButton > button:hover,
-    div[data-testid="stHorizontalBlock"] button:hover {
+    button[key*="nativo_v"]:hover, 
+    button[key*="nativo_c"]:hover,
+    button[key*="btn_voltar_aut_nativo"]:hover,
+    button[key*="btn_voltar_com"]:hover {
         background-color: #333333 !important;
         color: #ffffff !important;
         border: 1px solid #555555 !important;
     }
-    /* Protege o design dos botões reais de envio que ficam dentro dos formulários */
-    div[data-testid="stForm"] button,
-    .stFormSubmitButton > button {
+    /* PROTEÇÃO CRÍTICA: Mantém as caixas de senha em tamanho normal e funcionais */
+    div[data-baseweb="input"] {
+        width: 100% !important;
+    }
+    /* Restaura o verde padrão de alta conversão dos botões gigantes da Home */
+    button[key*="btn_ir_"] {
         background-color: #00803B !important;
         color: #FFFFFF !important;
-        width: 100% !important;
         font-weight: 800 !important;
         border-radius: 12px !important;
-        border: none !important;
-    }
-    div[data-testid="stForm"] button:hover,
-    .stFormSubmitButton > button:hover {
-        background-color: #005a24 !important;
+        padding: 0.8rem 0.2rem !important;
+        width: 100% !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -111,10 +112,8 @@ if not st.session_state.seguranca_master:
             use_container_width=True
         )
     if botao_destravar_lab:
-        # BUSCA A SENHA DE FORMA SEGURA NAS VARIÁVEIS DE AMBIENTE
         senha_correta = os.environ.get("CHAVE_ENGENHARIA") or \
             st.secrets.get("CHAVE_ENGENHARIA")
-
         if senha_desenvolvimento.strip() == senha_correta:
             st.session_state.seguranca_master = True
             st.rerun()
@@ -160,12 +159,11 @@ elif st.session_state.tela_atual == "consumidor":
     morador.renderizar(supabase)
 
 elif st.session_state.tela_atual == "autenticacao":
-    # BARRA DE NAVEGAÇÃO SUPERIOR NATIVA (Simétrica no PC, Empilhada no Celular)
     col_nav_c1, col_nav_c2 = st.columns(2)
     with col_nav_c1:
         if st.button(
             "🏠 Página Inicial",
-            key="btn_voltar_aut_nativo",
+            key="btn_voltar_aut_final_v",
             use_container_width=True
         ):
             st.session_state.tela_atual = "home"
@@ -237,5 +235,6 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except:
                 st.error("❌ Erro de autenticidade na base.")
+
 elif st.session_state.tela_atual == "comerciante":
     b2b.renderizar(supabase)

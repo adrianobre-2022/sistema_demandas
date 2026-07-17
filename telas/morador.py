@@ -11,7 +11,7 @@ def renderizar(supabase):
     with col_nav1:
         if st.button(
             "🏠 Página Inicial",
-            key="nav_home_nativo_v",
+            key="nav_home_final_v",
             use_container_width=True
         ):
             st.session_state.tela_atual = "home"
@@ -20,7 +20,7 @@ def renderizar(supabase):
         if st.session_state.aba_consumidor != "menu_triagem":
             if st.button(
                 "🗂️ Mudar Categoria",
-                key="nav_cat_nativo_c",
+                key="nav_cat_final_v",
                 use_container_width=True
             ):
                 st.session_state.aba_consumidor = "menu_triagem"

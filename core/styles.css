@@ -1,105 +1,73 @@
+/* RESETE UNIVERSAL DE SEGURANÇA */
 .stApp {
     background-color: #121212 !important;
     color: #FFFFFF !important;
 }
-.stWidgetFormLabel, label, p, .stMarkdown,
-[data-testid="stWidgetLabel"] {
+.stWidgetFormLabel, label, p, .stMarkdown, [data-testid="stWidgetLabel"] {
     color: #FFFFFF !important;
 }
-.stButton>button, .stFormSubmitButton>button,
-[data-testid="stDownloadButton"]>button {
+
+/* INTERFACE GERAL DE ENTRADAS DE DADOS (PROTEGE CAMPOS DE SENHA E O OLHO) */
+.stTextInput input, .stTextArea textarea, div[data-baseweb="input"] {
+    background-color: #1E1E1E !important;
+    color: #FFFFFF !important;
+    border-radius: 10px !important;
+    border: 1px solid #444444 !important;
+    width: 100% !important;
+}
+
+/* GARANTE QUE O BOTÃO INTERNO DO "OLHO" DA SENHA FIQUE INTACTO E INVISÍVEL */
+div[data-baseweb="input"] button {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #aaaaaa !important;
+    width: auto !important;
+}
+
+/* IDENTIDADE VISUAL DOS BOTÕES PRINCIPAIS DE CADASTRO E DA HOME (VERDE VIBRANTE) */
+button[key*="btn_ir_"], 
+.stFormSubmitButton>button,
+div[data-testid="stForm"] button {
     background-color: #00803B !important;
     color: #FFFFFF !important;
     font-weight: 800 !important;
     border-radius: 12px !important;
     border: none !important;
     padding: 0.8rem 0.2rem !important;
-    font-size: 15px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
     width: 100% !important;
     display: block !important;
 }
-.stButton>button:hover, .stFormSubmitButton>button:hover,
-[data-testid="stDownloadButton"]>button:hover {
-    background-color: #005a24 !important;
+
+/* ALVO CIRÚRGICO: COR NEUTRA (IDÊNTICA AO FUNDO DOS IMPACTOS) APENAS NOS BOTÕES UTILITÁRIOS */
+button[key="nav_home_final_v"], 
+button[key="nav_cat_final_v"],
+button[key="btn_voltar_aut_final_v"],
+button[key="btn_voltar_com_final_v"] {
+    background-color: #1A1A1A !important;
+    color: #aaaaaa !important;
+    border: 1px solid #333333 !important;
+    box-shadow: none !important;
+    background-image: none !important;
+    font-weight: bold !important;
+    width: 100% !important;
+    display: block !important;
 }
-h1 {
-    font-size: 34px !important;
-    font-weight: 900 !important;
-    text-align: center !important;
-    margin-bottom: 0px !important;
-}
-[data-testid="stHorizontalBlock"]:has(button[key*="simetrico"]) {
-    gap: 10px !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-}
-.stTextInput input, .stTextArea textarea,
-div[data-baseweb="textarea"] textarea,
-div[data-baseweb="input"] input {
-    background-color: #1E1E1E !important;
-    color: #FFFFFF !important;
-    border-radius: 10px !important;
+
+button[key="nav_home_final_v"]:hover, 
+button[key="nav_cat_final_v"]:hover,
+button[key="btn_voltar_aut_final_v"]:hover,
+button[key="btn_voltar_com_final_v"]:hover {
+    background-color: #262626 !important;
+    color: #ffffff !important;
     border: 1px solid #444444 !important;
 }
-input::placeholder, textarea::placeholder {
-    color: #888888 !important;
-    font-style: italic !important;
-}
+
 .bloco-lista-premium {
-    background-color: #1E1E1E !important;
+    background-color: #1A1A1A !important;
     padding: 1.2rem !important;
     border-radius: 10px !important;
     margin-bottom: 0.8rem !important;
     border: 1px solid #333333 !important;
 }
-.tag-calor-alta {
-    background-color: #ff3333 !important;
-    color: white !important;
-    padding: 0.2rem 0.6rem !important;
-    border-radius: 6px !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-    float: right !important;
-}
-.tag-calor-media {
-    background-color: #ff9933 !important;
-    color: black !important;
-    padding: 0.2rem 0.6rem !important;
-    border-radius: 6px !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-    float: right !important;
-}
-.tag-calor-baixa {
-    background-color: #3399ff !important;
-    color: white !important;
-    padding: 0.2rem 0.6rem !important;
-    border-radius: 6px !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-    float: right !important;
-}
-[data-testid="stForm"] {
-    border: none !important;
-    padding: 0px !important;
-}
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-/* Cor neutra fosca para os botões utilitários de navegação do topo */
-button[key*="nativo_v"], 
-button[key*="nativo_c"],
-button[key*="aut_nativo"] {
-    background-color: #262626 !important;
-    color: #aaaaaa !important;
-    border: 1px solid #444444 !important;
-    box-shadow: none !important;
-}
-button[key*="nativo_v"]:hover, 
-button[key*="nativo_c"]:hover,
-button[key*="aut_nativo"]:hover {
-    background-color: #333333 !important;
-    color: #ffffff !important;
-}
+#MainMenu, footer, header {visibility: hidden;}

@@ -20,7 +20,7 @@ def renderizar(supabase):
     with col_nav_b1:
         if st.button(
             "⬅️ Sair do Painel (Logoff)",
-            key="btn_voltar_com",
+            key="btn_voltar_com_final_v",
             use_container_width=True
         ):
             st.session_state.tela_atual = "home"
