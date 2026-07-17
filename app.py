@@ -33,25 +33,38 @@ except:
 
 # FORÇA A COR CINZA NEUTRA NOS BOTÕES DE RETORNO DO TOPO DO APP
 # FORÇA BRUTA VISUAL: Captura qualquer botão do topo removendo a identidade verde
+# ANCORAGEM ESTRUTURAL: Força o cinza neutro em botões dentro de colunas do topo
 st.markdown("""
     <style>
-    button[key*="nativo_v"], 
-    button[key*="nativo_c"],
-    button[key*="btn_voltar_aut_nativo"],
-    div[data-testid*="stBlock"] button[id*="nativo"],
-    button[data-testid="baseButton-secondary"] {
-        background-color: #1e1e1e !important;
+    div[data-testid="stColumn"] button,
+    div[data-testid="stColumn"] .stButton > button,
+    div[data-testid="stHorizontalBlock"] button {
+        background-color: #262626 !important;
         color: #aaaaaa !important;
-        border: 1px solid #333333 !important;
+        border: 1px solid #444444 !important;
         box-shadow: none !important;
         background-image: none !important;
     }
-    button[key*="nativo_v"]:hover, 
-    button[key*="nativo_c"]:hover,
-    button[key*="btn_voltar_aut_nativo"]:hover {
-        background-color: #262626 !important;
+    div[data-testid="stColumn"] button:hover,
+    div[data-testid="stColumn"] .stButton > button:hover,
+    div[data-testid="stHorizontalBlock"] button:hover {
+        background-color: #333333 !important;
         color: #ffffff !important;
-        border: 1px solid #444444 !important;
+        border: 1px solid #555555 !important;
+    }
+    /* Protege o design dos botões reais de envio que ficam dentro dos formulários */
+    div[data-testid="stForm"] button,
+    .stFormSubmitButton > button {
+        background-color: #00803B !important;
+        color: #FFFFFF !important;
+        width: 100% !important;
+        font-weight: 800 !important;
+        border-radius: 12px !important;
+        border: none !important;
+    }
+    div[data-testid="stForm"] button:hover,
+    .stFormSubmitButton > button:hover {
+        background-color: #005a24 !important;
     }
     </style>
 """, unsafe_allow_html=True)
