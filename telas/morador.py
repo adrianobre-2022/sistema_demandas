@@ -5,14 +5,14 @@ from core.database import obter_pegada_digital
 
 
 def renderizar(supabase):
-    # CSS AVANÇADO: Força alinhamento à esquerda, remove fundos e bordas
+    # CSS AVANÇADO: Alinha os links à esquerda, remove fundos e bordas pesadas
     st.markdown("""
         <style>
-        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo"]) {
+        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo_master"]) {
             justify-content: flex-start !important;
-            gap: 20px !important;
+            gap: 25px !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo"]) button {
+        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo_master"]) button {
             background-color: transparent !important;
             color: #aaaaaa !important;
             border: none !important;
@@ -24,18 +24,23 @@ def renderizar(supabase):
             width: auto !important;
             display: inline-block !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo"]) button:hover {
+        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo_master"]) button:hover {
             color: #ffffff !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # BARRA DE MENU HORIZONTAL ALINHADA À ESQUERDA
-    col_nav1, col_nav2 = st.columns([1, 4])
+    # CORES E CHAVES TRAVADAS COM SEGURANÇA CONTRA DUPLICIDADE
+    col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
-        if st.button("🏠 Página Inicial", key="nav_home_limpo"):
+        if st.button("🏠 Página Inicial", key="nav_home_limpo_master"):
             st.session_state.tela_atual = "home"
             st.rerun()
+    with col_nav2:
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo_master"):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
             if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo"):
