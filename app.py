@@ -122,11 +122,12 @@ elif st.session_state.tela_atual == "consumidor":
     morador.renderizar(supabase)
 
 elif st.session_state.tela_atual == "autenticacao":
-    # TEXTO UNIFICADO: Substitui "Voltar ao Menu Principal"
-    if st.button("🏠 Página Inicial", key="btn_voltar_aut"):
-        st.session_state.tela_atual = "home"
-        st.session_state.token_valido = False
-        st.rerun()
+    # LINK DE MENU HORIZONTAL: Sem fundo, limpo e minimalista
+    if st.markdown("<a href='#' style='text-decoration:none;color:#aaaaaa;font-size:14px;font-weight:bold;'>🏠 Página Inicial</a>", unsafe_allow_html=True):
+        if st.button("Clique para confirmar retorno", key="btn_voltar_aut_limpo"):
+            st.session_state.tela_atual = "home"
+            st.session_state.token_valido = False
+            st.rerun()
     st.markdown(
         "<h1 style='text-align: center; font-weight: 900; "
         "margin-bottom: 0px;'>🔍 E o que falta?</h1>",

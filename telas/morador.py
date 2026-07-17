@@ -5,18 +5,17 @@ from core.database import obter_pegada_digital
 
 
 def renderizar(supabase):
-    col_nav1, col_nav2 = st.columns(
-        2, gap="small"
-    )
-    with col_nav1:
-        # TEXTO UNIFICADO: Substitui "Ir para Home"
-        if st.button(
-            "🏠 Página Inicial",
-            key="nav_home_simetrico",
-            use_container_width=True
-        ):
+    # MENU HORIZONTAL INTEGRADO: Transforma o botão pesado em um link de texto minimalista
+    col_m1, col_m2 = st.columns([1, 1])
+    with col_m1:
+        if st.button("🏠 Página Inicial", key="nav_home_limpo_final"):
             st.session_state.tela_atual = "home"
             st.rerun()
+    with col_m2:
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo_final"):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != \
            "menu_triagem":
