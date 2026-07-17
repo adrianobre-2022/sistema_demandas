@@ -6,14 +6,13 @@
     color: #FFFFFF !important;
 }
 
-/* 📱 FIX 1: BLINDA TODOS OS TÍTULOS CONTRA QUEBRA DE LINHA NO CELULAR */
 h1, h2, h3, .stMarkdown h3 {
     white-space: nowrap !important;
     font-size: clamp(18px, 5.5vw, 36px) !important;
     text-align: center !important;
 }
 
-/* IDENTIDADE VISUAL DOS BOTÕES NATIVOS DO SISTEMA (VERDE ORIGINAL) */
+/* BOTOES VERDES ORIGINAIS */
 .stButton > button, 
 .stFormSubmitButton > button, 
 div[data-testid="stForm"] button,
@@ -25,39 +24,35 @@ button[key*="btn_validar"] {
     color: #FFFFFF !important;
     font-weight: 800 !important;
     border-radius: 12px !important;
-    border: none !important;
-}
-.stButton > button:hover, .stFormSubmitButton > button:hover {
-    background-color: #005a24 !important;
+    border: none;
+    padding: 0.8rem 0.2rem !important;
+    font-size: 15px !important;
 }
 
-/* 📱 FIX 2: FORÇA MÁXIMA ABSOLUTA PARA CAIXAS DE SELEÇÃO ESCURAS NO CELULAR */
+/* 🔒 FIX DEFINTIVO: FORÇA FUNDO PRETO IDÊNTICO AO INPUT DE PALAVRA-CHAVE EM TODAS AS CAIXAS DE SELEÇÃO */
 .stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input,
-div[data-baseweb="select"], div[data-baseweb="select"] > div, 
-div[data-baseweb="select"] ul, div[data-baseweb="popover"] ul,
-.stSelectbox, .stSelectbox [data-baseweb="select"],
-[data-testid="stSelectbox"] > div, [data-testid="stSelectbox"] div {
+[data-baseweb="select"] > div, [data-baseweb="select"] ul, [data-baseweb="popover"] ul,
+.stSelectbox div, [data-testid="stSelectbox"] > div, [data-testid="stSelectbox"] div,
+.stSelectbox [data-baseweb="select"] {
     background-color: #1E1E1E !important;
     color: #FFFFFF !important;
     border-radius: 10px !important;
     border: 1px solid #444444 !important;
 }
-/* Alinha os textos e setas internas das caixas de seleção no celular */
-div[data-baseweb="select"] span, div[data-baseweb="select"] div,
+
+/* GARANTE QUE O TEXTO INTERNO SEJA CLARO EM QUALQUER CELULAR */
+[data-baseweb="select"] span, [data-baseweb="select"] div,
 [data-testid="stSelectbox"] span, [data-testid="stSelectbox"] div,
 div[data-testid="stSelectbox"] p, svg[title="open"] {
     color: #FFFFFF !important;
     fill: #FFFFFF !important;
 }
 
-/* BLINDAGEM DO BOTÃO DO OLHO DA SENHA */
 div[data-baseweb="input"] button {
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
     color: #aaaaaa !important;
-    width: auto !important;
-    display: inline-flex !important;
 }
 
 input::placeholder, textarea::placeholder {
@@ -65,12 +60,10 @@ input::placeholder, textarea::placeholder {
     font-style: italic !important;
 }
 
-/* 📱 FIX 3: BLINDA E TRAVA O BOTÃO DO WHATSAPP NO VERDE MARCA EM QUALQUER CELULAR */
+/* WHATSAPP PREMIUM */
 .bloco-lista-premium a button,
 .bloco-lista-premium button,
-button[style*="background-color: #25D366"],
-div[style*="margin-top"] a button,
-button[key*="btn_pre"] + a button {
+button[style*="background-color: #25D366"] {
     background-color: #25D366 !important;
     color: #FFFFFF !important;
     font-weight: bold !important;
@@ -78,15 +71,9 @@ button[key*="btn_pre"] + a button {
     padding: 0.6rem 1.2rem !important;
     border-radius: 8px !important;
     width: auto !important;
-    display: inline-block !important;
     font-size: 14px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-}
-.bloco-lista-premium a button:hover {
-    background-color: #1ebd59 !important;
 }
 
-/* BLOCOS OPERACIONAIS DE CARÊNCIAS (PADRÃO ESCURO) */
 .bloco-lista-premium {
     background-color: #1E1E1E !important;
     padding: 1.2rem !important;
@@ -95,7 +82,7 @@ button[key*="btn_pre"] + a button {
     border: 1px solid #333333 !important;
 }
 
-/* TAGS ORIGINAIS DE ALTA CONVERSÃO ALINHADAS À DIREITA */
+/* TAGS ORIGINAIS */
 .tag-calor-alta {
     background-color: #ff3333 !important;
     color: white !important;
