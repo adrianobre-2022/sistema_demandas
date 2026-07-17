@@ -9,8 +9,9 @@ def renderizar(supabase):
         2, gap="small"
     )
     with col_nav1:
+        # TEXTO UNIFICADO: Substitui "Ir para Home"
         if st.button(
-            "🏠 Ir para Home",
+            "🏠 Página Inicial",
             key="nav_home_simetrico",
             use_container_width=True
         ):

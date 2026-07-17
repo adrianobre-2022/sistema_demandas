@@ -122,7 +122,8 @@ elif st.session_state.tela_atual == "consumidor":
     morador.renderizar(supabase)
 
 elif st.session_state.tela_atual == "autenticacao":
-    if st.button("⬅️ Voltar ao Menu Principal", key="btn_voltar_aut"):
+    # TEXTO UNIFICADO: Substitui "Voltar ao Menu Principal"
+    if st.button("🏠 Página Inicial", key="btn_voltar_aut"):
         st.session_state.tela_atual = "home"
         st.session_state.token_valido = False
         st.rerun()
