@@ -7,12 +7,12 @@ from core.database import (
 )
 from telas import morador, b2b
 
-# --- INICIALIZAÇÃO DE VARIÁVEIS UNIVERSAIS ---
+# --- VARIÁVEIS UNIVERSAIS ---
 botao_enviar = False
 termo_busca = ""
 loja_alvo_prioridade = "Mercadinho Do Bairro"
 
-# --- CONEXÃO COM O BANCO DE DADOS ---
+# --- CONEXÃO BANCO ---
 supabase = inicializar_supabase()
 
 st.set_page_config(
@@ -21,7 +21,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- INJEÇÃO DO DESIGN VISUAL MESTRE ---
+# --- INJEÇÃO CSS EXTERNO ---
 try:
     with open("core/styles.css", "r", encoding="utf-8") as f:
         st.markdown(
@@ -31,7 +31,7 @@ try:
 except:
     pass
 
-# FORÇA A COR CINZA NEUTRA APENAS NOS BOTÕES UTILITÁRIOS POR CHAVE EXCLUSIVA
+# --- ESTILOS EXCLUSIVOS UTILITÁRIOS ---
 st.markdown("""
     <style>
     button[key="nav_home_final_v"], 
@@ -42,7 +42,6 @@ st.markdown("""
         color: #aaaaaa !important;
         border: 1px solid #333333 !important;
         box-shadow: none !important;
-        background-image: none !important;
         width: 100% !important;
         display: block !important;
     }
@@ -54,7 +53,6 @@ st.markdown("""
         color: #ffffff !important;
         border: 1px solid #444444 !important;
     }
-    /* Restaura o verde padrão de alta conversão dos botões gigantes da Home */
     button[key*="btn_ir_"] {
         background-color: #00803B !important;
         color: #FFFFFF !important;
@@ -66,7 +64,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- INICIALIZAÇÃO DE SESSÕES UNIVERSAIS ---
+# --- INICIALIZAÇÃO DE SESSÕES ---
 if "seguranca_master" not in st.session_state:
     st.session_state.seguranca_master = False
 if "tela_atual" not in st.session_state:
@@ -84,7 +82,7 @@ if "aba_consumidor" not in st.session_state:
 if "regiao_cliente" not in st.session_state:
     st.session_state.regiao_cliente = "São Paulo/SP"
 
-# --- 🔐 CORTINA DE FUMAÇA: MANUTENÇÃO SEM FORMULÁRIO ENROLANDO ---
+# --- 🔐 MANUTENÇÃO ---
 if not st.session_state.seguranca_master:
     st.markdown(
         "<h3 style='text-align: center; color: #ff3333; "
@@ -98,7 +96,6 @@ if not st.session_state.seguranca_master:
     )
     st.write("---")
 
-    # Campo limpo nativo sem st.form para evitar esmagamento do input
     senha_desenvolvimento = st.text_input(
         label="Chave de Engenharia:",
         type="password",
@@ -116,7 +113,7 @@ if not st.session_state.seguranca_master:
             st.error("❌ Credencial incorreta.")
     st.stop()
 
-# --- ROTEADOR SUPREMO DE TELAS MODULARES ---
+# --- ROTEADOR SUPREMO ---
 if st.session_state.tela_atual == "home":
     st.markdown(
         "<h1 style='text-align: center; font-weight: 900; "
@@ -179,57 +176,55 @@ elif st.session_state.tela_atual == "autenticacao":
     )
     st.write("---")
 
-    with st.form(key="form_autenticacao_b2b", clear_on_submit=False):
-        token_inserido = st.text_input(
-            label="Token de Acesso:",
-            type="password",
-            placeholder="Digite seu token de acesso..."
-        )
-        botao_validar = st.form_submit_button(
-            "Validar Credenciais e Acessar",
-            use_container_width=True
-        )
+    # REMOVIDO ST.FORM: Libera o campo de Token e o olho contra esmagamento
+    token_inserido = st.text_input(
+        label="Token de Acesso corporativo:",
+        type="password",
+        placeholder="Digite seu token de acesso...",
+        key="campo_token_autenticacao_limpo"
+    )
 
-    if botao_validar and token_inserido:
-        token_limpo = token_inserido.strip()
-        tokens_fixos = {
-            "COMERCIO10": "comerciante", "SAUDE20": "saude",
-            "PET30": "petshop", "BELEZA40": "beleza",
-            "INVEST20": "investidor", "GESTOR30": "gestor",
-            "MIDIA40": "jornalista", "ADMIN99": "admin"
-        }
-        if token_limpo in tokens_fixos:
-            st.session_state.token_valido = True
-            st.session_state.perfil_cliente = tokens_fixos[token_limpo]
-            st.session_state.regiao_cliente = "São Paulo/SP"
-            st.session_state.tela_atual = "comerciante"
-            st.rerun()
-        elif token_limpo != "":
-            try:
-                busca_db = supabase.table("clientes_b2b")\
-                    .select("*").eq("token_acesso", token_limpo)\
-                    .execute()
-                if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_l = busca_db.data
-                    if dados_l.get("status_pagamento") == "Cancelado":
-                        st.error("❌ Token suspenso administrativamente.")
+    if st.button("🔑 Autenticar e Entrar no Painel", use_container_width=True, key="btn_validar_b2b_nativo"):
+        if token_inserido:
+            token_limpo = token_inserido.strip()
+            tokens_fixos = {
+                "COMERCIO10": "comerciante", "SAUDE20": "saude",
+                "PET30": "petshop", "BELEZA40": "beleza",
+                "INVEST20": "investidor", "GESTOR30": "gestor",
+                "MIDIA40": "jornalista", "ADMIN99": "admin"
+            }
+            if token_limpo in tokens_fixos:
+                st.session_state.token_valido = True
+                st.session_state.perfil_cliente = tokens_fixos[token_limpo]
+                st.session_state.regiao_cliente = "São Paulo/SP"
+                st.session_state.tela_atual = "comerciante"
+                st.rerun()
+            else:
+                try:
+                    busca_db = supabase.table("clientes_b2b")\
+                        .select("*").eq("token_acesso", token_limpo)\
+                        .execute()
+                    if busca_db and busca_db.data and len(busca_db.data) > 0:
+                        dados_l = busca_db.data[0]
+                        if dados_l.get("status_pagamento") == "Cancelado":
+                            st.error("❌ Token suspenso administrativamente.")
+                        else:
+                            st.session_state.perfil_cliente = dados_l.get(
+                                "perfil_segmento", "comerciante")
+                            st.session_state.regiao_cliente = dados_l.get(
+                                "regiao_atuacao", "São Paulo/SP")
+                            st.session_state.recursos_liberados = {
+                                "reverso": dados_l.get("recurso_marketplace_reverso", True),
+                                "whatsapp": dados_l.get("recurso_whatsapp", True),
+                                "pdf": dados_l.get("recurso_pdf", True)
+                            }
+                            st.session_state.token_valido = True
+                            st.session_state.tela_atual = "comerciante"
+                            st.rerun()
                     else:
-                        st.session_state.perfil_cliente = dados_l.get(
-                            "perfil_segmento", "comerciante")
-                        st.session_state.regiao_cliente = dados_l.get(
-                            "regiao_atuacao", "São Paulo/SP")
-                        st.session_state.recursos_liberados = {
-                            "reverso": dados_l.get("recurso_marketplace_reverso", True),
-                            "whatsapp": dados_l.get("recurso_whatsapp", True),
-                            "pdf": dados_l.get("recurso_pdf", True)
-                        }
-                        st.session_state.token_valido = True
-                        st.session_state.tela_atual = "comerciante"
-                        st.rerun()
-                else:
-                    st.error("❌ Token inválido.")
-            except:
-                st.error("❌ Erro de autenticidade na base.")
+                        st.error("❌ Token inválido.")
+                except:
+                    st.error("❌ Erro de autenticidade na base.")
 
 elif st.session_state.tela_atual == "comerciante":
     b2b.renderizar(supabase)

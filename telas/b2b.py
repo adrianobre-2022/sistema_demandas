@@ -63,7 +63,7 @@ def renderizar(supabase):
             clear_on_submit=True
         ):
             nome_novo_comercio = st.text_input(
-                "Nome do Estabelecimento:",
+                "Nome do Extabelecimento:",
                 placeholder="Ex: Supermercado..."
             )
             perfil_novo_comercio = st.selectbox(
@@ -106,7 +106,7 @@ def renderizar(supabase):
                         if novo_registro.data:
                             st.success("🎉 Cadastrado!")
                             tk_exibe = novo_registro\
-                                .data['token_acesso']
+                                .data[0]['token_acesso']
                             st.info(
                                 f"🔑 Token: `{tk_exibe}`"
                             )
