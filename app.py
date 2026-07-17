@@ -21,7 +21,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- INJEÇÃO DO DESIGN VISUAL MESTRE E COMPILADO ---
+# --- INJEÇÃO DO DESIGN VISUAL MESTRE ---
 try:
     with open("core/styles.css", "r", encoding="utf-8") as f:
         st.markdown(
@@ -34,29 +34,25 @@ except:
 # FORÇA A COR CINZA NEUTRA APENAS NOS BOTÕES UTILITÁRIOS POR CHAVE EXCLUSIVA
 st.markdown("""
     <style>
-    button[key*="nativo_v"], 
-    button[key*="nativo_c"],
-    button[key*="btn_voltar_aut_nativo"],
-    button[key*="btn_voltar_com"] {
-        background-color: #262626 !important;
+    button[key="nav_home_final_v"], 
+    button[key="nav_cat_final_v"],
+    button[key="btn_voltar_aut_final_v"],
+    button[key="btn_voltar_com_final_v"] {
+        background-color: #1A1A1A !important;
         color: #aaaaaa !important;
-        border: 1px solid #444444 !important;
+        border: 1px solid #333333 !important;
         box-shadow: none !important;
         background-image: none !important;
         width: 100% !important;
         display: block !important;
     }
-    button[key*="nativo_v"]:hover, 
-    button[key*="nativo_c"]:hover,
-    button[key*="btn_voltar_aut_nativo"]:hover,
-    button[key*="btn_voltar_com"]:hover {
-        background-color: #333333 !important;
+    button[key="nav_home_final_v"]:hover, 
+    button[key="nav_cat_final_v"]:hover,
+    button[key="btn_voltar_aut_final_v"]:hover,
+    button[key="btn_voltar_com_final_v"]:hover {
+        background-color: #262626 !important;
         color: #ffffff !important;
-        border: 1px solid #555555 !important;
-    }
-    /* PROTEÇÃO CRÍTICA: Mantém as caixas de senha em tamanho normal e funcionais */
-    div[data-baseweb="input"] {
-        width: 100% !important;
+        border: 1px solid #444444 !important;
     }
     /* Restaura o verde padrão de alta conversão dos botões gigantes da Home */
     button[key*="btn_ir_"] {
@@ -88,7 +84,7 @@ if "aba_consumidor" not in st.session_state:
 if "regiao_cliente" not in st.session_state:
     st.session_state.regiao_cliente = "São Paulo/SP"
 
-# --- 🔐 CORTINA DE FUMAÇA: MANUTENÇÃO ---
+# --- 🔐 CORTINA DE FUMAÇA: MANUTENÇÃO SEM FORMULÁRIO ENROLANDO ---
 if not st.session_state.seguranca_master:
     st.markdown(
         "<h3 style='text-align: center; color: #ff3333; "
@@ -101,17 +97,16 @@ if not st.session_state.seguranca_master:
         unsafe_allow_html=True
     )
     st.write("---")
-    with st.form(key="form_protecao_patente", clear_on_submit=False):
-        senha_desenvolvimento = st.text_input(
-            label="Chave de Engenharia:",
-            type="password",
-            placeholder="Insira a credencial..."
-        )
-        botao_destravar_lab = st.form_submit_button(
-            "Acessar Ambiente de Testes",
-            use_container_width=True
-        )
-    if botao_destravar_lab:
+
+    # Campo limpo nativo sem st.form para evitar esmagamento do input
+    senha_desenvolvimento = st.text_input(
+        label="Chave de Engenharia:",
+        type="password",
+        placeholder="Insira a credencial aqui...",
+        key="campo_senha_manutencao_limpo"
+    )
+
+    if st.button("🔓 Acessar Ambiente de Testes", use_container_width=True, key="btn_destravar_nativo"):
         senha_correta = os.environ.get("CHAVE_ENGENHARIA") or \
             st.secrets.get("CHAVE_ENGENHARIA")
         if senha_desenvolvimento.strip() == senha_correta:
