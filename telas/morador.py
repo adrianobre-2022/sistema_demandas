@@ -5,40 +5,24 @@ from core.database import obter_pegada_digital
 
 
 def renderizar(supabase):
-    # CSS AVANÇADO: Alinha os links à esquerda, remove fundos e bordas pesadas
-    st.markdown("""
-        <style>
-        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo_master"]) {
-            justify-content: flex-start !important;
-            gap: 25px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo_master"]) button {
-            background-color: transparent !important;
-            color: #aaaaaa !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0px !important;
-            font-size: 14px !important;
-            font-weight: bold !important;
-            text-align: left !important;
-            width: auto !important;
-            display: inline-block !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo_master"]) button:hover {
-            color: #ffffff !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # BARRA DE MENU HORIZONTAL SEM CHAVES DUPLICADAS
+    # REMOVIDO HACKS DE CSS: Restaura os botões verdes nativos estáveis
+    # BARRA DE NAVEGAÇÃO SUPERIOR RESPONSIVA (50/50 no PC, Empilhada no Celular)
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
-        if st.button("🏠 Página Inicial", key="nav_home_limpo_master"):
+        if st.button(
+            "🏠 Página Inicial",
+            key="nav_home_nativo_v",
+            use_container_width=True
+        ):
             st.session_state.tela_atual = "home"
             st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo_master"):
+            if st.button(
+                "🗂️ Mudar Categoria",
+                key="nav_cat_nativo_v",
+                use_container_width=True
+            ):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
@@ -58,21 +42,14 @@ def renderizar(supabase):
     )
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.markdown("##### 📍 Região/Cidade da falta:")
-        regiao_final = st.text_input(
-            label="Localizacao",
-            placeholder="Ex: São Paulo/SP - Centro",
-            key="input_regiao_via_unica",
-            label_visibility="collapsed"
-        )
         st.write("Escolha o tipo de ausência que você quer sinalizar:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="triagem_prod_m"):
+        if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="tri_prod"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
-        if st.button("🏪 NOVO COMÉRCIO LOCAL", use_container_width=True, key="triagem_serv_m"):
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL", use_container_width=True, key="tri_serv"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
-        if st.button("🏛️ ZELADORIA PÚBLICA", use_container_width=True, key="triagem_infra_m"):
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA", use_container_width=True, key="tri_infra"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
@@ -103,100 +80,111 @@ def renderizar(supabase):
                         break
                     n_nicho = l_imp['nicho']
                     if n_nicho == "Supermercado":
-                        icone, acao = "🛒 Varejo:", "repos"
+                        icone, acao = "🛒 Varejo V alimentar:", "repos o estoque de"
                     elif n_nicho in ["Saude", "Saúde"]:
-                        icone, acao = "🩺 Saúde:", "trouxe"
+                        icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o servico de"
                     elif n_nicho == "Petshop":
-                        icone, acao = "🐶 Pet:", "disponibilizou"
+                        icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
                     elif n_nicho == "Beleza":
-                        icone, acao = "💈 Estética:", "ativou"
+                        icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
                     else:
-                        icone, acao = "✨ Conquista:", "liberou"
+                        icone, acao = "✨ Conquista Local:", "disponibilizou"
 
                     st.markdown(
                         f"<div style='background-color: #1A1A1A; padding: 0.6rem 1rem; "
                         f"border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'>"
                         f"<span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>"
-                        f"✅ <b>{icone}</b> {l_imp['local']} {acao} <b>{l_imp['item']}</b>!</span>"
+                        f"✅ <b>{icone}</b> O estabelecimento {l_imp['local']} ({l_imp['cidade_exibicao']}) {acao} <b>{l_imp['item']}</b>!</span>"
                         f"</div>", unsafe_allow_html=True
                     )
                     contador_exibidos += 1
             else:
-                st.write("ℹ️ Nenhuma conquista.")
+                st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
         except:
             pass
 
     elif st.session_state.aba_consumidor in ["produto", "servico", "infra"]:
         aba = st.session_state.aba_consumidor
         if aba == "produto":
-            l_i, p_i = "Qual produto falta?", "Ex: Leite condensado..."
-            l_l, p_l = "Em qual mercado?", "Ex: Nome do mercado..."
-            l_c, t_e = "🔔 Ativar chance de aviso na reposição? (Opcional)", "Produto / Marca"
+            l_i, p_i = "Qual produto ou marca falta?", "Ex: Leite condensado marca X..."
+            l_l, p_l = "Em qual estabelecimento?", "Ex: Nome do mercado..."
+            l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Produto / Marca"
         elif aba == "servico":
-            l_i, p_i = "Qual comércio falta?", "Ex: Sapataria, lavanderia..."
+            l_i, p_i = "Qual comércio falta no bairro?", "Ex: Sapataria, lavanderia..."
             l_l, p_l = "Em qual rua ou ponto?", "Ex: Avenida Principal..."
-            l_c, t_e = "🔔 Ativar chance de aviso na abertura? (Opcional)", "Serviço Local"
+            l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Local / Novo Estabelecimento"
         elif aba == "infra":
-            l_i, p_i = "Qual o problema público?", "Ex: Falha na iluminação..."
-            l_l, p_l = "Qual a referência?", "Ex: Posto de saúde do bairro Y..."
-            l_c, t_e = "🔔 Ativar chance de aviso na conclusão? (Opcional)", "Serviço Público / Infraestrutura"
+            l_i, p_i = "Qual problema de infraestrutura pública?", "Ex: Falha na iluminação..."
+            l_l, p_l = "Qual o ponto de referência?", "Ex: Posto de saúde do bairro Y..."
+            l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Público / Infraestrutura"
 
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
+            # 📍 PERGUNTA 1: Região/Cidade movida para dentro do formulário e agora OBRIGATÓRIA
+            regiao_final = st.text_input(
+                label="📍 Região/Cidade da falta:",
+                placeholder="Ex: São Paulo/SP - Centro"
+            )
             item_solicitado = st.text_input(
                 label=l_i, placeholder=p_i, key="input_item")
             local_ocorrencia = st.text_input(
                 label=l_l, placeholder=p_l, key="input_local")
             contato_usuario = st.text_input(
                 label=l_c,
-                placeholder="Insira WhatsApp ou e-mail para tentarmos te avisar, caso o comerciante informe.",
+                placeholder="Insira seu WhatsApp ou e-mail, caso informem reposição.",
                 key="input_contato"
             )
             observacao_usuario = None
-            with st.expander("➕ Adicionar mais detalhes (Opcional)"):
+            with st.expander("➕ Adicionar mais detalhes e observações (Opcional)"):
                 observacao_usuario = st.text_area(
-                    label="Detalhes:", placeholder="Ex: Detalhe o ocorrido...", key="input_obs")
+                    label="Detalhes adicionais:", placeholder="Ex: Detalhe o ocorrido aqui...", key="input_obs")
             botao_enviar = st.form_submit_button(
                 "🔍 SINALIZAR ESTA FALTA", use_container_width=True)
 
-        if botao_enviar and item_solicitado and local_ocorrencia:
-            try:
-                hash_disp = obter_pegada_digital()
-                reg_s = st.session_state.get(
-                    "input_regiao_via_unica", "São Paulo/SP - Centro")
-                txt_reg = reg_s.strip() if reg_s else "São Paulo/SP - Centro"
-                loc_fmt = local_ocorrencia.strip().title()
+        if botao_enviar:
+            # TRAVA DE VALIDAÇÃO: Impede o envio em branco e avisa o usuário amigavelmente
+            if not regiao_final or regiao_final.strip() == "":
+                st.error(
+                    "⚠️ O campo '📍 Região/Cidade da falta:' é obrigatório para registrar a carência.")
+            elif not item_solicitado or not local_ocorrencia:
+                st.error(
+                    "⚠️ Por favor, preencha o item que falta e o local da ocorrência.")
+            else:
+                try:
+                    hash_disp = obter_pegada_digital()
+                    texto_regiao = regiao_final.strip()
+                    local_fmt = local_ocorrencia.strip().title()
 
-                l_data = supabase.table("locais_destino").insert({
-                    "nome_exibicao": loc_fmt, "regiao_cidade": txt_reg, "regiao_estado": "SP"
-                }).execute()
-                l_id = l_data.data[0]["id"] if (
-                    l_data and l_data.data and len(l_data.data) > 0) else None
-
-                if l_id:
-                    seg_det = "Geral"
-                    txt_u = item_solicitado.strip().lower()
-                    if any(p in txt_u for p in ["leite", "arroz", "feijão", "café", "açúcar", "pão", "mercado", "óleo"]):
-                        seg_det = "Supermercado"
-                    elif any(p in txt_u for p in ["remédio", "médico", "dentista", "farmácia", "clínica"]):
-                        seg_det = "Saúde"
-                    elif any(p in txt_u for p in ["ração", "pet", "cachorro", "gato", "petshop"]):
-                        seg_det = "Petshop"
-                    elif any(p in txt_u for p in ["manicure", "salão", "cabeleireiro", "estética"]):
-                        seg_det = "Beleza"
-
-                    txt_o = observacao_usuario.strip() if observacao_usuario else None
-                    c_aviso = contato_usuario.strip() if contato_usuario else None
-
-                    supabase.table("relatos_escassez").insert({
-                        "local_id": l_id, "item_solicitado": item_solicitado.strip().title(),
-                        "tipo_carencia": t_e, "status": "Pendente", "sub_segmento": seg_det,
-                        "pegada_digital": hash_disp, "observacao_detalhe": txt_o, "contato_aviso": c_aviso
+                    l_data = supabase.table("locais_destino").insert({
+                        "nome_exibicao": local_fmt, "regiao_cidade": texto_regiao, "regiao_estado": "SP"
                     }).execute()
-                    st.success("✅ Sinalizado com sucesso!")
-                    time.sleep(1.2)
-                    st.session_state.aba_consumidor = "menu_triagem"
-                    st.session_state.tela_atual = "home"
-                    st.rerun()
-            except Exception as e:
-                st.error(f"⚠️ Erro de persistência: {str(e)}")
+                    l_id = l_data.data["id"] if (
+                        l_data and l_data.data and len(l_data.data) > 0) else None
+
+                    if l_id:
+                        seg_det = "Geral"
+                        txt_u = item_solicitado.strip().lower()
+                        if any(p in txt_u for p in ["leite", "arroz", "feijão", "café", "açúcar", "pão", "mercado", "óleo"]):
+                            seg_det = "Supermercado"
+                        elif any(p in txt_u for p in ["remédio", "médico", "dentista", "farmácia", "clínica"]):
+                            seg_det = "Saúde"
+                        elif any(p in txt_u for p in ["ração", "pet", "cachorro", "gato", "petshop"]):
+                            seg_det = "Petshop"
+                        elif any(p in txt_u for p in ["manicure", "salão", "cabeleireiro", "estética"]):
+                            seg_det = "Beleza"
+
+                        txt_o = observacao_usuario.strip() if observacao_usuario else None
+                        c_aviso = contato_usuario.strip() if contato_usuario else None
+
+                        supabase.table("relatos_escassez").insert({
+                            "local_id": l_id, "item_solicitado": item_solicitado.strip().title(),
+                            "tipo_carencia": t_e, "status": "Pendente", "sub_segmento": seg_det,
+                            "pegada_digital": hash_disp, "observacao_detalhe": txt_o, "contato_aviso": c_aviso
+                        }).execute()
+                        st.success("✅ Falta sinalizada com sucesso!")
+                        time.sleep(1.2)
+                        st.session_state.aba_consumidor = "menu_triagem"
+                        st.session_state.tela_atual = "home"
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
