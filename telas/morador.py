@@ -155,6 +155,7 @@ def renderizar(supabase):
                 "🔍 SINALIZAR ESTA FALTA",
                 use_container_width=True
             )
+
         if botao_enviar:
             # TRAVA DE VALIDAÇÃO: Impede o envio em branco e avisa o usuário amigavelmente
             if not regiao_final or regiao_final.strip() == "":
