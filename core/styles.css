@@ -6,7 +6,14 @@
     color: #FFFFFF !important;
 }
 
-/* 🎯 CORREÇÃO CRÍTICA DOS BOTÕES VERDES: CAPTURA APENAS BOTÕES REAIS DE CLIQUE, PROTEGENDO O OLHO DA SENHA */
+/* 📱 CORREÇÃO 1: BLINDA O TÍTULO CONTRA QUEBRAS DE LINHA NO CELULAR */
+h1 {
+    white-space: nowrap !important;
+    font-size: clamp(24px, 6vw, 42px) !important;
+    text-align: center !important;
+}
+
+/* IDENTIDADE VISUAL DOS BOTÕES NATIVOS (VERDE ORIGINAL) */
 .stButton > button, 
 .stFormSubmitButton > button, 
 div[data-testid="stForm"] button,
@@ -21,27 +28,29 @@ button[key*="btn_validar"] {
     border: none !important;
     padding: 0.8rem 0.2rem !important;
     font-size: 15px !important;
-    transition: all 0.3s ease !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
     width: 100% !important;
     display: block !important;
 }
-
 .stButton > button:hover, .stFormSubmitButton > button:hover {
     background-color: #005a24 !important;
 }
 
-/* 🔒 BLINDAGEM COMPLETA DOS INPUTS DE SENHA E TEXTO CONTRA DEFORMAÇÕES */
-.stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input {
+/* 📱 CORREÇÃO 2: FORÇA O PADRÃO ESCURO NAS CAIXAS DE SELEÇÃO (SELECTBOX) NO CELULAR */
+.stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input,
+div[data-baseweb="select"] > div, div[data-baseweb="select"] ul {
     background-color: #1E1E1E !important;
     color: #FFFFFF !important;
     border-radius: 10px !important;
     border: 1px solid #444444 !important;
 }
+/* Alinha os textos internos das opções da caixas de seleção mobile */
+div[data-baseweb="select"] span, div[data-baseweb="select"] div {
+    color: #FFFFFF !important;
+}
 
-/* REMOVE FUNDOS OU BORDAS VERDES DO BOTÃO INTERNO DO OLHO GERADO PELO NAVEGADOR/FRAMEWORK */
-div[data-baseweb="input"] button, 
-div[data-baseweb="input"] button:hover {
+/* BLINDAGEM DO BOTÃO DO OLHO DA SENHA */
+div[data-baseweb="input"] button {
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -56,7 +65,22 @@ input::placeholder, textarea::placeholder {
     font-style: italic !important;
 }
 
-/* BLOCOS DE INFRAESTRUTURA E LISTAGENS OPERACIONAIS */
+/* 📱 CORREÇÃO 3: BLINDA E FIXA O BOTÃO DO WHATSAPP PREMIUM NO PADRÃO ESCURO E RESPONSIVO */
+.bloco-lista-premium a button,
+button[style*="background-color: #25D366"] {
+    background-color: #25D366 !important;
+    color: #FFFFFF !important;
+    font-weight: bold !important;
+    border: none !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 8px !important;
+    width: auto !important;
+    display: inline-block !important;
+    font-size: 14px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+/* BLOCOS OPERACIONAIS DE CARÊNCIAS (PADRÃO ESCURO) */
 .bloco-lista-premium {
     background-color: #1E1E1E !important;
     padding: 1.2rem !important;
@@ -65,7 +89,7 @@ input::placeholder, textarea::placeholder {
     border: 1px solid #333333 !important;
 }
 
-/* TAGS REPOSICIONADAS À DIREITA */
+/* TAGS ORIGINAIS DE ALTA CONVERSÃO ALINHADAS À DIREITA */
 .tag-calor-alta {
     background-color: #ff3333 !important;
     color: white !important;
