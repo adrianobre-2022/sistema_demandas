@@ -6,8 +6,14 @@
     color: #FFFFFF !important;
 }
 
-/* RESTAURAÇÃO DO VERDE ORIGINAL UNIVERSAL PARA TODOS OS BOTÕES DO SISTEMA */
-.stButton>button, .stFormSubmitButton>button, div[data-testid="stForm"] button, button {
+/* 🎯 CORREÇÃO CRÍTICA DOS BOTÕES VERDES: CAPTURA APENAS BOTÕES REAIS DE CLIQUE, PROTEGENDO O OLHO DA SENHA */
+.stButton > button, 
+.stFormSubmitButton > button, 
+div[data-testid="stForm"] button,
+button[key*="btn_ir_"],
+button[key*="tri_"],
+button[key*="btn_destravar"],
+button[key*="btn_validar"] {
     background-color: #00803B !important;
     color: #FFFFFF !important;
     font-weight: 800 !important;
@@ -20,16 +26,31 @@
     width: 100% !important;
     display: block !important;
 }
-.stButton>button:hover, .stFormSubmitButton>button:hover, button:hover {
+
+.stButton > button:hover, .stFormSubmitButton > button:hover {
     background-color: #005a24 !important;
 }
 
-.stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
+/* 🔒 BLINDAGEM COMPLETA DOS INPUTS DE SENHA E TEXTO CONTRA DEFORMAÇÕES */
+.stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input {
     background-color: #1E1E1E !important;
     color: #FFFFFF !important;
     border-radius: 10px !important;
     border: 1px solid #444444 !important;
 }
+
+/* REMOVE FUNDOS OU BORDAS VERDES DO BOTÃO INTERNO DO OLHO GERADO PELO NAVEGADOR/FRAMEWORK */
+div[data-baseweb="input"] button, 
+div[data-baseweb="input"] button:hover {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #aaaaaa !important;
+    width: auto !important;
+    display: inline-flex !important;
+    padding: 0px 8px !important;
+}
+
 input::placeholder, textarea::placeholder {
     color: #888888 !important;
     font-style: italic !important;
@@ -44,7 +65,7 @@ input::placeholder, textarea::placeholder {
     border: 1px solid #333333 !important;
 }
 
-/* TAGS ORIGINAIS DE ALTA CONVERSÃO REPOSICIONADAS À DIREITA */
+/* TAGS REPOSICIONADAS À DIREITA */
 .tag-calor-alta {
     background-color: #ff3333 !important;
     color: white !important;
