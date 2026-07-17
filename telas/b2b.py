@@ -15,12 +15,12 @@ def renderizar(supabase):
         "investidor", "gestor", "jornalista"
     ]
 
-    # BARRA DE NAVEGAÇÃO B2B SIMÉTRICA (50/50 no PC, Empilhada no Celular)
+    # BARRA DE NAVEGAÇÃO B2B SIMÉTRICA (VERDE ORIGINAL)
     col_nav_b1, col_nav_b2 = st.columns(2)
     with col_nav_b1:
         if st.button(
             "⬅️ Sair do Painel (Logoff)",
-            key="btn_voltar_com_final_v",
+            key="btn_voltar_com_nativo_v",
             use_container_width=True
         ):
             st.session_state.tela_atual = "home"
@@ -63,7 +63,7 @@ def renderizar(supabase):
             clear_on_submit=True
         ):
             nome_novo_comercio = st.text_input(
-                "Nome do Extabelecimento:",
+                "Nome do Estabelecimento:",
                 placeholder="Ex: Supermercado..."
             )
             perfil_novo_comercio = st.selectbox(
@@ -106,7 +106,7 @@ def renderizar(supabase):
                         if novo_registro.data:
                             st.success("🎉 Cadastrado!")
                             tk_exibe = novo_registro\
-                                .data[0]['token_acesso']
+                                .data['token_acesso']
                             st.info(
                                 f"🔑 Token: `{tk_exibe}`"
                             )

@@ -5,13 +5,11 @@ from core.database import obter_pegada_digital
 
 
 def renderizar(supabase):
-    # REMOVIDO HACKS DE CSS: Restaura os botões verdes nativos estáveis
-    # BARRA DE NAVEGAÇÃO SUPERIOR RESPONSIVA (50/50 no PC, Empilhada no Celular)
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
         if st.button(
             "🏠 Página Inicial",
-            key="nav_home_final_v",
+            key="nav_home_v_original_v",
             use_container_width=True
         ):
             st.session_state.tela_atual = "home"
@@ -20,7 +18,7 @@ def renderizar(supabase):
         if st.session_state.aba_consumidor != "menu_triagem":
             if st.button(
                 "🗂️ Mudar Categoria",
-                key="nav_cat_final_v",
+                key="nav_cat_v_original_v",
                 use_container_width=True
             ):
                 st.session_state.aba_consumidor = "menu_triagem"
@@ -43,13 +41,13 @@ def renderizar(supabase):
 
     if st.session_state.aba_consumidor == "menu_triagem":
         st.write("Escolha o tipo de ausência que você quer sinalizar:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="tri_prod"):
+        if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL", use_container_width=True, key="tri_serv"):
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL", use_container_width=True, key="tri_serv_v"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA", use_container_width=True, key="tri_infra"):
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA", use_container_width=True, key="tri_infra_v"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
@@ -80,9 +78,9 @@ def renderizar(supabase):
                         break
                     n_nicho = l_imp['nicho']
                     if n_nicho == "Supermercado":
-                        icone, acao = "🛒 Varejo V alimentar:", "repos o estoque de"
+                        icone, acao = "🛒 Varejo Alimentar:", "repôs o estoque de"
                     elif n_nicho in ["Saude", "Saúde"]:
-                        icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o servico de"
+                        icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o serviço de"
                     elif n_nicho == "Petshop":
                         icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
                     elif n_nicho == "Beleza":
@@ -106,58 +104,41 @@ def renderizar(supabase):
     elif st.session_state.aba_consumidor in ["produto", "servico", "infra"]:
         aba = st.session_state.aba_consumidor
         if aba == "produto":
-            l_i, p_i = "Qual produto ou marca falta?", "Ex: Leite condensado marca X..."
-            l_l, p_l = "Em qual estabelecimento?", "Ex: Nome do mercado..."
+            l_i, p_i = "Qual produto ou marca falta? *", "Ex: Leite condensado marca X..."
+            l_l, p_l = "Em qual estabelecimento? *", "Ex: Nome do mercado..."
             l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Produto / Marca"
         elif aba == "servico":
-            l_i, p_i = "Qual comércio falta no bairro?", "Ex: Sapataria, lavanderia..."
-            l_l, p_l = "Em qual rua ou ponto?", "Ex: Avenida Principal..."
+            l_i, p_i = "Qual comércio falta no bairro? *", "Ex: Sapataria, lavanderia..."
+            l_l, p_l = "Em qual rua ou ponto? *", "Ex: Avenida Principal..."
             l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Local / Novo Estabelecimento"
         elif aba == "infra":
-            l_i, p_i = "Qual problema de infraestrutura pública?", "Ex: Falha na iluminação..."
-            l_l, p_l = "Qual o ponto de referência?", "Ex: Posto de saúde do bairro Y..."
+            l_i, p_i = "Qual problema de infraestrutura pública? *", "Ex: Falha na iluminação..."
+            l_l, p_l = "Qual o ponto de referência? *", "Ex: Posto de saúde do bairro Y..."
             l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Público / Infraestrutura"
 
         st.write("")
-        with st.form(
-            key="formulario_dinamico_consumidor",
-            clear_on_submit=False
-        ):
-            # 📍 PERGUNTA 1: Adicionado asterisco de obrigatoriedade visual
+        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
             regiao_final = st.text_input(
                 label="📍 Região/Cidade da falta: *",
-                placeholder="Ex: São Paulo/SP - Centro",
-                key="reg_obrigatoria"
+                placeholder="Ex: São Paulo/SP - Centro"
             )
             item_solicitado = st.text_input(
-                label=l_i + " *",
-                placeholder=p_i,
-                key="input_item"
-            )
+                label=l_i, placeholder=p_i, key="input_item")
             local_ocorrencia = st.text_input(
-                label=l_l + " *",
-                placeholder=p_l,
-                key="input_local"
-            )
+                label=l_l, placeholder=p_l, key="input_local")
             contato_usuario = st.text_input(
                 label=l_c,
                 placeholder="Insira seu WhatsApp ou e-mail, caso informem reposição.",
                 key="input_contato"
             )
             observacao_usuario = None
-            with st.expander("➕ Detalhes e observações"):
+            with st.expander("➕ Adicionar mais detalhes e observações (Opcional)"):
                 observacao_usuario = st.text_area(
-                    label="Detalhes adicionais:",
-                    placeholder="Ex: Detalhe o ocorrido aqui...",
-                    key="input_obs"
-                )
+                    label="Detalhes adicionais:", placeholder="Ex: Detalhe o ocorrido aqui...", key="input_obs")
             botao_enviar = st.form_submit_button(
-                "🔍 SINALIZAR ESTA FALTA",
-                use_container_width=True
-            )
+                "🔍 SINALIZAR ESTA FALTA", use_container_width=True)
 
         if botao_enviar:
-            # TRAVA DE VALIDAÇÃO: Impede o envio em branco e avisa o usuário amigavelmente
             if not regiao_final or regiao_final.strip() == "":
                 st.error(
                     "⚠️ O campo '📍 Região/Cidade da falta:' é obrigatório para registrar a carência.")
@@ -173,7 +154,7 @@ def renderizar(supabase):
                     l_data = supabase.table("locais_destino").insert({
                         "nome_exibicao": local_fmt, "regiao_cidade": texto_regiao, "regiao_estado": "SP"
                     }).execute()
-                    l_id = l_data.data["id"] if (
+                    l_id = l_data.data[0]["id"] if (
                         l_data and l_data.data and len(l_data.data) > 0) else None
 
                     if l_id:
