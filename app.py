@@ -21,7 +21,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- INJEÇÃO DO DESIGN VISUAL VIA ARQUIVO EXTERNO ---
+# --- INJEÇÃO DO DESIGN VISUAL MESTRE E TESTE NEUTRO ---
 try:
     with open("core/styles.css", "r", encoding="utf-8") as f:
         st.markdown(
@@ -30,6 +30,27 @@ try:
         )
 except:
     pass
+
+# FORÇA A COR CINZA NEUTRA NOS BOTÕES DE RETORNO DO TOPO DO APP
+st.markdown("""
+    <style>
+    /* Alvo cirúrgico: captura os botões de retorno pelas chaves master */
+    button[key*="nativo_v"], 
+    button[key*="nativo_c"],
+    button[key*="btn_voltar_aut_nativo"] {
+        background-color: #262626 !important;
+        color: #aaaaaa !important;
+        border: 1px solid #444444 !important;
+        box-shadow: none !important;
+    }
+    button[key*="nativo_v"]:hover, 
+    button[key*="nativo_c"]:hover,
+    button[key*="btn_voltar_aut_nativo"]:hover {
+        background-color: #333333 !important;
+        color: #ffffff !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- INICIALIZAÇÃO DE SESSÕES UNIVERSAIS ---
 if "seguranca_master" not in st.session_state:

@@ -20,7 +20,7 @@ def renderizar(supabase):
         if st.session_state.aba_consumidor != "menu_triagem":
             if st.button(
                 "🗂️ Mudar Categoria",
-                key="nav_cat_nativo_v",
+                key="nav_cat_nativo_c",
                 use_container_width=True
             ):
                 st.session_state.aba_consumidor = "menu_triagem"
