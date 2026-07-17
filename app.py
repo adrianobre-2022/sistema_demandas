@@ -122,30 +122,18 @@ elif st.session_state.tela_atual == "consumidor":
     morador.renderizar(supabase)
 
 elif st.session_state.tela_atual == "autenticacao":
-    # CSS: Alinha o link do login perfeitamente à esquerda
-    st.markdown("""
-        <style>
-        button[key="btn_voltar_aut"] {
-            background-color: transparent !important;
-            color: #aaaaaa !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0px !important;
-            font-size: 14px !important;
-            font-weight: bold !important;
-            text-align: left !important;
-            width: auto !important;
-        }
-        button[key="btn_voltar_aut"]:hover {
-            color: #ffffff !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    # BARRA DE NAVEGAÇÃO SUPERIOR NATIVA (Simétrica no PC, Empilhada no Celular)
+    col_nav_c1, col_nav_c2 = st.columns(2)
+    with col_nav_c1:
+        if st.button(
+            "🏠 Página Inicial",
+            key="btn_voltar_aut_nativo",
+            use_container_width=True
+        ):
+            st.session_state.tela_atual = "home"
+            st.session_state.token_valido = False
+            st.rerun()
 
-    if st.button("🏠 Página Inicial", key="btn_voltar_aut"):
-        st.session_state.tela_atual = "home"
-        st.session_state.token_valido = False
-        st.rerun()
     st.markdown(
         "<h1 style='text-align: center; font-weight: 900; "
         "margin-bottom: 0px;'>🔍 E o que falta?</h1>",
@@ -191,7 +179,7 @@ elif st.session_state.tela_atual == "autenticacao":
                     .select("*").eq("token_acesso", token_limpo)\
                     .execute()
                 if busca_db and busca_db.data and len(busca_db.data) > 0:
-                    dados_l = busca_db.data[0]
+                    dados_l = busca_db.data
                     if dados_l.get("status_pagamento") == "Cancelado":
                         st.error("❌ Token suspenso administrativamente.")
                     else:
@@ -211,6 +199,5 @@ elif st.session_state.tela_atual == "autenticacao":
                     st.error("❌ Token inválido.")
             except:
                 st.error("❌ Erro de autenticidade na base.")
-
 elif st.session_state.tela_atual == "comerciante":
     b2b.renderizar(supabase)
