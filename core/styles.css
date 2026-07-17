@@ -12,7 +12,7 @@ h1, h2, h3, .stMarkdown h3 {
     text-align: center !important;
 }
 
-/* BOTOES VERDES ORIGINAIS */
+/* BOTÕES VERDES ORIGINAIS */
 .stButton > button, 
 .stFormSubmitButton > button, 
 div[data-testid="stForm"] button,
@@ -29,7 +29,7 @@ button[key*="btn_validar"] {
     font-size: 15px !important;
 }
 
-/* 🔒 FIX DEFINTIVO: FORÇA FUNDO PRETO IDÊNTICO AO INPUT DE PALAVRA-CHAVE EM TODAS AS CAIXAS DE SELEÇÃO */
+/* 🔒 REMOVE QUALQUER DEMARCAÇÃO E COR ADICIONAL DAS CAIXAS DE SELEÇÃO — PADRONIZAÇÃO COM INPUTS */
 .stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input,
 [data-baseweb="select"] > div, [data-baseweb="select"] ul, [data-baseweb="popover"] ul,
 .stSelectbox div, [data-testid="stSelectbox"] > div, [data-testid="stSelectbox"] div,
@@ -38,14 +38,17 @@ button[key*="btn_validar"] {
     color: #FFFFFF !important;
     border-radius: 10px !important;
     border: 1px solid #444444 !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
-/* GARANTE QUE O TEXTO INTERNO SEJA CLARO EM QUALQUER CELULAR */
+/* GARANTE QUE O TEXTO INTERNO DA CAIXA DE SELEÇÃO SEJA IDENTICO AO DA PALAVRA-CHAVE */
 [data-baseweb="select"] span, [data-baseweb="select"] div,
 [data-testid="stSelectbox"] span, [data-testid="stSelectbox"] div,
 div[data-testid="stSelectbox"] p, svg[title="open"] {
     color: #FFFFFF !important;
     fill: #FFFFFF !important;
+    font-weight: normal !important;
 }
 
 div[data-baseweb="input"] button {

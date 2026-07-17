@@ -7,7 +7,6 @@ from core.database import (
 
 
 def renderizar(supabase):
-    # NAVEGAÇÃO SUPERIOR VERDE NATIVA
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
         if st.button(
@@ -50,8 +49,8 @@ def renderizar(supabase):
     if st.session_state\
        .aba_consumidor == \
        "menu_triagem":
-        # FRASE CURTA ATENDIDA
-        st.write("Escolha o tipo de falta:")
+        # CORREÇÃO 2: Frase encurtada exata solicitada
+        st.write("Escolha tipo de falta:")
         if st.button(
             "📦 PRODUTO OU MARCA EM FALTA",
             use_container_width=True,
@@ -79,6 +78,7 @@ def renderizar(supabase):
               .aba_consumidor = \
                 "infra"
             st.rerun()
+
         st.write("")
         st.markdown(
             "### 🏆 Impactos Recentes "
@@ -86,166 +86,59 @@ def renderizar(supabase):
         )
         try:
             resolvidos = supabase\
-                .table(
-                    "relatos_escassez"
-                )\
+                .table("relatos_escassez")\
                 .select(
                     "item_solicitado, "
                     "sub_segmento, "
                     "locais_destino("
                     "nome_exibicao, "
                     "regiao_cidade)"
-                )\
-                .eq(
-                    "status",
-                    "Atendido"
-                )\
-                .order(
-                    "data_registro",
-                    desc=True
-                )\
+                ).eq("status", "Atendido")\
+                .order("data_registro", desc=True)\
                 .limit(20).execute()
             if resolvidos.data:
                 lista_impactos = []
-                for item in \
-                        resolvidos.data:
-                    if item.get(
-                        "locais_destino"
-                    ):
-                        i_vitrine = \
-                            str(
-                                item[
-                                    "item_soli"
-                                    "citado"]
-                            ).rstrip(
-                                " 0123"
-                                "456789"
-                            ).strip()\
-                             .title()
-                        lista_impactos\
-                            .append({
-                                "item":
-                                i_vitrine,
-                                "nicho":
-                                item.get(
-                                    "sub_seg"
-                                    "mento",
-                                    "Geral"
-                                ).strip(),
-                                "local":
-                                item[
-                                    "locais_de"
-                                    "stino"][
-                                    "nome_exi"
-                                    "bicao"]
-                                .strip()
-                                .title(),
-                                "cidade_ex":
-                                item[
-                                    "locais_de"
-                                    "stino"][
-                                    "regiao_ci"
-                                    "dade"]
-                                .strip()
-                            })
-                df_imp = pd.DataFrame(
-                    lista_impactos
-                ).drop_duplicates(
-                    subset=["local"]
-                ).drop_duplicates(
-                    subset=["nicho"]
-                )
+                for item in resolvidos.data:
+                    if item.get("locais_destino"):
+                        i_vit = str(item["item_solicitado"])\
+                            .rstrip(" 0123456789")\
+                            .strip().title()
+                        lista_impactos.append({
+                            "item": i_vit,
+                            "nicho": item.get("sub_segmento", "Geral").strip(),
+                            "local": item["locais_destino"]["nome_exibicao"].strip().title(),
+                            "cidade_ex": item["locais_destino"]["regiao_cidade"].strip()
+                        })
+                df_imp = pd.DataFrame(lista_impactos)\
+                           .drop_duplicates(subset=["local"])\
+                           .drop_duplicates(subset=["nicho"])
 
                 cont_exibidos = 0
-                for _, l_imp in \
-                        df_imp.iterrows():
-                    if cont_exibidos \
-                       >= 3:
+                for _, l_imp in df_imp.iterrows():
+                    if cont_exibidos >= 3:
                         break
-                    n_nicho = \
-                        l_imp['nicho']
-                    if n_nicho == \
-                       "Supermercado":
-                        icone, acao = \
-                            "🛒 Varejo " \
-                            "Alimentar:", \
-                            "repôs o " \
-                            "estoque de"
-                    elif n_nicho in \
-                        ["Saude",
-                         "Saúde"]:
-                        icone, acao = \
-                            "🩺 Saúde e " \
-                            "Bem-Estar:", \
-                            "trouxe o " \
-                            "serviço de"
-                    elif n_nicho == \
-                            "Petshop":
-                        icone, acao = \
-                            "🐶 Setor " \
-                            "Animal/Pet:", \
-                            "disponibi" \
-                            "lizou o item"
-                    elif n_nicho == \
-                            "Beleza":
-                        icone, acao = \
-                            "💈 Beleza e " \
-                            "Estética:", \
-                            "ativou o " \
-                            "atendimen" \
-                            "to de"
+                    n_nicho = l_imp['nicho']
+                    if n_nicho == "Supermercado":
+                        icone, acao = "🛒 Varejo Alimentar:", "repôs o estoque de"
+                    elif n_nicho in ["Saude", "Saúde"]:
+                        icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o serviço de"
+                    elif n_nicho == "Petshop":
+                        icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
+                    elif n_nicho == "Beleza":
+                        icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
                     else:
-                        icone, acao = \
-                            "✨ Conquista " \
-                            "Local:", \
-                            "disponibi" \
-                            "lizou"
+                        icone, acao = "✨ Conquista Local:", "disponibilizou"
 
-                    # SEM A REDUNDÂNCIA: "O estabelecimento" removido com sucesso
+                    # CORREÇÃO 1: Remoção forçada e absoluta do termo redundante "O estabelecimento"
                     st.markdown(
-                        f"<div style='"
-                        f"background-"
-                        f"color: "
-                        f"#1A1A1A; "
-                        f"padding: "
-                        f"0.6rem "
-                        f"1rem; "
-                        f"border-"
-                        f"radius: "
-                        f"8px; "
-                        f"border-"
-                        f"left: 4px "
-                        f"solid "
-                        f"#00803B; "
-                        f"margin-"
-                        f"bottom: "
-                        f"8px;'>"
-                        f"<span "
-                        f"style='"
-                        f"font-size: "
-                        f"13px; "
-                        f"color: "
-                        f"#aaaaaa; "
-                        f"font-"
-                        f"weight: "
-                        f"500;'>"
-                        f"✅ "
-                        f"<b>"
-                        f"{icone}"
-                        f"</b> "
-                        f"{l_imp['local']} "
-                        f"("
-                        f"{l_imp['cidade_ex']}"
-                        f") "
-                        f"{acao} "
-                        f"<b>"
-                        f"{l_imp['item']}"
-                        f"</b>!"
-                        f"</span>"
-                        f"</div>",
-                        unsafe_allow_html=True
+                        f"<div style='background-color: #1A1A1A; padding: 0.6rem 1rem; "
+                        f"border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'>"
+                        f"<span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>"
+                        f"✅ <b>{icone}</b> {l_imp['local']} ({l_imp['cidade_ex']}) {acao} <b>{l_imp['item']}</b>!</span>"
+                        f"</div>", unsafe_allow_html=True
                     )
                     cont_exibidos += 1
+
             else:
                 st.write(
                     "ℹ️ Nenhuma "
