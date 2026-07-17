@@ -15,16 +15,20 @@ def renderizar(supabase):
         "investidor", "gestor", "jornalista"
     ]
 
-    if st.button(
-        "⬅️ Sair do Painel (Logoff)",
-        key="btn_voltar_com"
-    ):
-        st.session_state.tela_atual = "home"
-        st.session_state.token_valido = False
-        st.session_state.perfil_cliente = None
-        st.session_state.busca_ativa = False
-        st.session_state.dados_grafico = None
-        st.rerun()
+    # BARRA DE NAVEGAÇÃO B2B SIMÉTRICA (50/50 no PC, Empilhada no Celular)
+    col_nav_b1, col_nav_b2 = st.columns(2)
+    with col_nav_b1:
+        if st.button(
+            "⬅️ Sair do Painel (Logoff)",
+            key="btn_voltar_com",
+            use_container_width=True
+        ):
+            st.session_state.tela_atual = "home"
+            st.session_state.token_valido = False
+            st.session_state.perfil_cliente = None
+            st.session_state.busca_ativa = False
+            st.session_state.dados_grafico = None
+            st.rerun()
 
     st.markdown(
         "<h1 style='text-align: center; "
