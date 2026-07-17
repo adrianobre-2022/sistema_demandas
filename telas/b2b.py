@@ -469,88 +469,165 @@ def renderizar(supabase):
                     df_total
         except Exception as e:
             st.error(f"⚠️ Erro de performance: {str(e)}")
-        if st.session_state.dados_grafico \
-           is not None:
+        if st.session_state\
+           .dados_grafico is not None:
             df = st.session_state\
                 .dados_grafico
             if not df.empty:
-                if p_cli == "comerciante":
-                    n_abas = ["📦 Varejo",
-                              "🎯 Marketplace Reverso"]
+                if p_cli == \
+                   "comerciante":
+                    n_abas = [
+                        "📦 Varejo",
+                        "🎯 Marketplace "
+                        "Reverso"
+                    ]
                 elif p_cli == "saude":
-                    n_abas = ["📦 Saúde",
-                              "🎯 Marketplace Reverso"]
+                    n_abas = [
+                        "📦 Saúde",
+                        "🎯 Marketplace "
+                        "Reverso"
+                    ]
                 elif p_cli == "petshop":
-                    n_abas = ["📦 Pet",
-                              "🎯 Marketplace Reverso"]
+                    n_abas = [
+                        "📦 Pet",
+                        "🎯 Marketplace "
+                        "Reverso"
+                    ]
                 elif p_cli == "beleza":
-                    n_abas = ["📦 Estética",
-                              "🎯 Marketplace Reverso"]
-                elif p_cli == "investidor":
-                    n_abas = ["💼 Novos Negócios"]
-                elif p_cli == "jornalista":
-                    n_abas = ["🏛️ Infraestrutura",
-                              "💼 Novos Negócios"]
+                    n_abas = [
+                        "📦 Estética",
+                        "🎯 Marketplace "
+                        "Reverso"
+                    ]
+                elif p_cli == \
+                        "investidor":
+                    n_abas = [
+                        "💼 Novos Negócios"
+                    ]
+                elif p_cli == \
+                        "jornalista":
+                    n_abas = [
+                        "🏛️ Infraestrutura",
+                        "💼 Novos Negócios"
+                    ]
                 else:
-                    n_abas = ["🏛️ Infraestrutura"]
+                    n_abas = [
+                        "🏛️ Infraestrutura"
+                    ]
 
-                abas_st = st.tabs(n_abas)
-                for num_aba, n_aba_atv \
-                        in enumerate(n_abas):
-                    with abas_st[num_aba]:
-                        fr_atv = "Infra" \
-                            if "Infra" in n_aba_atv \
-                            else ("Serviços"
-                                  if "Negócios" in n_aba_atv
-                                  else "Varejo")
-                        is_rev = "Marketplace Reverso" \
+                abas_st = st.tabs(
+                    n_abas
+                )
+                for num_aba, \
+                        n_aba_atv in \
+                        enumerate(n_abas):
+                    with abas_st[
+                        num_aba
+                    ]:
+                        fr_atv = \
+                            "Infra" if \
+                            "Infra" in \
+                            n_aba_atv \
+                            else (
+                                "Serviços"
+                                if
+                                "Negócios"
+                                in
+                                n_aba_atv
+                                else
+                                "Varejo"
+                            )
+                        is_rev = \
+                            "Marketplace" \
                             in n_aba_atv
-                        if is_rev and not \
-                           st.session_state\
-                           .get("recursos_liberados", {})\
-                           .get("reverso", True):
-                            st.warning("🔒 Suspensa.")
+                        if is_rev and \
+                           not st\
+                           .session_state\
+                           .get(
+                               "recursos_"
+                               "liberados",
+                               {}
+                           ).get(
+                               "reverso",
+                               True
+                           ):
+                            st.warning(
+                                "🔒 Suspensa."
+                            )
                             continue
                         df_f_aba = df
-                        if fr_atv == "Infra":
-                            df_f_aba = df[
-                                df['Categoria'] ==
-                                "Serviço Público / "
-                                "Infraestrutura"
-                            ]
-                        elif fr_atv == "Serviços":
-                            df_f_aba = df[
-                                df['Categoria'] ==
-                                "Serviço Local / "
-                                "Novo Estabelecimento"
-                            ]
-                        elif fr_atv == "Varejo":
-                            if p_cli == "comerciante":
+                        if fr_atv == \
+                           "Infra":
+                            df_f_aba = \
+                                df[
+                                    df[
+                                        'Categoria']
+                                    ==
+                                    "Serviço "
+                                    "Público / "
+                                    "Infra"
+                                    "estrutura"
+                                ]
+                        elif fr_atv == \
+                                "Serviços":
+                            df_f_aba = \
+                                df[
+                                    df[
+                                        'Categoria']
+                                    ==
+                                    "Serviço "
+                                    "Local / "
+                                    "Novo Estabe"
+                                    "lecimento"
+                                ]
+                        elif fr_atv == \
+                                "Varejo":
+                            if p_cli == \
+                               "comerciante":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Supermercado|Geral", case=False, na=False)]
-                            elif p_cli == "saude":
+                            elif p_cli == \
+                                    "saude":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Saude|Saúde", case=False, na=False)]
-                            elif p_cli == "petshop":
+                            elif p_cli == \
+                                    "petshop":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Pet", case=False, na=False)]
-                            elif p_cli == "beleza":
+                            elif p_cli == \
+                                    "beleza":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Beleza", case=False, na=False)]
                         if termo_busca:
                             df_f_aba = df_f_aba[df_f_aba['O que Falta'].str.contains(
                                 termo_busca, case=False) | df_f_aba['Local/Referência'].str.contains(termo_busca, case=False)]
-                        if not df_f_aba.empty:
-                            df_f_aba['É_Minha_Loja'] = \
-                                df_f_aba['Local/Referência']\
-                                .apply(lambda x: 1
-                                       if x == loja_alvo_prioridade
-                                       else 0)
-                            pode_pdf = \
-                                st.session_state\
-                                .get("recursos_liberados", {})\
-                                .get("pdf", True)
 
+                        if not \
+                           df_f_aba\
+                           .empty:
+                            df_f_aba[
+                                'É_Minha_Loja'] = \
+                                df_f_aba[
+                                'Local/'
+                                'Referência']\
+                                .apply(
+                                    lambda
+                                    x: 1
+                                    if x ==
+                                    loja_alvo_prioridade
+                                    else 0
+                            )
+                            pode_pdf = \
+                                st\
+                                .session_state\
+                                .get(
+                                    "recursos_"
+                                    "liberados",
+                                    {}
+                                ).get(
+                                    "pdf",
+                                    True
+                                )
                             if espectador_analitico:
                                 try:
                                     p_r = FPDF()
@@ -597,15 +674,9 @@ def renderizar(supabase):
                                     try:
                                         p_o = FPDF()
                                         p_o.add_page()
-                                        p_o.set_font(
-                                            "Arial",
-                                            size=12
-                                        )
+                                        p_o.set_font("Arial", size=12)
                                         p_o.cell(
-                                            200, 10,
-                                            txt="Relatorio Operacional",
-                                            ln=1, align="C"
-                                        )
+                                            200, 10, txt="Relatorio Operacional", ln=1, align="C")
                                         for _, r in df_f_aba.iterrows():
                                             p_o.cell(190, 10, txt=f"- Falta: {r['O que Falta']} | Ponto: {r['Local/Referência']}".encode(
                                                 'latin-1', 'ignore').decode('latin-1'), ln=1)
@@ -652,6 +723,9 @@ def renderizar(supabase):
                                             st.markdown(f'<a href="https://whatsapp.com{c_morador.strip()}&text=Olá! Temos {i_nome} disponível!" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>', unsafe_allow_html=True)
                                         elif c_morador and not pode_wa:
                                             st.warning("🔒 WhatsApp Bloqueado.")
+                                        else:
+                                            st.markdown(
+                                                "<span style='color: #888888; font-size: 13px; font-style: italic;'>⚠️ sem número de retorno</span>", unsafe_allow_html=True)
                                         if not is_rev and is_dono_vazio:
                                             id_conf = f"confirma_baixa_{sub_id}"
                                             if id_conf not in st.session_state:

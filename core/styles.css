@@ -6,10 +6,10 @@
     color: #FFFFFF !important;
 }
 
-/* 📱 CORREÇÃO 1: BLINDA O TÍTULO CONTRA QUEBRAS DE LINHA NO CELULAR */
-h1 {
+/* 📱 FIX 1: BLINDA TODOS OS TÍTULOS CONTRA QUEBRA DE LINHA NO CELULAR */
+h1, h2, h3, .stMarkdown h3 {
     white-space: nowrap !important;
-    font-size: clamp(24px, 6vw, 42px) !important;
+    font-size: clamp(18px, 5.5vw, 36px) !important;
     text-align: center !important;
 }
 
@@ -36,16 +36,17 @@ button[key*="btn_validar"] {
     background-color: #005a24 !important;
 }
 
-/* 📱 CORREÇÃO 2: FORÇA O PADRÃO ESCURO NAS CAIXAS DE SELEÇÃO (SELECTBOX) NO CELULAR */
+/* 📱 FIX 2: FORÇA MÁXIMA PARA SELECTBOX ESCURA EM QUALQUER PERFIL/CELULAR */
 .stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input,
-div[data-baseweb="select"] > div, div[data-baseweb="select"] ul {
+div[data-baseweb="select"] > div, div[data-baseweb="select"] ul,
+div[data-baseweb="popover"] ul, .stSelectbox [data-baseweb="select"] {
     background-color: #1E1E1E !important;
     color: #FFFFFF !important;
     border-radius: 10px !important;
     border: 1px solid #444444 !important;
 }
-/* Alinha os textos internos das opções da caixas de seleção mobile */
-div[data-baseweb="select"] span, div[data-baseweb="select"] div {
+div[data-baseweb="select"] span, div[data-baseweb="select"] div,
+[data-testid="stSelectbox"] div {
     color: #FFFFFF !important;
 }
 
@@ -65,9 +66,10 @@ input::placeholder, textarea::placeholder {
     font-style: italic !important;
 }
 
-/* 📱 CORREÇÃO 3: BLINDA E FIXA O BOTÃO DO WHATSAPP PREMIUM NO PADRÃO ESCURO E RESPONSIVO */
+/* 📱 FIX 3: BLINDA O BOTÃO DO WHATSAPP PREMIUM NO PADRÃO ESCURO NO CELULAR */
 .bloco-lista-premium a button,
-button[style*="background-color: #25D366"] {
+button[style*="background-color: #25D366"],
+.bloco-lista-premium button {
     background-color: #25D366 !important;
     color: #FFFFFF !important;
     font-weight: bold !important;
@@ -77,7 +79,6 @@ button[style*="background-color: #25D366"] {
     width: auto !important;
     display: inline-block !important;
     font-size: 14px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 }
 
 /* BLOCOS OPERACIONAIS DE CARÊNCIAS (PADRÃO ESCURO) */

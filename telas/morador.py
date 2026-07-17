@@ -40,7 +40,8 @@ def renderizar(supabase):
     )
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        st.write("Escolha o tipo de ausência que você quer sinalizar:")
+        # ALTERAÇÃO SOLICITADA: Frase mais curta e direta
+        st.write("Escolha o tipo de falta:")
         if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
@@ -106,15 +107,16 @@ def renderizar(supabase):
         if aba == "produto":
             l_i, p_i = "Qual produto ou marca falta? *", "Ex: Leite condensado marca X..."
             l_l, p_l = "Em qual estabelecimento? *", "Ex: Nome do mercado..."
-            l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Produto / Marca"
+            # ALTERAÇÃO SOLICITADA: Texto encurtado anti-quebra de linha
+            l_c, t_e = "Deixar contato, caso reponha? (Opcional)", "Produto / Marca"
         elif aba == "servico":
             l_i, p_i = "Qual comércio falta no bairro? *", "Ex: Sapataria, lavanderia..."
             l_l, p_l = "Em qual rua ou ponto? *", "Ex: Avenida Principal..."
-            l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Local / Novo Estabelecimento"
+            l_c, t_e = "Deixar contato, caso reponha? (Opcional)", "Serviço Local / Novo Estabelecimento"
         elif aba == "infra":
             l_i, p_i = "Qual problema de infraestrutura pública? *", "Ex: Falha na iluminação..."
             l_l, p_l = "Qual o ponto de referência? *", "Ex: Posto de saúde do bairro Y..."
-            l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Público / Infraestrutura"
+            l_c, t_e = "Deixar contato, caso reponha? (Opcional)", "Serviço Público / Infraestrutura"
 
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
@@ -154,7 +156,7 @@ def renderizar(supabase):
                     l_data = supabase.table("locais_destino").insert({
                         "nome_exibicao": local_fmt, "regiao_cidade": texto_regiao, "regiao_estado": "SP"
                     }).execute()
-                    l_id = l_data.data[0]["id"] if (
+                    l_id = l_data.data["id"] if (
                         l_data and l_data.data and len(l_data.data) > 0) else None
 
                     if l_id:
