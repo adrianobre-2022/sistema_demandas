@@ -119,28 +119,42 @@ def renderizar(supabase):
             l_c, t_e = "Quer deixar contato para o caso de reposição? (Opcional)", "Serviço Público / Infraestrutura"
 
         st.write("")
-        with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
-            # 📍 PERGUNTA 1: Região/Cidade movida para dentro do formulário e agora OBRIGATÓRIA
+        with st.form(
+            key="formulario_dinamico_consumidor",
+            clear_on_submit=False
+        ):
+            # 📍 PERGUNTA 1: Adicionado asterisco de obrigatoriedade visual
             regiao_final = st.text_input(
-                label="📍 Região/Cidade da falta:",
-                placeholder="Ex: São Paulo/SP - Centro"
+                label="📍 Região/Cidade da falta: *",
+                placeholder="Ex: São Paulo/SP - Centro",
+                key="reg_obrigatoria"
             )
             item_solicitado = st.text_input(
-                label=l_i, placeholder=p_i, key="input_item")
+                label=l_i + " *",
+                placeholder=p_i,
+                key="input_item"
+            )
             local_ocorrencia = st.text_input(
-                label=l_l, placeholder=p_l, key="input_local")
+                label=l_l + " *",
+                placeholder=p_l,
+                key="input_local"
+            )
             contato_usuario = st.text_input(
                 label=l_c,
                 placeholder="Insira seu WhatsApp ou e-mail, caso informem reposição.",
                 key="input_contato"
             )
             observacao_usuario = None
-            with st.expander("➕ Adicionar mais detalhes e observações (Opcional)"):
+            with st.expander("➕ Detalhes e observações"):
                 observacao_usuario = st.text_area(
-                    label="Detalhes adicionais:", placeholder="Ex: Detalhe o ocorrido aqui...", key="input_obs")
+                    label="Detalhes adicionais:",
+                    placeholder="Ex: Detalhe o ocorrido aqui...",
+                    key="input_obs"
+                )
             botao_enviar = st.form_submit_button(
-                "🔍 SINALIZAR ESTA FALTA", use_container_width=True)
-
+                "🔍 SINALIZAR ESTA FALTA",
+                use_container_width=True
+            )
         if botao_enviar:
             # TRAVA DE VALIDAÇÃO: Impede o envio em branco e avisa o usuário amigavelmente
             if not regiao_final or regiao_final.strip() == "":

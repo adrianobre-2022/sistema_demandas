@@ -88,3 +88,18 @@ input::placeholder, textarea::placeholder {
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
+/* Cor neutra fosca para os botões utilitários de navegação do topo */
+button[key*="nativo_v"], 
+button[key*="nativo_c"],
+button[key*="aut_nativo"] {
+    background-color: #262626 !important;
+    color: #aaaaaa !important;
+    border: 1px solid #444444 !important;
+    box-shadow: none !important;
+}
+button[key*="nativo_v"]:hover, 
+button[key*="nativo_c"]:hover,
+button[key*="aut_nativo"]:hover {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+}
