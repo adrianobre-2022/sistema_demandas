@@ -122,12 +122,28 @@ elif st.session_state.tela_atual == "consumidor":
     morador.renderizar(supabase)
 
 elif st.session_state.tela_atual == "autenticacao":
-    # LINK DE MENU HORIZONTAL: Sem fundo, limpo e minimalista
-    if st.markdown("<a href='#' style='text-decoration:none;color:#aaaaaa;font-size:14px;font-weight:bold;'>🏠 Página Inicial</a>", unsafe_allow_html=True):
-        if st.button("Clique para confirmar retorno", key="btn_voltar_aut_limpo"):
-            st.session_state.tela_atual = "home"
-            st.session_state.token_valido = False
-            st.rerun()
+    # CSS INVISÍVEL: Transforma o botão de retorno em link de texto no login
+    st.markdown("""
+        <style>
+        button[key="btn_voltar_aut"] {
+            background-color: transparent !important;
+            color: #aaaaaa !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0px !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+        }
+        button[key="btn_voltar_aut"]:hover {
+            color: #ffffff !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    if st.button("🏠 Página Inicial", key="btn_voltar_aut"):
+        st.session_state.tela_atual = "home"
+        st.session_state.token_valido = False
+        st.rerun()
     st.markdown(
         "<h1 style='text-align: center; font-weight: 900; "
         "margin-bottom: 0px;'>🔍 E o que falta?</h1>",

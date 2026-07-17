@@ -5,29 +5,36 @@ from core.database import obter_pegada_digital
 
 
 def renderizar(supabase):
-    # MENU HORIZONTAL INTEGRADO: Transforma o botão pesado em um link de texto minimalista
-    col_m1, col_m2 = st.columns([1, 1])
-    with col_m1:
-        if st.button("🏠 Página Inicial", key="nav_home_limpo_final"):
+    # CSS INVISÍVEL: Remove o fundo verde apenas dos botões de navegação do topo
+    st.markdown("""
+        <style>
+        div[data-testid="stHorizontalBlock"] button {
+            background-color: transparent !important;
+            color: #aaaaaa !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0px !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            text-align: left !important;
+        }
+        div[data-testid="stHorizontalBlock"] button:hover {
+            color: #ffffff !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # BARRA DE MENU HORIZONTAL LIMPA: Sem fundo e sem bordas pesadas
+    col_nav1, col_nav2 = st.columns(2, gap="small")
+    with col_nav1:
+        if st.button("🏠 Página Inicial", key="nav_home_limpo"):
             st.session_state.tela_atual = "home"
             st.rerun()
-    with col_m2:
+    with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
-            if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo_final"):
+            if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo"):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
-    with col_nav2:
-        if st.session_state.aba_consumidor != \
-           "menu_triagem":
-            if st.button(
-                "🗂️ Mudar Categoria",
-                key="nav_categoria_simetrico",
-                use_container_width=True
-            ):
-                st.session_state.aba_consumidor = \
-                    "menu_triagem"
-                st.rerun()
-
     st.markdown(
         "<h1 style='text-align: center; "
         "font-weight: 900; margin-bottom: 0px;"
