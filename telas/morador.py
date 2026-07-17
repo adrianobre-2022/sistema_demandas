@@ -40,7 +40,7 @@ def renderizar(supabase):
     )
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        # ALTERAÇÃO SOLICITADA: Frase mais curta e direta
+        # CORREÇÃO 2 ATENDIDA: Texto curto e sem quebras no mobile
         st.write("Escolha o tipo de falta:")
         if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
@@ -107,7 +107,7 @@ def renderizar(supabase):
         if aba == "produto":
             l_i, p_i = "Qual produto ou marca falta? *", "Ex: Leite condensado marca X..."
             l_l, p_l = "Em qual estabelecimento? *", "Ex: Nome do mercado..."
-            # ALTERAÇÃO SOLICITADA: Texto encurtado anti-quebra de linha
+            # CORREÇÃO 1 ATENDIDA: Rótulo curto definitivo anti-quebra de linha
             l_c, t_e = "Deixar contato, caso reponha? (Opcional)", "Produto / Marca"
         elif aba == "servico":
             l_i, p_i = "Qual comércio falta no bairro? *", "Ex: Sapataria, lavanderia..."

@@ -719,13 +719,17 @@ def renderizar(supabase):
                                                 f"💬 *Relato:* \"{s_l['Observação']}\"")
                                         pode_wa = st.session_state.get(
                                             "recursos_liberados", {}).get("whatsapp", True)
+
+                                        # 📝 CORREÇÃO 3 ATENDIDA: Sinalização descritiva exata para o lojista
                                         if c_morador and pode_wa:
                                             st.markdown(f'<a href="https://whatsapp.com{c_morador.strip()}&text=Olá! Temos {i_nome} disponível!" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>', unsafe_allow_html=True)
                                         elif c_morador and not pode_wa:
                                             st.warning("🔒 WhatsApp Bloqueado.")
                                         else:
+                                            # Texto exato solicitado caso o morador pule o contato
                                             st.markdown(
-                                                "<span style='color: #888888; font-size: 13px; font-style: italic;'>⚠️ sem número de retorno</span>", unsafe_allow_html=True)
+                                                "<span style='color: #888888; font-size: 13px; font-style: italic;'>⚠️ sem número de contato</span>", unsafe_allow_html=True)
+
                                         if not is_rev and is_dono_vazio:
                                             id_conf = f"confirma_baixa_{sub_id}"
                                             if id_conf not in st.session_state:
