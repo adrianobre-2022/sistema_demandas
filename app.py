@@ -32,22 +32,26 @@ except:
     pass
 
 # FORÇA A COR CINZA NEUTRA NOS BOTÕES DE RETORNO DO TOPO DO APP
+# FORÇA BRUTA VISUAL: Captura qualquer botão do topo removendo a identidade verde
 st.markdown("""
     <style>
-    /* Alvo cirúrgico: captura os botões de retorno pelas chaves master */
     button[key*="nativo_v"], 
     button[key*="nativo_c"],
-    button[key*="btn_voltar_aut_nativo"] {
-        background-color: #262626 !important;
+    button[key*="btn_voltar_aut_nativo"],
+    div[data-testid*="stBlock"] button[id*="nativo"],
+    button[data-testid="baseButton-secondary"] {
+        background-color: #1e1e1e !important;
         color: #aaaaaa !important;
-        border: 1px solid #444444 !important;
+        border: 1px solid #333333 !important;
         box-shadow: none !important;
+        background-image: none !important;
     }
     button[key*="nativo_v"]:hover, 
     button[key*="nativo_c"]:hover,
     button[key*="btn_voltar_aut_nativo"]:hover {
-        background-color: #333333 !important;
+        background-color: #262626 !important;
         color: #ffffff !important;
+        border: 1px solid #444444 !important;
     }
     </style>
 """, unsafe_allow_html=True)
