@@ -122,7 +122,7 @@ elif st.session_state.tela_atual == "consumidor":
     morador.renderizar(supabase)
 
 elif st.session_state.tela_atual == "autenticacao":
-    # CSS INVISÍVEL: Transforma o botão de retorno em link de texto no login
+    # CSS: Alinha o link do login perfeitamente à esquerda
     st.markdown("""
         <style>
         button[key="btn_voltar_aut"] {
@@ -133,6 +133,8 @@ elif st.session_state.tela_atual == "autenticacao":
             padding: 0px !important;
             font-size: 14px !important;
             font-weight: bold !important;
+            text-align: left !important;
+            width: auto !important;
         }
         button[key="btn_voltar_aut"]:hover {
             color: #ffffff !important;

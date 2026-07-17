@@ -5,10 +5,14 @@ from core.database import obter_pegada_digital
 
 
 def renderizar(supabase):
-    # CSS INVISÍVEL: Remove o fundo verde apenas dos botões de navegação do topo
+    # CSS AVANÇADO: Força alinhamento à esquerda, remove fundos e bordas
     st.markdown("""
         <style>
-        div[data-testid="stHorizontalBlock"] button {
+        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo"]) {
+            justify-content: flex-start !important;
+            gap: 20px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo"]) button {
             background-color: transparent !important;
             color: #aaaaaa !important;
             border: none !important;
@@ -17,19 +21,26 @@ def renderizar(supabase):
             font-size: 14px !important;
             font-weight: bold !important;
             text-align: left !important;
+            width: auto !important;
+            display: inline-block !important;
         }
-        div[data-testid="stHorizontalBlock"] button:hover {
+        div[data-testid="stHorizontalBlock"]:has(button[key*="limpo"]) button:hover {
             color: #ffffff !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # BARRA DE MENU HORIZONTAL LIMPA: Sem fundo e sem bordas pesadas
-    col_nav1, col_nav2 = st.columns(2, gap="small")
+    # BARRA DE MENU HORIZONTAL ALINHADA À ESQUERDA
+    col_nav1, col_nav2 = st.columns([1, 4])
     with col_nav1:
         if st.button("🏠 Página Inicial", key="nav_home_limpo"):
             st.session_state.tela_atual = "home"
             st.rerun()
+    with col_nav2:
+        if st.session_state.aba_consumidor != "menu_triagem":
+            if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo"):
+                st.session_state.aba_consumidor = "menu_triagem"
+                st.rerun()
     with col_nav2:
         if st.session_state.aba_consumidor != "menu_triagem":
             if st.button("🗂️ Mudar Categoria", key="nav_cat_limpo"):
