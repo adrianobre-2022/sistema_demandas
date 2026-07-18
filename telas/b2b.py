@@ -606,7 +606,8 @@ def renderizar(supabase):
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Supermercado|Geral", case=False, na=False)]
                             elif p_cli == "saude":
-                                df_f_aba = df[df['SubSegmento'].str.contains("Saude|Saúde", case=False, na-False)]
+                                df_f_aba = df[df['SubSegmento'].str.contains(
+                                    "Saude|Saúde", case=False, na=False)]
                             elif p_cli == "petshop":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Pet", case=False, na=False)]
@@ -631,7 +632,7 @@ def renderizar(supabase):
                                 .get("recursos_liberados", {})\
                                 .get("pdf", True)
 
-                            # 📄 ATENDIDO: BOTÃO DE DOWNLOAD DO PDF RESTAURADO NATIVAMENTE NO TOPO DE CADA ABA
+                            # 📄 ATENDIDO: DOWNLOAD DO PDF RESTAURADO NATIVAMENTE NO TOPO DE CADA ABA
                             if pode_pdf:
                                 try:
                                     p_o = FPDF()
