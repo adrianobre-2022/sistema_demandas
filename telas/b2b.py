@@ -469,285 +469,204 @@ def renderizar(supabase):
                     df_total
         except Exception as e:
             st.error(f"⚠️ Erro de performance: {str(e)}")
-        if st.session_state\
-           .dados_grafico is not None:
+        if st.session_state.dados_grafico \
+           is not None:
             df = st.session_state\
                 .dados_grafico
             if not df.empty:
-                if p_cli == \
-                   "comerciante":
-                    n_abas = [
-                        "📦 Varejo",
-                        "🎯 Marketplace "
-                        "Reverso"
-                    ]
+                if p_cli == "comerciante":
+                    n_abas = ["📦 Varejo",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "saude":
-                    n_abas = [
-                        "📦 Saúde",
-                        "🎯 Marketplace "
-                        "Reverso"
-                    ]
+                    n_abas = ["📦 Saúde",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "petshop":
-                    n_abas = [
-                        "📦 Pet",
-                        "🎯 Marketplace "
-                        "Reverso"
-                    ]
+                    n_abas = ["📦 Pet",
+                              "🎯 Marketplace Reverso"]
                 elif p_cli == "beleza":
-                    n_abas = [
-                        "📦 Estética",
-                        "🎯 Marketplace "
-                        "Reverso"
-                    ]
-                elif p_cli == \
-                        "investidor":
-                    n_abas = [
-                        "💼 Novos Negócios"
-                    ]
-                elif p_cli == \
-                        "jornalista":
-                    n_abas = [
-                        "🏛️ Infraestrutura",
-                        "💼 Novos Negócios"
-                    ]
+                    n_abas = ["📦 Estética",
+                              "🎯 Marketplace Reverso"]
+                elif p_cli == "investidor":
+                    n_abas = ["💼 Novos Negócios"]
+                elif p_cli == "jornalista":
+                    n_abas = ["🏛️ Infraestrutura",
+                              "💼 Novos Negócios"]
                 else:
-                    n_abas = [
-                        "🏛️ Infraestrutura"
-                    ]
+                    n_abas = ["🏛️ Infraestrutura"]
 
-                abas_st = st.tabs(
-                    n_abas
-                )
-                for num_aba, \
-                        n_aba_atv in \
-                        enumerate(n_abas):
-                    with abas_st[
-                        num_aba
-                    ]:
-                        fr_atv = \
-                            "Infra" if \
-                            "Infra" in \
-                            n_aba_atv \
-                            else (
-                                "Serviços"
-                                if
-                                "Negócios"
-                                in
-                                n_aba_atv
-                                else
-                                "Varejo"
-                            )
-                        is_rev = \
-                            "Marketplace" \
+                abas_st = st.tabs(n_abas)
+                for num_aba, n_aba_atv \
+                        in enumerate(n_abas):
+                    with abas_st[num_aba]:
+                        fr_atv = "Infra" \
+                            if "Infra" in n_aba_atv \
+                            else ("Services"
+                                  if "Negócios" in n_aba_atv
+                                  else "Varejo")
+                        is_rev = "Marketplace Reverso" \
                             in n_aba_atv
-                        if is_rev and \
-                           not st\
-                           .session_state\
-                           .get(
-                               "recursos_"
-                               "liberados",
-                               {}
-                           ).get(
-                               "reverso",
-                               True
-                           ):
-                            st.warning(
-                                "🔒 Suspensa."
-                            )
+                        if is_rev and not \
+                           st.session_state\
+                           .get("recursos_liberados", {})\
+                           .get("reverso", True):
+                            st.warning("🔒 Suspensa.")
                             continue
                         df_f_aba = df
-                        if fr_atv == \
-                           "Infra":
-                            df_f_aba = \
-                                df[
-                                    df[
-                                        'Categoria']
-                                    ==
-                                    "Serviço "
-                                    "Público / "
-                                    "Infra"
-                                    "estrutura"
-                                ]
-                        elif fr_atv == \
-                                "Serviços":
-                            df_f_aba = \
-                                df[
-                                    df[
-                                        'Categoria']
-                                    ==
-                                    "Serviço "
-                                    "Local / "
-                                    "Novo Estabe"
-                                    "lecimento"
-                                ]
-                        elif fr_atv == \
-                                "Varejo":
-                            if p_cli == \
-                               "comerciante":
+                        if fr_atv == "Infra":
+                            df_f_aba = df[
+                                df['Categoria'] ==
+                                "Serviço Público / "
+                                "Infraestrutura"
+                            ]
+                        elif fr_atv == "Services":
+                            df_f_aba = df[
+                                df['Categoria'] ==
+                                "Serviço Local / "
+                                "Novo"
+                                " Estabelecimento"
+                            ]
+                        elif fr_atv == "Varejo":
+                            if p_cli == "comerciante":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Supermercado|Geral", case=False, na=False)]
-                            elif p_cli == \
-                                    "saude":
+                            elif p_cli == "saude":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Saude|Saúde", case=False, na=False)]
-                            elif p_cli == \
-                                    "petshop":
+                            elif p_cli == "petshop":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Pet", case=False, na=False)]
-                            elif p_cli == \
-                                    "beleza":
+                            elif p_cli == "beleza":
                                 df_f_aba = df[df['SubSegmento'].str.contains(
                                     "Beleza", case=False, na=False)]
                         if termo_busca:
                             df_f_aba = df_f_aba[df_f_aba['O que Falta'].str.contains(
                                 termo_busca, case=False) | df_f_aba['Local/Referência'].str.contains(termo_busca, case=False)]
 
-                        if not \
-                           df_f_aba\
-                           .empty:
-                            df_f_aba[
-                                'É_Minha_Loja'] = \
-                                df_f_aba[
-                                'Local/'
-                                'Referência']\
-                                .apply(
-                                    lambda
-                                    x: 1
-                                    if x ==
-                                    loja_alvo_prioridade
-                                    else 0
-                            )
+                        if not df_f_aba.empty:
+                            df_f_aba['É_Minha_Loja'] = \
+                                df_f_aba['Local/Referência']\
+                                .apply(lambda x: 1
+                                       if x == loja_alvo_prioridade
+                                       else 0)
                             pode_pdf = \
-                                st\
-                                .session_state\
-                                .get(
-                                    "recursos_"
-                                    "liberados",
-                                    {}
-                                ).get(
-                                    "pdf",
-                                    True
-                                )
-                            if espectador_analitico:
+                                st.session_state\
+                                .get("recursos_liberados", {})\
+                                .get("pdf", True)
+
+                            # 📄 RESTAURAÇÃO DO BOTÃO DO PDF: Reativado nativamente no topo de cada aba
+                            if pode_pdf:
                                 try:
-                                    p_r = FPDF()
-                                    p_r.add_page()
-                                    p_r.set_font(
-                                        "Arial", size=12
-                                    )
-                                    p_r.cell(
-                                        200, 10,
-                                        txt="Relatorio Analitico",
-                                        ln=1, align="C"
-                                    )
+                                    p_o = FPDF()
+                                    p_o.add_page()
+                                    p_o.set_font("Arial", size=12)
+                                    p_o.cell(
+                                        200, 10, txt="Relatorio de Demanda", ln=1, align="C")
                                     for _, r in df_f_aba.iterrows():
-                                        p_r.cell(190, 10, txt=f"- Falta: {r['O que Falta']} | Ponto: {r['Local/Referência']}".encode(
+                                        p_o.cell(190, 10, txt=f"- Falta: {r['O que Falta']} | Ponto: {r['Local/Referência']}".encode(
                                             'latin-1', 'ignore').decode('latin-1'), ln=1)
                                     st.download_button(
-                                        label="Baixar Relatório Analítico (PDF)",
-                                        data=bytes(p_r.output(dest='S')),
-                                        file_name="expansao.pdf",
+                                        label="📄 Baixar Relatório de Demandas (PDF)",
+                                        data=bytes(p_o.output(dest='S')),
+                                        file_name="demandas_quarteirao.pdf",
                                         mime="application/pdf",
-                                        key=f"btn_pdf_{num_aba}"
+                                        key=f"btn_pdf_real_final_{num_aba}"
                                     )
                                 except:
                                     pass
+
+                            total_sua_loja = len(
+                                df_f_aba[df_f_aba['Local/Referência'] == loja_alvo_prioridade]) if not is_rev else 0
+                            t_conc = len(df_f_aba) - total_sua_loja
+                            st.markdown(
+                                f"<div style='text-align: right; font-size: 15px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Sua Loja: {total_sua_loja} • Concorrência: {t_conc} • Total Geral: {len(df_f_aba)}</div>", unsafe_allow_html=True)
+                            df_agr = df_f_aba.groupby(["O que Falta", "Categoria"]).agg(V_Total=("ID", "count"), M_Idade=(
+                                "Dias", "min"), F_Dono=("É_Minha_Loja", "max")).sort_values(by="V_Total", ascending=False).reset_index()
+                            for _, linha in df_agr.iterrows():
+                                i_nome = linha['O que Falta']
+                                s_alvo = int(linha['F_Dono'])
+                                if is_rev:
+                                    c_tag = "tag-calor-media"
+                                    l_tag = "🎯 REVERSO"
+                                else:
+                                    c_tag = "tag-calor-alta" if s_alvo == 1 else "tag-calor-baixa"
+                                    l_tag = "🎯 SEU MERCADO" if s_alvo == 1 else "🌍 CONCORRÊNCIA"
                                 st.markdown(
-                                    f"<div style='text-align: right; font-size: 16px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Total de Oportunidades: {len(df_f_aba)}</div>", unsafe_allow_html=True)
-                                df_agr = df_f_aba.groupby(["O que Falta", "Categoria"]).agg(C_Unicos=("Pegada", "nunique"), A_Totais=(
-                                    "ID", "count"), M_Espera=("Dias", "max")).sort_values(by="C_Unicos", ascending=False).reset_index()
-                                for _, m_line in df_agr.iterrows():
-                                    i_nome = m_line['O que Falta']
-                                    clis = int(m_line['C_Unicos'])
-                                    c_tag = "tag-calor-alta" if clis >= 5 else (
-                                        "tag-calor-media" if clis >= 2 else "tag-calor-baixa")
+                                    f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
+                                for _, s_l in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["CidadeCompleta", "Local/Referência", "Observação", "Contato"]).iterrows():
+                                    sub_id, sub_local, c_morador = s_l['ID'], s_l['Local/Referência'], s_l['Contato']
+                                    is_dono_vazio = (
+                                        sub_local == loja_alvo_prioridade) and not is_rev
                                     st.markdown(
-                                        f'<div class="bloco-lista-premium"><span class="{c_tag}">🔥 CRÍTICO • {clis} CPFs</span><b style="color: #FFFFFF; font-size: 16px;">🏢 Falta: {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ {m_line["A_Totais"]} relatos • Espera: {m_line["M_Espera"]} dias</div></div>', unsafe_allow_html=True)
-                                    for _, s_it in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["CidadeCompleta", "Local/Referência", "Observação"]).iterrows():
-                                        st.markdown(
-                                            f"  * **{s_it['CidadeCompleta']}** - *Ponto:* {s_it['Local/Referência']}")
-                                        if s_it['Observação']:
-                                            st.markdown(
-                                                f"    * 💬 *Relato:* \"{s_it['Observação']}\"")
-                            else:
-                                if pode_pdf:
-                                    try:
-                                        p_o = FPDF()
-                                        p_o.add_page()
-                                        p_o.set_font("Arial", size=12)
-                                        p_o.cell(
-                                            200, 10, txt="Relatorio Operacional", ln=1, align="C")
-                                        for _, r in df_f_aba.iterrows():
-                                            p_o.cell(190, 10, txt=f"- Falta: {r['O que Falta']} | Ponto: {r['Local/Referência']}".encode(
-                                                'latin-1', 'ignore').decode('latin-1'), ln=1)
-                                        st.download_button(
-                                            label="Baixar Relatório (PDF)",
-                                            data=bytes(p_o.output(dest='S')),
-                                            file_name="relatorio.pdf",
-                                            mime="application/pdf",
-                                            key=f"btn_pdf_op_{num_aba}"
-                                        )
-                                    except:
-                                        pass
-                                total_sua_loja = len(
-                                    df_f_aba[df_f_aba['Local/Referência'] == loja_alvo_prioridade]) if not is_rev else 0
-                                t_conc = len(df_f_aba) - total_sua_loja
-                                st.markdown(
-                                    f"<div style='text-align: right; font-size: 15px; font-weight: bold; color: #00803B; margin-top: 10px; margin-bottom: 20px;'>Sua Loja: {total_sua_loja} • Concorrência: {t_conc} • Total Geral: {len(df_f_aba)}</div>", unsafe_allow_html=True)
-                                df_agr = df_f_aba.groupby(["O que Falta", "Categoria"]).agg(V_Total=("ID", "count"), M_Idade=(
-                                    "Dias", "min"), F_Dono=("É_Minha_Loja", "max")).sort_values(by="V_Total", ascending=False).reset_index()
-                                for _, linha in df_agr.iterrows():
-                                    i_nome = linha['O que Falta']
-                                    s_alvo = int(linha['F_Dono'])
-                                    if is_rev:
-                                        c_tag = "tag-calor-media"
-                                        l_tag = "🎯 REVERSO"
+                                        f"{'🔥 **SEU ESTABELECIMENTO:** ' if is_dono_vazio else '📍 **Captado no concorrente:** '}{sub_local} ({s_l['CidadeCompleta']})")
+                                    if s_l['Observação']:
+                                        st.info(
+                                            f"💬 *Relato:* \"{s_l['Observação']}\"")
+                                    pode_wa = st.session_state.get(
+                                        "recursos_liberados", {}).get("whatsapp", True)
+
+                                    # 🎯 REPADRONIZAÇÃO DO CONTATO: Transforma o aviso em um botão estruturado simétrico
+                                    if c_morador and str(c_morador).strip() != "" and str(c_morador).strip() != "None" and pode_wa:
+                                        st.markdown(f'<a href="https://whatsapp.com{c_morador.strip()}&text=Olá! Temos {i_nome} disponível!" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>', unsafe_allow_html=True)
+                                    elif c_morador and str(c_morador).strip() != "" and not pode_wa:
+                                        st.warning("🔒 WhatsApp Bloqueado.")
                                     else:
-                                        c_tag = "tag-calor-alta" if s_alvo == 1 else "tag-calor-baixa"
-                                        l_tag = "🎯 SEU MERCADO" if s_alvo == 1 else "🌍 CONCORRÊNCIA"
-                                    st.markdown(
-                                        f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
-                                    for _, s_l in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["CidadeCompleta", "Local/Referência", "Observação", "Contato"]).iterrows():
-                                        sub_id, sub_local, c_morador = s_l['ID'], s_l[
-                                            'Local/Referência'], s_l['Contato']
-                                        is_dono_vazio = (
-                                            sub_local == loja_alvo_prioridade) and not is_rev
+                                        # Justificativa visual em formato de botão fosco alinhado para evitar o vácuo de tela
                                         st.markdown(
-                                            f"{'🔥 **SEU ESTABELECIMENTO:** ' if is_dono_vazio else '📍 **Captado no concorrente:** '}{sub_local} ({s_l['CidadeCompleta']})")
-                                        if s_l['Observação']:
-                                            st.info(
-                                                f"💬 *Relato:* \"{s_l['Observação']}\"")
-                                        pode_wa = st.session_state.get(
-                                            "recursos_liberados", {}).get("whatsapp", True)
+                                            "<div class='botao-contato-vazio-v'>⚠️ sem número de contato</div>", unsafe_allow_html=True)
 
-                                        # 🎯 CORREÇÃO 4 TRAVADA: Garante a renderização do aviso caso o campo esteja nulo ou vazio
-                                        if c_morador and str(c_morador).strip() != "" and str(c_morador).strip() != "None" and pode_wa:
-                                            st.markdown(f'<a href="https://whatsapp.com{c_morador.strip()}&text=Olá! Temos {i_nome} disponível!" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>', unsafe_allow_html=True)
-                                        elif c_morador and str(c_morador).strip() != "" and not pode_wa:
-                                            st.warning("🔒 WhatsApp Bloqueado.")
+                                    if not is_rev and is_dono_vazio:
+                                        id_conf = f"confirma_baixa_{sub_id}"
+                                        if id_conf not in st.session_state:
+                                            st.session_state[id_conf] = False
+                                        if not st.session_state[id_conf]:
+                                            if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}_{num_aba}"):
+                                                st.session_state[id_conf] = True
+                                                st.rerun()
                                         else:
-                                            # Imprime de forma limpa e visível para o comerciante saber o status do lead
-                                            st.markdown(
-                                                "<span style='color: #888888; font-size: 13px; font-style: italic;'>⚠️ sem número de contato</span>", unsafe_allow_html=True)
-
-                                        if not is_rev and is_dono_vazio:
-                                            id_conf = f"confirma_baixa_{sub_id}"
-                                            if id_conf not in st.session_state:
-                                                st.session_state[id_conf] = False
-                                            if not st.session_state[id_conf]:
-                                                if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}_{num_aba}"):
-                                                    st.session_state[id_conf] = True
-                                                    st.rerun()
+                                            if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}_{num_aba}"):
+                                                supabase.table("relatos_escassez").update(
+                                                    {"status": "Atendido"}).eq("id", sub_id).execute()
                                             else:
-                                                if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}_{num_aba}"):
-                                                    supabase.table("relatos_escassez").update(
-                                                        {"status": "Atendido"}).eq("id", sub_id).execute()
-                                                    st.success("🎉 Concluído!")
+                                                if st.button(
+                                                    "🚨 Confirmar",
+                                                    key=f"btn_real_"
+                                                        f"{sub_id}_"
+                                                        f"{num_aba}"
+                                                ):
+                                                    supabase\
+                                                        .table(
+                                                            "relatos_"
+                                                            "escassez"
+                                                        ).update({
+                                                            "status":
+                                                                "Atendido"
+                                                        }).eq(
+                                                            "id",
+                                                            sub_id
+                                                        ).execute()
+
+                                                    st.success(
+                                                        "🎉 Con"
+                                                        "cluído!"
+                                                    )
                                                     import time
-                                                    time.sleep(0.5)
-                                                    st.session_state[id_conf] = False
-                                                    st.session_state.busca_ativa = False
+                                                    time.sleep(
+                                                        0.5
+                                                    )
+                                                    st.session_\
+                                                        state[
+                                                            id_conf] \
+                                                        = False
+                                                    st.session_\
+                                                        state\
+                                                        .busca_at\
+                                                        iva = \
+                                                        False
                                                     st.rerun()
                         else:
                             st.info(
-                                "ℹ️ Nenhum registro ativo encontrado para esta aba.")
+                                "ℹ️ Nenhum "
+                                "registro ativo "
+                                "encontrado "
+                                "para esta aba."
+                            )
