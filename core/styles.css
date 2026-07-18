@@ -12,7 +12,7 @@ h1, h2, h3, .stMarkdown h3 {
     text-align: center !important;
 }
 
-/* BOTÕES VERDES NATIVOS ORIGINAIS */
+/* BOTÕES VERDES NATIVOS */
 .stButton > button, 
 .stFormSubmitButton > button, 
 div[data-testid="stForm"] button,
@@ -29,12 +29,19 @@ button[key*="btn_validar"] {
     font-size: 15px !important;
 }
 
-/* 🔒 PADRONIZAÇÃO ABSOLUTA: FORÇA FUNDO ESCURO NAS CAIXAS DE TEXTO E SELEÇÃO */
+/* 🔒 REMOVE QUALQUER DEMARCAÇÃO DOS TÍTULOS E ESCURECE AS CAIXAS */
+[data-testid="stSelectbox"] label, 
+[data-testid="stSelectbox"] .stWidgetLabel {
+    background-color: transparent !important;
+    background: none !important;
+    border: none !important;
+    padding: 0px !important;
+}
+
 .stTextInput input, .stTextArea textarea, div[data-baseweb="input"] input,
-[data-baseweb="select"], [data-baseweb="select"] > div, 
-[data-baseweb="select"] ul, [data-baseweb="popover"] ul,
-.stSelectbox, .stSelectbox [data-baseweb="select"],
-[data-testid="stSelectbox"] > div, [data-testid="stSelectbox"] div {
+[data-baseweb="select"] > div, [data-baseweb="select"] ul, [data-baseweb="popover"] ul,
+.stSelectbox div, [data-testid="stSelectbox"] > div, [data-testid="stSelectbox"] div,
+.stSelectbox [data-baseweb="select"] {
     background-color: #1E1E1E !important;
     border-radius: 10px !important;
     border: 1px solid #444444 !important;
@@ -42,20 +49,14 @@ button[key*="btn_validar"] {
     outline: none !important;
 }
 
-/* 🎯 CORREÇÃO DO TEXTO OCULTO: FORÇA A COR DA FONTE INTERNA E DAS DICAS PARA CLARO/BRANCO */
+/* 🎯 CORREÇÃO DA FONTE: TEXTO INTERNO EM CINZA FOSCO VISÍVEL COMO O CAMPO SUPERIOR */
 [data-baseweb="select"] span, [data-baseweb="select"] div,
 [data-testid="stSelectbox"] span, [data-testid="stSelectbox"] div,
 div[data-testid="stSelectbox"] p, svg[title="open"],
 .stSelectbox p, div[role="option"] {
-    color: #FFFFFF !important;
-    fill: #FFFFFF !important;
-    font-weight: normal !important;
-}
-
-/* Garante que os textos secundários ou placeholders das caixas de seleção fiquem cinza claro visível */
-div[data-baseweb="select"] div[data-testid="stMarkdownContainer"] p,
-.stSelectbox div[data-baseweb="select"] div {
     color: #aaaaaa !important;
+    fill: #aaaaaa !important;
+    font-weight: normal !important;
 }
 
 div[data-baseweb="input"] button {
@@ -70,7 +71,7 @@ input::placeholder, textarea::placeholder {
     font-style: italic !important;
 }
 
-/* WHATSAPP PREMIUM */
+/* BOTÕES INTERNOS DAS GÔNDOLAS (WHATSAPP E CONTATO FOSCO) */
 .bloco-lista-premium a button,
 .bloco-lista-premium button,
 button[style*="background-color: #25D366"],
@@ -83,6 +84,18 @@ div[style*="margin-top"] a button {
     border-radius: 8px !important;
     width: auto !important;
     font-size: 14px !important;
+}
+
+/* BOTÃO DE CONTATO FALTO (PADRÃO CINZA SEGUINDO A MESMA ESTRUTURA DO WA) */
+.botao-contato-vazio-v {
+    background-color: #262626 !important;
+    color: #888888 !important;
+    font-weight: bold !important;
+    border: 1px solid #444444 !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    display: inline-block !important;
 }
 
 .bloco-lista-premium {
