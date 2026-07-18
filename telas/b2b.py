@@ -614,59 +614,25 @@ def renderizar(supabase):
                                         st.markdown(
                                             "<div class='botao-contato-vazio-v'>⚠️ sem número de contato</div>", unsafe_allow_html=True)
 
-                                    if not is_rev and is_dono_vazio:
-                                        id_conf = f"confirma_baixa_{sub_id}"
-                                        if id_conf not in st.session_state:
-                                            st.session_state[id_conf] = False
-                                        if not st.session_state[id_conf]:
-                                            if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}_{num_aba}"):
-                                                st.session_state[id_conf] = True
-                                                st.rerun()
-                                        else:
-                                            if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}_{num_aba}"):
-                                                supabase.table("relatos_escassez").update(
-                                                    {"status": "Atendido"}).eq("id", sub_id).execute()
-                                            else:
-                                                if st.button(
-                                                    "🚨 Confirmar",
-                                                    key=f"btn_real_"
-                                                        f"{sub_id}_"
-                                                        f"{num_aba}"
-                                                ):
-                                                    supabase\
-                                                        .table(
-                                                            "relatos_"
-                                                            "escassez"
-                                                        ).update({
-                                                            "status":
-                                                                "Atendido"
-                                                        }).eq(
-                                                            "id",
-                                                            sub_id
-                                                        ).execute()
+                                        if not is_rev and is_dono_vazio:
+                                            id_conf = f"confirma_baixa_{sub_id}"
+                                            if id_conf not in st.session_state:
+                                                st.session_state[id_conf] = False
 
-                                                    st.success(
-                                                        "🎉 Con"
-                                                        "cluído!"
-                                                    )
+                                            if not st.session_state[id_conf]:
+                                                if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}_{num_aba}"):
+                                                    st.session_state[id_conf] = True
+                                                    st.rerun()
+                                            else:
+                                                if st.button("🚨 Confirmar", key=f"btn_real_{sub_id}_{num_aba}"):
+                                                    supabase.table("relatos_escassez").update(
+                                                        {"status": "Atendido"}).eq("id", sub_id).execute()
+                                                    st.success("🎉 Concluído!")
                                                     import time
-                                                    time.sleep(
-                                                        0.5
-                                                    )
-                                                    st.session_\
-                                                        state[
-                                                            id_conf] \
-                                                        = False
-                                                    st.session_\
-                                                        state\
-                                                        .busca_at\
-                                                        iva = \
-                                                        False
+                                                    time.sleep(0.5)
+                                                    st.session_state[id_conf] = False
+                                                    st.session_state.busca_ativa = False
                                                     st.rerun()
                         else:
                             st.info(
-                                "ℹ️ Nenhum "
-                                "registro ativo "
-                                "encontrado "
-                                "para esta aba."
-                            )
+                                "ℹ️ Nenhum registro ativo encontrado para esta aba.")
