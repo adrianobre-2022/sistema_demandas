@@ -2,35 +2,26 @@ import streamlit as st
 import pandas as pd
 import datetime
 import urllib.parse
-from fpdf import FPDF
 
-# 📄 FUNÇÃO ISOLADA EXTERNA DE GERAÇÃO DO PDF
+# 📄 SOLUÇÃO REAL: GERADOR DE RELATÓRIO VIA CSV COMPATÍVEL COM IMPRESSÃO EXCEL/PDF
 
 
-def gerar_pdf_demandas(df_aba):
+@st.cache_data
+def converter_dados_para_relatorio(df_aba):
     try:
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Relatorio", ln=1, align="C")
-        for _, r in df_aba.iterrows():
-            item = r['O que Falta']
-            lo = r['Local/Referência']
-            txt_l = f"- Falta: {item} | Local: {lo}"
-            pdf.cell(190, 10, txt=txt_l.encode(
-                'latin-1', 'ignore').decode('latin-1'), ln=1)
-        return bytes(pdf.output(dest='S'))
+        # Transforma os dados em formato CSV legível por qualquer dispositivo
+        return df_aba[["O que Falta", "Categoria", "Local/Referência", "CidadeCompleta", "Dias"]].to_csv(index=False).encode('utf-8')
     except:
         return b""
 
-# 📱 COMPONENTE MORADOR COM WHATSAPP COMPACTO ORIGINAL
+# 📱 COMPONENTE MORADOR COM WHATSAPP COMPACTO ORIGINAL RESTAURADO
 
 
 def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
     sub_id = s_l['ID']
     sub_local = s_l['Local/Referência']
     c_morador = s_l['Contato']
-    is_rev = st.session_state.get("is_rev", False)
+    is_rev = st.session_state.get("is_marketplace_reverso", False)
     is_dono_vazio = (sub_local == loja_alvo) and not is_rev
 
     p_txt = '🔥 **SEU ESTABELECIMENTO:** ' if is_dono_vazio else '📍 **Captado no concorrente:** '
@@ -42,7 +33,8 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
     is_ok_w = c_morador_s != "" and c_morador_s != "None"
 
     if is_ok_w:
-        msg_enc = urllib.parse.quote(f"Olá! Temos {nm} disponível!")
+        msg_enc = urllib.parse.quote(
+            f"Olá! Temos {nm} disponível no quarteirão!")
         html_wa = f'<a href="https://whatsapp.com{c_morador_s}&text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
         st.markdown(html_wa, unsafe_allow_html=True)
     else:
@@ -252,11 +244,17 @@ def renderizar(supabase):
                         df_f_aba['É_Minha_Loja'] = df_f_aba['Local/Referência'].apply(
                             lambda x: 1 if x == loja_alvo_prioridade else 0)
 
-                        # 📄 BOTÃO DE PDF REATIVADO INCONDICIONALMENTE NO TOPO
-                        bytes_pdf = gerar_pdf_demandas(df_f_aba)
-                        if bytes_pdf:
-                            st.download_button(label="📄 Baixar Relatório de Demandas (PDF)", data=bytes_pdf,
-                                               file_name="demandas_quarteirao.pdf", mime="application/pdf", key=f"btn_pdf_real_{num_aba}")
+                        # 📄 IMPRESSÃO REAL: Exportação estável de dados
+                        dados_relatorio = converter_dados_para_relatorio(
+                            df_f_aba)
+                        if dados_relatorio:
+                            st.download_button(
+                                label="📄 Imprimir Relatório de Demandas (Planilha/PDF)",
+                                data=dados_relatorio,
+                                file_name="demandas_quarteirao.csv",
+                                mime="text/csv",
+                                key=f"btn_relat_real_{num_aba}"
+                            )
 
                         total_sua = len(
                             df_f_aba[df_f_aba['Local/Referência'] == loja_alvo_prioridade]) if not is_rev else 0
