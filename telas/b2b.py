@@ -287,6 +287,7 @@ def renderizar(supabase):
                                 f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
 
                             for _, s_l in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["ID"]).iterrows():
+                                # 📱 RESTAURAÇÃO: Removido o esticamento forçado para devolver o botão compacto original
                                 desenhar_morador(
                                     s_l, i_nome, num_aba, dict_liberados, supabase, loja_alvo_prioridade)
                     else:
