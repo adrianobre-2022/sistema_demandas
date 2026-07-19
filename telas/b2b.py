@@ -21,7 +21,7 @@ def gerar_pdf_demandas(df_aba):
     except:
         return b""
 
-# 🛠️ FUNÇÃO AUXILIAR: RENDERIZADOR DE CADA COMPONENT MORADOR INDIVIDUAL
+# 🛠️ RECONSTRUÇÃO: RESTAURAÇÃO DO VISUAL COMPACTO ORIGINAL DO WHATSAPP
 
 
 def desenhar_morador(s_l, nm, num_aba, dict_liberados, supabase, loja_alvo):
@@ -38,14 +38,17 @@ def desenhar_morador(s_l, nm, num_aba, dict_liberados, supabase, loja_alvo):
 
     c_morador_s = str(c_morador).strip()
     is_ok_w = c_morador_s != "" and c_morador_s != "None"
+
+    # Validação segura das permissões
     p_wa = dict_liberados.get("whatsapp", True) if isinstance(
         dict_liberados, dict) else True
 
     if is_ok_w and p_wa:
-        u_w = f"https://whatsapp.com{c_morador_s}&text=" + \
-            urllib.parse.quote(f"Olá! Temos {nm} disponível!")
-        st.link_button(label="📱 Falar no WhatsApp",
-                       url=u_w, use_container_width=True)
+        # 🎯 VOLTOU AO ORIGINAL: Botão injetado via HTML com estilo em linha compacto aprovado
+        msg_enc = urllib.parse.quote(
+            f"Olá! Temos {nm} disponível no quarteirão!")
+        html_wa = f'<a href="https://whatsapp.com{c_morador_s}&text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
+        st.markdown(html_wa, unsafe_allow_html=True)
     elif is_ok_w:
         st.warning("🔒 WhatsApp Bloqueado.")
     else:
