@@ -36,6 +36,7 @@ def renderizar(supabase):
         st.write("")
         st.markdown("### 🏆 Impactos Recentes no Bairro")
         try:
+            # 🔄 ATENDIDO: Removido travas ocultas para atualizar em tempo real
             resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
                 "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
             if resolvidos.data:
@@ -50,10 +51,10 @@ def renderizar(supabase):
                             "local": item["locais_destino"]["nome_exibicao"].strip().title(),
                             "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()
                         })
-                df_imp = pd.DataFrame(lista_impactos).drop_duplicates(
-                    subset=["local"]).drop_duplicates(subset=["nicho"])
 
-                # 🎯 VITRINE DE ROLAGEM NATIVA: Envelopamento seguro em caixa de altura fixa
+                # 🎯 CORREÇÃO: Mantido apenas o DataFrame limpo sem deletar novos relatos do mesmo local
+                df_imp = pd.DataFrame(lista_impactos)
+
                 with st.container(height=280, border=False):
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
@@ -74,7 +75,6 @@ def renderizar(supabase):
                 st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
         except:
             pass
-
     elif st.session_state.aba_consumidor in ["produto", "servico", "infra"]:
         aba = st.session_state.aba_consumidor
         if aba == "produto":
