@@ -249,7 +249,7 @@ def renderizar(supabase):
                             df_f_aba)
                         if dados_relatorio:
                             st.download_button(
-                                label="📄 Imprimir Relatório de Demandas (Planilha/PDF)",
+                                label="📄 Imprimir Relatório de Demandas (Planilha/CSV)",
                                 data=dados_relatorio,
                                 file_name="demandas_quarteirao.csv",
                                 mime="text/csv",
