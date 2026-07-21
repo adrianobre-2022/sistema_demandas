@@ -53,26 +53,23 @@ def renderizar(supabase):
                 df_imp = pd.DataFrame(lista_impactos).drop_duplicates(
                     subset=["local"]).drop_duplicates(subset=["nicho"])
 
-                contador_exibidos = 0
-                for _, l_imp in df_imp.iterrows():
-                    if contador_exibidos >= 3:
-                        break
-                    n_nicho = l_imp['nicho']
-                    if n_nicho == "Supermercado":
-                        icone, acao = "🛒 Varejo Alimentar:", "repôs o estoque de"
-                    elif n_nicho in ["Saude", "Saúde"]:
-                        icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o serviço de"
-                    elif n_nicho == "Petshop":
-                        icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
-                    elif n_nicho == "Beleza":
-                        icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
-                    else:
-                        icone, acao = "✨ Conquista Local:", "disponibilizou"
+                # 🎯 VITRINE DE ROLAGEM NATIVA: Envelopamento seguro em caixa de altura fixa
+                with st.container(height=280, border=False):
+                    for _, l_imp in df_imp.iterrows():
+                        n_nicho = l_imp['nicho']
+                        if n_nicho == "Supermercado":
+                            icone, acao = "🛒 Varejo Alimentar:", "repôs o estoque de"
+                        elif n_nicho in ["Saude", "Saúde"]:
+                            icone, acao = "🩺 Saúde e Bem-Estar:", "trouxe o serviço de"
+                        elif n_nicho == "Petshop":
+                            icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
+                        elif n_nicho == "Beleza":
+                            icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
+                        else:
+                            icone, acao = "✨ Conquista Local:", "disponibilizou"
 
-                    # ATENDIDO: "O estabelecimento" removido definitivamente da string
-                    st.markdown(
-                        f"<div style='background-color: #1A1A1A; padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'><span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>✅ <b>{icone}</b> {l_imp['local']} ({l_imp['cidade_exibicao']}) {acao} <b>{l_imp['item']}</b>!</span></div>", unsafe_allow_html=True)
-                    contador_exibidos += 1
+                        st.markdown(
+                            f"<div style='background-color: #1A1A1A; padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid #00803B; margin-bottom: 8px;'><span style='font-size: 13px; color: #aaaaaa; font-weight: 500;'>✅ <b>{icone}</b> {l_imp['local']} ({l_imp['cidade_exibicao']}) {acao} <b>{l_imp['item']}</b>!</span></div>", unsafe_allow_html=True)
             else:
                 st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
         except:
