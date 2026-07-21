@@ -36,7 +36,6 @@ def renderizar(supabase):
         st.write("")
         st.markdown("### 🏆 Impactos Recentes no Bairro")
         try:
-            # 🔄 ATENDIDO: Removido travas ocultas para atualizar em tempo real
             resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
                 "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
             if resolvidos.data:
@@ -52,9 +51,10 @@ def renderizar(supabase):
                             "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()
                         })
 
-                # 🎯 CORREÇÃO: Mantido apenas o DataFrame limpo sem deletar novos relatos do mesmo local
+                # 🎯 TRAVA REMOVIDA: Agora o mesmo comércio pode aparecer com produtos diferentes!
                 df_imp = pd.DataFrame(lista_impactos)
 
+                # ↕️ VITRINE RESPONSIVA NATIVA: Lista tudo dentro da caixa com barra de rolagem
                 with st.container(height=280, border=False):
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
@@ -75,6 +75,7 @@ def renderizar(supabase):
                 st.write("ℹ️ Nenhuma benfeitoria recente registrada.")
         except:
             pass
+
     elif st.session_state.aba_consumidor in ["produto", "servico", "infra"]:
         aba = st.session_state.aba_consumidor
         if aba == "produto":
