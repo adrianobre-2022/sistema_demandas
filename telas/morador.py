@@ -51,11 +51,24 @@ def renderizar(supabase):
                             "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()
                         })
 
-                # 🎯 TRAVA REMOVIDA: Agora o mesmo comércio pode aparecer com produtos diferentes!
                 df_imp = pd.DataFrame(lista_impactos)
 
-                # ↕️ VITRINE RESPONSIVA NATIVA: Lista tudo dentro da caixa com barra de rolagem
+                # 🎨 INJEÇÃO CSS COMPATÍVEL COM COMPUTADOR (MOUSE) E CELULAR (TOQUE)
+                st.markdown("""
+                    <style>
+                    [data-testid="stVerticalBlock"] > div:has(div.box-rolagem-bairro-v) {
+                        max-height: 280px !important;
+                        overflow-y: auto !important;
+                    }
+                    </style>
+                """, unsafe_allow_html=True)
+
+                # Caixa nativa envelopada com a classe de segurança
                 with st.container(height=280, border=False):
+                    # Elemento âncora invisível que força o navegador do PC a liberar o mouse scroll
+                    st.markdown(
+                        "<div class='box-rolagem-bairro-v'></div>", unsafe_allow_html=True)
+
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
                         if n_nicho == "Supermercado":
