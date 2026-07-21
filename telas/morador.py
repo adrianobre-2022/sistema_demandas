@@ -36,8 +36,10 @@ def renderizar(supabase):
         st.write("")
         st.markdown("### 🏆 Impactos Recentes no Bairro")
         try:
+            # 🔄 QUEBRA DE CACHE ABSOLUTA: Traz os dados em tempo real sem reter memória velha
             resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
                 "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
+
             if resolvidos.data:
                 lista_impactos = []
                 for item in resolvidos.data:
@@ -53,21 +55,20 @@ def renderizar(supabase):
 
                 df_imp = pd.DataFrame(lista_impactos)
 
-                # 🎨 INJEÇÃO CSS COMPATÍVEL COM COMPUTADOR (MOUSE) E CELULAR (TOQUE)
+                # 🎨 INJEÇÃO CSS QUE FORÇA A ROLAGEM VERTICAL COMPATÍVEL COM COMPUTADOR
                 st.markdown("""
                     <style>
-                    [data-testid="stVerticalBlock"] > div:has(div.box-rolagem-bairro-v) {
-                        max-height: 280px !important;
-                        overflow-y: auto !important;
+                    [data-testid="stVerticalBlock"] > div:has(div.box-rolagem-computador) {
+                        max-height: 240px !important;
+                        overflow-y: scroll !important;
                     }
                     </style>
                 """, unsafe_allow_html=True)
 
-                # Caixa nativa envelopada com a classe de segurança
-                with st.container(height=280, border=False):
-                    # Elemento âncora invisível que força o navegador do PC a liberar o mouse scroll
+                # Caixa nativa configurada com rolagem de dados
+                with st.container(height=240, border=False):
                     st.markdown(
-                        "<div class='box-rolagem-bairro-v'></div>", unsafe_allow_html=True)
+                        "<div class='box-rolagem-computador'></div>", unsafe_allow_html=True)
 
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
