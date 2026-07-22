@@ -65,11 +65,8 @@ def renderizar(supabase):
                     </style>
                 """, unsafe_allow_html=True)
 
-                # Caixa nativa configurada com rolagem de dados
-                with st.container(height=240, border=False):
-                    st.markdown(
-                        "<div class='box-rolagem-computador'></div>", unsafe_allow_html=True)
-
+                # 🎯 CORREÇÃO DE SENTIDO COMERCIAL: Ações realistas por nicho
+                with st.container(height=280, border=False):
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
                         if n_nicho == "Supermercado":
@@ -80,6 +77,9 @@ def renderizar(supabase):
                             icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
                         elif n_nicho == "Beleza":
                             icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
+                        elif n_nicho == "Infraestrutura":
+                            # 🏛️ Coerência para Zeladoria Pública
+                            icone, acao = "🏛️ Zeladoria Pública:", "zelou e resolveu o problema de"
                         else:
                             icone, acao = "✨ Conquista Local:", "disponibilizou"
 
