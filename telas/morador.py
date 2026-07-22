@@ -36,7 +36,6 @@ def renderizar(supabase):
         st.write("")
         st.markdown("### 🏆 Impactos Recentes no Bairro")
         try:
-            # 🔄 QUEBRA DE CACHE ABSOLUTA: Traz os dados em tempo real sem reter memória velha
             resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
                 "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
 
@@ -55,7 +54,6 @@ def renderizar(supabase):
 
                 df_imp = pd.DataFrame(lista_impactos)
 
-                # 🎨 INJEÇÃO CSS QUE FORÇA A ROLAGEM VERTICAL COMPATÍVEL COM COMPUTADOR
                 st.markdown("""
                     <style>
                     [data-testid="stVerticalBlock"] > div:has(div.box-rolagem-computador) {
@@ -65,10 +63,14 @@ def renderizar(supabase):
                     </style>
                 """, unsafe_allow_html=True)
 
-                # 🎯 CORREÇÃO DE SENTIDO COMERCIAL: Ações realistas por nicho
-                with st.container(height=280, border=False):
+                with st.container(height=240, border=False):
+                    st.markdown(
+                        "<div class='box-rolagem-computador'></div>", unsafe_allow_html=True)
+
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
+
+                        # 🎯 CALIBRAÇÃO SEMÂNTICA: Mapeamento de ações realistas por nicho
                         if n_nicho == "Supermercado":
                             icone, acao = "🛒 Varejo Alimentar:", "repôs o estoque de"
                         elif n_nicho in ["Saude", "Saúde"]:
@@ -77,8 +79,9 @@ def renderizar(supabase):
                             icone, acao = "🐶 Setor Animal/Pet:", "disponibilizou o item"
                         elif n_nicho == "Beleza":
                             icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
+                        elif n_nicho == "Serviços":
+                            icone, acao = "🏪 Serviços Locais:", "trouxe o serviço de"
                         elif n_nicho == "Infraestrutura":
-                            # 🏛️ Coerência para Zeladoria Pública
                             icone, acao = "🏛️ Zeladoria Pública:", "zelou e resolveu o problema de"
                         else:
                             icone, acao = "✨ Conquista Local:", "disponibilizou"
