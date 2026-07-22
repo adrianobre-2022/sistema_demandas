@@ -244,10 +244,27 @@ def renderizar(supabase):
                         df_f_aba['É_Minha_Loja'] = df_f_aba['Local/Referência'].apply(
                             lambda x: 1 if x == loja_alvo_prioridade else 0)
 
-                        # 📄 IMPRESSÃO REAL: Exportação estável de dados
+                        # 📄 IMPRESSÃO REAL: Exportação estável de dados com correção de contraste visual
                         dados_relatorio = converter_dados_para_relatorio(
                             df_f_aba)
                         if dados_relatorio:
+                            # Injeção de estilo local para fixar o fundo cinza e a fonte branca visível
+                            st.markdown("""
+                                    <style>
+                                    div.stDownloadButton > button {
+                                        background-color: #262626 !important;
+                                        color: #FFFFFF !important;
+                                        border: 1px solid #404040 !important;
+                                        border-radius: 8px !important;
+                                    }
+                                    div.stDownloadButton > button:hover {
+                                        background-color: #404040 !important;
+                                        color: #FFFFFF !important;
+                                        border-color: #00803B !important;
+                                    }
+                                    </style>
+                                """, unsafe_allow_html=True)
+
                             st.download_button(
                                 label="📄 Imprimir Relatório de Demandas (Planilha/CSV)",
                                 data=dados_relatorio,
