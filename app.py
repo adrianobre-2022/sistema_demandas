@@ -7,6 +7,18 @@ from core.database import (
 )
 from telas import morador, b2b
 
+# 🎨 BLINDAGEM VISUAL: Remove menus, rodapés e marcas d'água do Streamlit
+st.markdown("""
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        [data-testid="stDecoration"] {display: none;}
+        [data-testid="stHeader"] {display: none;}
+        </style>
+    """, unsafe_allow_html=True)
+
+
 # --- INICIALIZAÇÃO DE VARIÁVEIS UNIVERSAIS ---
 botao_enviar = False
 termo_busca = ""
