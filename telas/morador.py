@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import random  # 🔀 NOVO: Biblioteca para embaralhar os registros
 from core.database import obter_pegada_digital
 
 
@@ -22,7 +23,6 @@ def renderizar(supabase):
 
     if st.session_state.aba_consumidor == "menu_triagem":
         st.write("Escolha tipo de falta:")
-        # 🤝 ALINHADO: Mantém o formato original curto, limpo e em caixa alta com o ponto de interrogação
         if st.button("📦 PRODUTO OU MARCA EM FALTA?", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
@@ -36,8 +36,9 @@ def renderizar(supabase):
         st.write("")
         st.markdown("### 🏆 Impactos Recentes no Bairro")
         try:
+            # Puxamos um volume um pouco maior (ex: 50 itens) para ter variedade no embaralhamento
             resolvidos = supabase.table("relatos_escassez").select("item_solicitado, sub_segmento, locais_destino(nome_exibicao, regiao_cidade)").eq(
-                "status", "Atendido").order("data_registro", desc=True).limit(20).execute()
+                "status", "Atendido").limit(50).execute()
 
             if resolvidos.data:
                 lista_impactos = []
@@ -52,7 +53,13 @@ def renderizar(supabase):
                             "cidade_exibicao": item["locais_destino"]["regiao_cidade"].strip()
                         })
 
-                df_imp = pd.DataFrame(lista_impactos)
+                # 🔀 MÁGICA TÉCNICA: Embaralha a lista de dados coletada para quebrar a sequência repetitiva
+                random.shuffle(lista_impactos)
+
+                # Selecionamos apenas os 15 primeiros itens após o embaralhamento para exibir
+                exibicao_final = lista_impactos[:15]
+
+                df_imp = pd.DataFrame(exibicao_final)
 
                 st.markdown("""
                     <style>
@@ -80,7 +87,6 @@ def renderizar(supabase):
                             icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
                         elif n_nicho == "Serviços":
                             icone, acao = "🏪 Serviços Locais:", "trouxe o serviço de"
-                        # 🏛️ CORRIGIDO: Removida a redundância ("zelou e") e corrigido ortograficamente para "problema"
                         elif n_nicho == "Infraestrutura":
                             icone, acao = "🏛️ Zeladoria Pública:", "resolveu o problema de"
                         else:
@@ -111,7 +117,6 @@ def renderizar(supabase):
             l_l, p_l = "Qual o ponto de referência? *", "Ex: Posto de saúde do bairro Y..."
             l_c, t_e = "Deixar contato, caso reponham? (Opcional)", "Serviço Público / Infraestrutura"
 
-        # 🎯 ALINHADO: Rótulo com margens negativas calibradas para não esticar o formulário
         st.markdown(
             f"<p style='font-size: 13px; color: #888888; text-align: left; margin-bottom: -10px; font-weight: 500; padding-left: 2px;'>📋 {texto_feedback}</p>",
             unsafe_allow_html=True
@@ -149,7 +154,7 @@ def renderizar(supabase):
 
                     l_data = supabase.table("locais_destino").insert(
                         {"nome_exibicao": local_fmt, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
-                    l_id = l_data.data[0]["id"] if (
+                    l_id = l_data.data["id"] if (
                         l_data and l_data.data and len(l_data.data) > 0) else None
                 except:
                     pass
