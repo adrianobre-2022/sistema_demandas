@@ -23,13 +23,13 @@ def renderizar(supabase):
     if st.session_state.aba_consumidor == "menu_triagem":
         st.write("Escolha tipo de falta:")
         # 🎯 APERFEIÇOAMENTO: Botões transformados em perguntas diretas e humanas
-        if st.button("🛒 QUAL PRODUTO OU MARCA ESTÁ FAZENDO FALTA?", use_container_width=True, key="tri_prod_v"):
+        if st.button("🛒 PRODUTO OU MARCA EM FALTA?", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
-        if st.button("🏪 QUAL PRESTADOR DE SERVIÇO FALTA NO QUARTEIRÃO?", use_container_width=True, key="tri_serv_v"):
+        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL?", use_container_width=True, key="tri_serv_v"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
-        if st.button("🏛️ O QUE A ZELADORIA PÚBLICA PRECISA CONSERTAR AQUI?", use_container_width=True, key="tri_infra_v"):
+        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA?", use_container_width=True, key="tri_infra_v"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
