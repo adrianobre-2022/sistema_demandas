@@ -17,7 +17,7 @@ def renderizar(supabase):
                 st.session_state.aba_consumidor = "menu_triagem"
                 st.rerun()
 
-    st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
+    st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 Sistema de Demandas Regionais</h1>",
                 unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
 
