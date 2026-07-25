@@ -18,7 +18,7 @@ def renderizar(supabase):
 
     st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da região.</p>", unsafe_allow_html=True)
 
     if st.session_state.aba_consumidor == "menu_triagem":
         # ATENDIDO: Texto curto sem quebra de linha
