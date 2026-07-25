@@ -18,12 +18,12 @@ def renderizar(supabase):
 
     st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 E o que falta?</h1>",
                 unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da região.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
 
     if st.session_state.aba_consumidor == "menu_triagem":
         st.write("Escolha tipo de falta:")
-        # 🎯 APERFEIÇOAMENTO: Botões transformados em perguntas diretas e humanas
-        if st.button("🛒 PRODUTO OU MARCA EM FALTA?", use_container_width=True, key="tri_prod_v"):
+        # 🤝 ALINHADO: Mantém o formato original curto, limpo e em caixa alta com o ponto de interrogação
+        if st.button("📦 PRODUTO OU MARCA EM FALTA?", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
         if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL?", use_container_width=True, key="tri_serv_v"):
@@ -80,8 +80,9 @@ def renderizar(supabase):
                             icone, acao = "💈 Beleza e Estética:", "ativou o atendimento de"
                         elif n_nicho == "Serviços":
                             icone, acao = "🏪 Serviços Locais:", "trouxe o serviço de"
+                        # 🏛️ CORRIGIDO: Removida a redundância ("zelou e") e corrigido ortograficamente para "problema"
                         elif n_nicho == "Infraestrutura":
-                            icone, acao = "🏛️ Zeladoria Pública:", "zelou e resolveu o problem de"
+                            icone, acao = "🏛️ Zeladoria Pública:", "resolveu o problema de"
                         else:
                             icone, acao = "✨ Conquista Local:", "disponibilizou"
 
@@ -110,11 +111,9 @@ def renderizar(supabase):
             l_l, p_l = "Qual o ponto de referência? *", "Ex: Posto de saúde do bairro Y..."
             l_c, t_e = "Deixar contato, caso reponham? (Opcional)", "Serviço Público / Infraestrutura"
 
-        # 🎯 APERFEIÇOAMENTO VISUAL: Rótulo discreto posicionado acima, antes dos campos e à esquerda
+        # 🎯 ALINHADO: Rótulo com margens negativas calibradas para não esticar o formulário
         st.markdown(
-            f"<p style='font-size: 13px; color: #888888; text-align: left; margin-bottom: -10px; font-weight: 500; padding-left: 2px;'>"
-            f"📋 {texto_feedback}"
-            f"</p>", 
+            f"<p style='font-size: 13px; color: #888888; text-align: left; margin-bottom: -10px; font-weight: 500; padding-left: 2px;'>📋 {texto_feedback}</p>",
             unsafe_allow_html=True
         )
 
