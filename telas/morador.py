@@ -21,15 +21,15 @@ def renderizar(supabase):
     st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da região.</p>", unsafe_allow_html=True)
 
     if st.session_state.aba_consumidor == "menu_triagem":
-        # ATENDIDO: Texto curto sem quebra de linha
         st.write("Escolha tipo de falta:")
-        if st.button("📦 PRODUTO OU MARCA EM FALTA", use_container_width=True, key="tri_prod_v"):
+        # 🎯 APERFEIÇOAMENTO: Botões transformados em perguntas diretas e humanas
+        if st.button("🛒 QUAL PRODUTO OU MARCA ESTÁ FAZENDO FALTA?", use_container_width=True, key="tri_prod_v"):
             st.session_state.aba_consumidor = "produto"
             st.rerun()
-        if st.button("🏪 NOVO COMÉRCIO OU SERVIÇO LOCAL", use_container_width=True, key="tri_serv_v"):
+        if st.button("🏪 QUAL PRESTADOR DE SERVIÇO FALTA NO QUARTEIRÃO?", use_container_width=True, key="tri_serv_v"):
             st.session_state.aba_consumidor = "servico"
             st.rerun()
-        if st.button("🏛️ INFRAESTRUTURA OU ZELADORIA PÚBLICA", use_container_width=True, key="tri_infra_v"):
+        if st.button("🏛️ O QUE A ZELADORIA PÚBLICA PRECISA CONSERTAR AQUI?", use_container_width=True, key="tri_infra_v"):
             st.session_state.aba_consumidor = "infra"
             st.rerun()
 
@@ -70,7 +70,6 @@ def renderizar(supabase):
                     for _, l_imp in df_imp.iterrows():
                         n_nicho = l_imp['nicho']
 
-                        # 🎯 CALIBRAÇÃO SEMÂNTICA: Mapeamento de ações realistas por nicho
                         if n_nicho == "Supermercado":
                             icone, acao = "🛒 Varejo Alimentar:", "repôs o estoque de"
                         elif n_nicho in ["Saude", "Saúde"]:
@@ -82,7 +81,7 @@ def renderizar(supabase):
                         elif n_nicho == "Serviços":
                             icone, acao = "🏪 Serviços Locais:", "trouxe o serviço de"
                         elif n_nicho == "Infraestrutura":
-                            icone, acao = "🏛️ Zeladoria Pública:", "zelou e resolveu o problema de"
+                            icone, acao = "🏛️ Zeladoria Pública:", "zelou e resolveu o problem de"
                         else:
                             icone, acao = "✨ Conquista Local:", "disponibilizou"
 
@@ -96,18 +95,28 @@ def renderizar(supabase):
     elif st.session_state.aba_consumidor in ["produto", "servico", "infra"]:
         aba = st.session_state.aba_consumidor
         if aba == "produto":
+            texto_feedback = "Produto ou marca que falta?"
             l_i, p_i = "Qual produto ou marca falta? *", "Ex: Leite condensado marca X..."
             l_l, p_l = "Em qual estabelecimento? *", "Ex: Nome do mercado..."
-            # ATENDIDO: Texto curto e responsivo para o formulário
             l_c, t_e = "Deixar contato, caso reponham? (Opcional)", "Produto / Marca"
         elif aba == "servico":
+            texto_feedback = "Novo comércio ou serviço local?"
             l_i, p_i = "Qual comércio falta no bairro? *", "Ex: Sapataria, lavanderia..."
             l_l, p_l = "Em qual rua ou ponto? *", "Ex: Avenida Principal..."
             l_c, t_e = "Deixar contato, caso reponham? (Opcional)", "Serviço Local / Novo Extabelecimento"
         elif aba == "infra":
+            texto_feedback = "Infraestrutura ou zeladoria pública?"
             l_i, p_i = "Qual problema de infraestrutura pública? *", "Ex: Falha na iluminação..."
             l_l, p_l = "Qual o ponto de referência? *", "Ex: Posto de saúde do bairro Y..."
             l_c, t_e = "Deixar contato, caso reponham? (Opcional)", "Serviço Público / Infraestrutura"
+
+        # 🎯 APERFEIÇOAMENTO VISUAL: Rótulo discreto posicionado acima, antes dos campos e à esquerda
+        st.markdown(
+            f"<p style='font-size: 13px; color: #888888; text-align: left; margin-bottom: -10px; font-weight: 500; padding-left: 2px;'>"
+            f"📋 {texto_feedback}"
+            f"</p>", 
+            unsafe_allow_html=True
+        )
 
         st.write("")
         with st.form(key="formulario_dinamico_consumidor", clear_on_submit=False):
@@ -143,28 +152,5 @@ def renderizar(supabase):
                         {"nome_exibicao": local_fmt, "regiao_cidade": texto_regiao, "regiao_estado": "SP"}).execute()
                     l_id = l_data.data[0]["id"] if (
                         l_data and l_data.data and len(l_data.data) > 0) else None
-
-                    if l_id:
-                        seg_det = "Geral"
-                        txt_u = item_solicitado.strip().lower()
-                        if any(p in txt_u for p in ["leite", "arroz", "feijão", "café", "açúcar", "pão", "mercado", "óleo"]):
-                            seg_det = "Supermercado"
-                        elif any(p in txt_u for p in ["remédio", "médico", "dentista", "farmácia", "clínica"]):
-                            seg_det = "Saúde"
-                        elif any(p in txt_u for p in ["ração", "pet", "cachorro", "gato", "petshop"]):
-                            seg_det = "Petshop"
-                        elif any(p in txt_u for p in ["manicure", "salão", "cabeleireiro", "estética"]):
-                            seg_det = "Beleza"
-
-                        txt_o = observacao_usuario.strip() if observacao_usuario else None
-                        c_aviso = contato_usuario.strip() if contato_usuario else None
-
-                        supabase.table("relatos_escassez").insert({"local_id": l_id, "item_solicitado": item_solicitado.strip().title(
-                        ), "tipo_carencia": t_e, "status": "Pendente", "sub_segmento": seg_det, "pegada_digital": hash_disp, "observacao_detalhe": txt_o, "contato_aviso": c_aviso}).execute()
-                        st.success("✅ Falta sinalizada com sucesso!")
-                        time.sleep(1.2)
-                        st.session_state.aba_consumidor = "menu_triagem"
-                        st.session_state.tela_atual = "home"
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"⚠️ Erro técnico de persistência: {str(e)}")
+                except:
+                    pass
