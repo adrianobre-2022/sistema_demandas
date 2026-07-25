@@ -4,6 +4,7 @@ import hashlib
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+
 def inicializar_supabase():
     caminho_atual = os.path.dirname(
         os.path.abspath(__file__)
@@ -13,17 +14,18 @@ def inicializar_supabase():
         caminho_atual, ".."
     )
     load_dotenv(os.path.join(raiz, ".env"))
-    
+
     url = os.environ.get("SUPABASE_URL") or \
-          st.secrets.get("SUPABASE_URL")
+        st.secrets.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_KEY") or \
-          st.secrets.get("SUPABASE_KEY")
-          
+        st.secrets.get("SUPABASE_KEY")
+
     if not url or not key:
         st.error("⚠️ Credenciais ausentes.")
         st.stop()
-        
+
     return create_client(url, key)
+
 
 def obter_pegada_digital():
     try:
@@ -37,4 +39,5 @@ def obter_pegada_digital():
         return hashlib.sha256(
             f"{ip}-{agente}".encode('utf-8')
         ).hexdigest()
-    except: return "pegada_fallback"
+    except:
+        return "pegada_fallback"
