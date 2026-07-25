@@ -28,7 +28,7 @@ loja_alvo_prioridade = "Mercadinho Do Bairro"
 supabase = inicializar_supabase()
 
 st.set_page_config(page_title="Sistema de Demandas",
-                   page_icon="🔍", layout="wide")
+                   page_icon="🔍", layout="centered")
 
 
 # --- INJEÇÃO DO DESIGN VISUAL MESTRE VERDE ---
