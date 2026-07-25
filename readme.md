@@ -1,5 +1,5 @@
 ---
-title: Sistema Demandas Quarteirao
+title: Sistema Demandas
 emoji: 🔍
 colorFrom: green
 colorTo: darkgreen
@@ -10,7 +10,7 @@ pinned: false
 license: mit
 ---
 
-# 🔍 E o que falta? — O Termômetro de Carências do Quarteirão
+# 🔍 E o que falta? — O Termômetro de Carências
 
 MVP de inteligência geográfica focado em mapear, auditar e sanar escassezas comerciais, falhas de infraestrutura pública e carências de serviços locais diretamente no quarteirão.
 

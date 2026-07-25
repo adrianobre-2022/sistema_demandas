@@ -27,11 +27,9 @@ loja_alvo_prioridade = "Mercadinho Do Bairro"
 # --- CONEXÃO COM O BANCO DE DADOS ---
 supabase = inicializar_supabase()
 
-st.set_page_config(
-    page_title="E o que falta?",
-    page_icon="🔍",
-    layout="centered"
-)
+st.set_page_config(page_title="Sistema de Demandas",
+                   page_icon="🔍", layout="wide")
+
 
 # --- INJEÇÃO DO DESIGN VISUAL MESTRE VERDE ---
 try:
@@ -97,7 +95,7 @@ if not st.session_state.seguranca_master:
 if st.session_state.tela_atual == "home":
     st.markdown(
         "<h1 style='text-align: center; font-weight: 900; "
-        "margin-bottom: 0px;'>🔍 E o que falta?</h1>",
+        "margin-bottom: 0px;'>🔍 Sistema de Demandas</h1>",
         unsafe_allow_html=True
     )
     st.markdown(
@@ -144,7 +142,7 @@ elif st.session_state.tela_atual == "autenticacao":
 
     st.markdown(
         "<h1 style='text-align: center; font-weight: 900; "
-        "margin-bottom: 0px;'>🔍 E o que falta?</h1>",
+        "margin-bottom: 0px;'>🔍 Sistema de Demandas</h1>",
         unsafe_allow_html=True
     )
     st.markdown(
