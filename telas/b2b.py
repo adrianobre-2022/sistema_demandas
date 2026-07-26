@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+
 def renderizar(supabase):
     # 🎨 INJEÇÃO DE CSS: Força o tema escuro na lista suspensa (selectbox) e corrige a quebra visual
     st.markdown("""
@@ -66,36 +67,40 @@ def renderizar(supabase):
     else:
         perfil = st.session_state.perfil_b2b_atual
         st.info(f"🔑 Logado com sucesso no Perfil: **{perfil}**")
-        
+
         # 🔍 FILTRO DA CIDADE (Mecanismo Global que estava apresentando fundo branco no navegador)
         try:
-            cidades_query = supabase.table("locais_destino").select("regiao_cidade").execute()
+            cidades_query = supabase.table(
+                "locais_destino").select("regiao_cidade").execute()
             if cidades_query.data:
                 df_cid = pd.DataFrame(cidades_query.data)
-                lista_cidades = sorted(df_cid["regiao_cidade"].unique().tolist())
+                lista_cidades = sorted(
+                    df_cid["regiao_cidade"].unique().tolist())
         except:
             lista_cidades = []
-            
+
         lista_cidades_opcoes = ["Todos (Global)"] + lista_cidades
-        
+
         # O seletor abaixo agora obedecerá obrigatoriamente as regras de CSS escuras inseridas no topo
         cidade_selecionada = st.selectbox(
             "📍 Selecionar Região/Cidade para Análise:",
             options=lista_cidades_opcoes,
             key="b2b_filtro_cidade_global"
         )
-        
+
         st.write("")
         st.markdown("### 📊 Demandas Ocultas Identificadas na Região")
-        
+
         try:
             # Puxa os dados brutos de relatos para estruturar as tabelas do lojista
-            query_relatos = supabase.table("relatos_escassez").select("item_solicitado, status, data_registro, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente")
-            
+            query_relatos = supabase.table("relatos_escassez").select(
+                "item_solicitado, status, data_registro, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente")
+
             if cidade_selecionada != "Todos (Global)":
                 # Se não for global, aplica a filtragem estrita da cidade selecionada
                 relatos_dados = query_relatos.execute()
-                dados_filtrados = [r for r in relatos_dados.data if r.get("locais_destino") and r["locais_destino"]["regiao_cidade"] == cidade_selecionada]
+                dados_filtrados = [r for r in relatos_dados.data if r.get(
+                    "locais_destino") and r["locais_destino"]["regiao_cidade"] == cidade_selecionada]
             else:
                 relatos_dados = query_relatos.execute()
                 dados_filtrados = relatos_dados.data
@@ -108,10 +113,13 @@ def renderizar(supabase):
                         "Localidade Relatada": str(r["locais_destino"]["nome_exibicao"]).strip().title(),
                         "Cidade/Região": str(r["locais_destino"]["regiao_cidade"]).strip()
                     })
-                
+
                 df_relatorio = pd.DataFrame(lista_tabela)
-                st.dataframe(df_relatorio, use_container_width=True, hide_index=True)
+                st.dataframe(
+                    df_relatorio, use_container_width=True, hide_index=True)
             else:
-                st.write("ℹ️ Nenhuma demanda pendente registrada para a região selecionada.")
+                st.write(
+                    "ℹ️ Nenhuma demanda pendente registrada para a região selecionada.")
         except:
-            st.error("⚠️ Falha ao carregar a matriz de dados do banco. Verifique a conexão.")
+            st.error(
+                "⚠️ Falha ao carregar a matriz de dados do banco. Verifique a conexão.")
