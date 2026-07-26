@@ -1,125 +1,316 @@
 import streamlit as st
 import pandas as pd
+import datetime
+import urllib.parse
+
+# 📄 SOLUÇÃO REAL: GERADOR DE RELATÓRIO VIA CSV COMPATÍVEL COM IMPRESSÃO EXCEL/PDF
+
+
+@st.cache_data
+def converter_dados_para_relatorio(df_aba):
+    try:
+        # Transforma os dados em formato CSV legível por qualquer dispositivo
+        return df_aba[["O que Falta", "Categoria", "Local/Referência", "CidadeCompleta", "Dias"]].to_csv(index=False).encode('utf-8')
+    except:
+        return b""
+
+# 📱 COMPONENTE MORADOR COM WHATSAPP COMPACTO ORIGINAL RESTAURADO
+
+
+def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
+    sub_id = s_l['ID']
+    sub_local = s_l['Local/Referência']
+    c_morador = s_l['Contato']
+    is_rev = st.session_state.get("is_marketplace_reverso", False)
+    is_dono_vazio = (sub_local == loja_alvo) and not is_rev
+
+    p_txt = '🔥 **SEU ESTABELECIMENTO:** ' if is_dono_vazio else '📍 **Captado no concorrente:** '
+    st.markdown(f"{p_txt}{sub_local} ({s_l['CidadeCompleta']})")
+    if s_l['Observação'] and s_l['Observação'] != "Sem detalhes.":
+        st.info(f"💬 *Relato:* \"{s_l['Observação']}\"")
+
+    c_morador_s = str(c_morador).strip()
+    is_ok_w = c_morador_s != "" and c_morador_s != "None"
+
+    if is_ok_w:
+        msg_enc = urllib.parse.quote(
+            f"Olá! Temos {nm} disponível no quarteirão!")
+        html_wa = f'<a href="https://whatsapp.com{c_morador_s}&text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
+        st.markdown(html_wa, unsafe_allow_html=True)
+    else:
+        st.markdown(
+            "<div class='botao-contato-vazio-v'>⚠️ sem número de contato</div>", unsafe_allow_html=True)
+
+    if is_dono_vazio:
+        id_conf = f"confirma_baixa_{sub_id}"
+        if id_conf not in st.session_state:
+            st.session_state[id_conf] = False
+        if not st.session_state[id_conf]:
+            if st.button(f"Dar baixa no {sub_local}", key=f"btn_pre_{sub_id}_{num_aba}"):
+                st.session_state[id_conf] = True
+                st.rerun()
+        else:
+            if st.button("🚨 Confirmar Exclusão", key=f"btn_real_{sub_id}_{num_aba}"):
+                supabase.table("relatos_escassez").update(
+                    {"status": "Atendido"}).eq("id", sub_id).execute()
+                st.success("🎉 Concluído!")
+                import time
+                time.sleep(0.5)
+                st.session_state[id_conf] = False
+                st.session_state.busca_ativa = False
+                st.rerun()
 
 
 def renderizar(supabase):
-    # 🎨 INJEÇÃO DE CSS: Força o tema escuro na lista suspensa (selectbox) e corrige a quebra visual
+    def renderizar(supabase):  # Ou o nome exato da sua função inicial
+    # 🎨 COLADO AQUI (Apenas adicione este bloco abaixo)
     st.markdown("""
         <style>
-        /* Define fundo escuro e texto branco para a lista suspensa */
         div[data-baseweb="popover"] ul {
             background-color: #1A1A1A !important;
             color: #FFFFFF !important;
         }
-        /* Define cor verde institucional quando o mouse passa sobre a cidade */
         div[data-baseweb="popover"] li:hover {
             background-color: #00803B !important;
             color: #FFFFFF !important;
         }
-        /* Garante que o texto da cidade selecionada na caixa fique branco */
         div[data-baseweb="select"] div {
-            color: #FFFFFF !important;
-        }
-        /* Alinhamento geral de inputs para manter a simetria */
-        .stSelectbox label {
             color: #FFFFFF !important;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 🚏 BARRA DE NAVEGAÇÃO: Alinhamento padrão do painel corporativo
-    col_nav1, col_nav2 = st.columns(2)
-    with col_nav1:
-        if st.button("🏠 Página Inicial", key="nav_home_b2b_v", use_container_width=True):
-            st.session_state.tela_atual = "home"
-            st.rerun()
-    with col_nav2:
-        if st.session_state.get("perfil_b2b_atual") is not None:
-            if st.button("🚪 Sair do Painel", key="nav_logout_b2b_v", use_container_width=True):
-                st.session_state.perfil_b2b_atual = None
-                st.rerun()
+    # O restando do seu código original continua aqui para baixo...
 
-    # 🛡️ CORTINA DE FUMAÇA: Cabeçalho camuflado sob o codinome de segurança institucional
+    loja_alvo_prioridade = "Mercadinho Do Bairro"
+    termo_busca = st.session_state.get("termo_busca_temp", "")
+    p_cli = st.session_state.perfil_cliente
+
+    # ⬅️ BARRA NATIVA DE DESCONEXÃO (LOGOFF)
+    col_nav1, _ = st.columns(2)
+    with col_nav1:
+        if st.button("⬅️ Sair do Painel (Logoff)", key="btn_voltar_com_nativo_v", use_container_width=True):
+            st.session_state.tela_atual = "home"
+            st.session_state.token_valido = False
+            st.session_state.perfil_cliente = None
+            st.session_state.busca_ativa = False
+            st.session_state.dados_grafico = None
+            st.rerun()
+
     st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 Sistema de Demandas</h1>",
                 unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>Painel de Inteligência e Monitoramento de Mercado.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
+    st.write("---")
+    termo_busca = st.text_input(label="Refinar por palavra-chave:",
+                                placeholder="Digite para filtrar...", key="input_busca_painel")
 
-    # 🔐 CONTROLE DE ACESSO: Triagem de perfis B2B (Comércio, Mídia, etc.)
-    if st.session_state.get("perfil_b2b_atual") is None:
-        st.write("Selecione o seu perfil de acesso corporativo:")
-        col_p1, col_p2 = st.columns(2)
-        with col_p1:
-            if st.button("🏪 COMÉRCIO / VAREJO", use_container_width=True, key="btn_perf_com_v"):
-                st.session_state.perfil_b2b_atual = "Comercio"
-                st.rerun()
-            if st.button("📢 MÍDIA / PUBLICIDADE", use_container_width=True, key="btn_perf_mid_v"):
-                st.session_state.perfil_b2b_atual = "Midia"
-                st.rerun()
-        with col_p2:
-            if st.button("🏛️ SETOR PÚBLICO / PREFEITURA", use_container_width=True, key="btn_perf_pub_v"):
-                st.session_state.perfil_b2b_atual = "Publico"
-                st.rerun()
-            if st.button("📊 INVESTIDORES / EXPANSÃO", use_container_width=True, key="btn_perf_inv_v"):
-                st.session_state.perfil_b2b_atual = "Investidor"
-                st.rerun()
+    # 🛠️ MÓDULO EXCLUSIVO DO ADMIN MESTRE
+    if p_cli == "admin":
+        st.markdown(
+            "<h3 style='text-align: center;'>🛠️ Cadastro de Assinantes (ERP)</h3>", unsafe_allow_html=True)
+        with st.form(key="form_admin_mestre_cad", clear_on_submit=True):
+            nome_novo = st.text_input(
+                "Nome do Estabelecimento:", placeholder="Ex: Supermercado...")
+            perfil_novo = st.selectbox("Perfil de Acesso Corporativo:", [
+                                       "comerciante", "saude", "petshop", "beleza", "investidor", "gestor", "jornalista"])
+            regiao_novo = st.text_input(
+                "Região/Cidade de Atuação:", placeholder="Ex: São Paulo/SP...")
+            if st.form_submit_button("💼 Cadastrar Lojista"):
+                if nome_novo and regiao_novo:
+                    try:
+                        n_c = nome_novo.strip().title()
+                        r_c = regiao_novo.strip()
+                        supabase.table("clientes_b2b").insert({"nome_estabelecimento": n_c, "perfil_segmento": perfil_novo, "regiao_atuacao": r_c,
+                                                               "status_pagamento": "Ativo", "recurso_marketplace_reverso": True, "recurso_whatsapp": True, "recurso_pdf": True}).execute()
+                        st.success("🎉 Cadastrado!")
+                        import time
+                        time.sleep(0.5)
+                        st.rerun()
+                    except Exception as err:
+                        st.error(f"Erro: {str(err)}")
 
-    # 🏙️ RENDERIZAÇÃO DO PAINEL LOGADO: Filtros globais e cruzamento de carências
+        st.markdown(
+            "<h3 style='text-align: center;'>📊 Central Financeira</h3>", unsafe_allow_html=True)
+        try:
+            resposta_clientes = supabase.table("clientes_b2b").select(
+                "*").order("created_at", desc=True).execute()
+            if resposta_clientes.data:
+                for cli in resposta_clientes.data:
+                    c_id = cli["id"]
+                    with st.expander(f"🏢 {cli['nome_estabelecimento']}"):
+                        st.text_input(
+                            "🔑 Token Completo:", value=cli['token_acesso'], disabled=True, key=f"tk_full_{c_id}")
+                        col_status, col_plan = st.columns(2)
+                        with col_status:
+                            status_pag = st.selectbox("Status de Pagamento:", ["Ativo", "Inadimplente", "Cancelado"], index=[
+                                                      "Ativo", "Inadimplente", "Cancelado"].index(cli.get("status_pagamento", "Ativo")), key=f"pay_{c_id}")
+                        with col_plan:
+                            plano_cont = st.selectbox("Plano Contratado:", ["Bronze", "Prata", "Ouro"], index=[
+                                                      "Bronze", "Prata", "Ouro"].index(cli.get("plano_contratado", "Ouro")), key=f"plan_{c_id}")
+                        if st.button("💾 Salvar Alterações", key=f"save_{c_id}"):
+                            supabase.table("clientes_b2b").update(
+                                {"status_pagamento": status_pag, "plano_contratado": plano_cont}).eq("id", c_id).execute()
+                            st.success("🔒 Sincronizado!")
+                            import time
+                            time.sleep(0.5)
+                            st.rerun()
+        except:
+            pass
     else:
-        perfil = st.session_state.perfil_b2b_atual
-        st.info(f"🔑 Logado com sucesso no Perfil: **{perfil}**")
-
-        # 🔍 FILTRO DA CIDADE (Mecanismo Global que estava apresentando fundo branco no navegador)
         try:
-            cidades_query = supabase.table(
-                "locais_destino").select("regiao_cidade").execute()
-            if cidades_query.data:
-                df_cid = pd.DataFrame(cidades_query.data)
-                lista_cidades = sorted(
-                    df_cid["regiao_cidade"].unique().tolist())
-        except:
-            lista_cidades = []
+            resposta_bruta = supabase.table("relatos_escassez").select(
+                "id, item_solicitado, tipo_carencia, data_registro, status, observacao_detalhe, sub_segmento, pegada_digital, contato_aviso, locais_destino(nome_exibicao, regiao_cidade)").execute()
+            cidades_detectadas = set()
+            bairros_por_cidade = {}
+            dados_brutos_limpos = []
+            agora = datetime.datetime.now(datetime.timezone.utc)
 
-        lista_cidades_opcoes = ["Todos (Global)"] + lista_cidades
+            if resposta_bruta.data:
+                for reg in resposta_bruta.data:
+                    if reg.get("status") != "Atendido" and reg.get("locais_destino"):
+                        loc_c = str(reg["locais_destino"]
+                                    ["regiao_cidade"]).strip()
+                        c_raiz, b_raiz = loc_c.split(
+                            " - ", 1) if " - " in loc_c else (loc_c, "Geral")
+                        c_raiz, b_raiz = c_raiz.strip(), b_raiz.strip()
+                        cidades_detectadas.add(c_raiz)
+                        if c_raiz not in bairros_por_cidade:
+                            bairros_por_cidade[c_raiz] = set()
+                        bairros_por_cidade[c_raiz].add(b_raiz)
 
-        # O seletor abaixo agora obedecerá obrigatoriamente as regras de CSS escuras inseridas no topo
-        cidade_selecionada = st.selectbox(
-            "📍 Selecionar Região/Cidade para Análise:",
-            options=lista_cidades_opcoes,
-            key="b2b_filtro_cidade_global"
-        )
+                        sub_seg = str(reg.get("sub_segmento", "Geral")).strip()
+                        cat_b = str(reg.get("tipo_carencia",
+                                    "Produto / Marca")).strip()
+                        idade_dias = max(0, (agora - datetime.datetime.fromisoformat(reg.get(
+                            "data_registro").replace("Z", "+00:00"))).days) if reg.get("data_registro") else 0
+                        cat_limpa = "Serviço Público / Infraestrutura" if ("Público" in cat_b or "Publico" in cat_b or "Infra" in cat_b or "Zeladoria" in sub_seg) else (
+                            "Serviço Local / Novo Estabelecimento" if ("Local" in cat_b or "Invest" in sub_seg) else "Produto / Marca")
+                        item_limpo = str(reg["item_solicitado"]).rstrip(
+                            " 0123456789").strip().title()
+                        n_local_b = reg["locais_destino"]["nome_exibicao"]
 
-        st.write("")
-        st.markdown("### 📊 Demandas Ocultas Identificadas na Região")
+                        if p_cli in ["comerciante", "saude", "petshop", "beleza"] and n_local_b != loja_alvo_prioridade:
+                            if sub_seg == "Supermercado":
+                                n_local_ex = "Mercado Concorrente"
+                            elif sub_seg in ["Saude", "Saúde"]:
+                                n_local_ex = "Clínica Concorrente"
+                            elif sub_seg == "Petshop":
+                                n_local_ex = "Petshop Concorrente"
+                            elif sub_seg == "Beleza":
+                                n_local_ex = "Salão Concorrente"
+                            else:
+                                n_local_ex = "Parceiro Comercial"
+                        else:
+                            n_local_ex = n_local_b
 
-        try:
-            # Puxa os dados brutos de relatos para estruturar as tabelas do lojista
-            query_relatos = supabase.table("relatos_escassez").select(
-                "item_solicitado, status, data_registro, locais_destino(nome_exibicao, regiao_cidade)").eq("status", "Pendente")
+                        dados_brutos_limpos.append({"ID": reg["id"], "O que Falta": item_limpo, "Categoria": cat_limpa, "Local/Referência": n_local_ex, "CidadeRaiz": c_raiz, "Bairro": b_raiz, "CidadeCompleta": loc_c, "Dias": idade_dias,
+                                                   "Observação": reg.get("observacao_detalhe") or "Sem detalhes.", "SubSegmento": sub_seg, "Pegada": reg.get("pegada_digital") or f"anon_{reg['id']}", "Contato": reg.get("contato_aviso") or ""})
 
-            if cidade_selecionada != "Todos (Global)":
-                # Se não for global, aplica a filtragem estrita da cidade selecionada
-                relatos_dados = query_relatos.execute()
-                dados_filtrados = [r for r in relatos_dados.data if r.get(
-                    "locais_destino") and r["locais_destino"]["regiao_cidade"] == cidade_selecionada]
+            l_cidades = ["[ Mostrar Todas as Cidades ]"] + \
+                sorted(list(cidades_detectadas))
+            cidade_sel = st.selectbox(
+                "📍 1. Selecionar Cidade (Global):", options=l_cidades, key="b2b_cidade_auto")
+            if cidade_sel == "[ Mostrar Todas as Cidades ]":
+                bairro_sel = st.selectbox("🏘️ 2. Refinar por Bairro:", options=[
+                                          "--- Selecione uma Cidade ---"], disabled=True, key="b2b_bairro_auto")
             else:
-                relatos_dados = query_relatos.execute()
-                dados_filtrados = relatos_dados.data
+                b_opts = [" Mostrar Todos os Bairros "] + \
+                    sorted(list(bairros_por_cidade.get(cidade_sel, set())))
+                bairro_sel = st.selectbox(
+                    "🏘️ 2. Refinar por Bairro:", options=b_opts, key="b2b_bairro_auto")
 
-            if dados_filtrados:
-                lista_tabela = []
-                for r in dados_filtrados:
-                    lista_tabela.append({
-                        "Item Ausente": str(r["item_solicitado"]).strip().title(),
-                        "Localidade Relatada": str(r["locais_destino"]["nome_exibicao"]).strip().title(),
-                        "Cidade/Região": str(r["locais_destino"]["regiao_cidade"]).strip()
-                    })
+            df_total = pd.DataFrame(dados_brutos_limpos) if dados_brutos_limpos else pd.DataFrame(columns=[
+                "ID", "O que Falta", "Categoria", "Local/Referência", "CidadeRaiz", "Bairro", "CidadeCompleta", "Dias", "Observação", "SubSegmento", "Pegada", "Contato"])
+            if not df_total.empty and cidade_sel != "[ Mostrar Todas as Cidades ]":
+                df_total = df_total[df_total['CidadeRaiz'] == cidade_sel]
+                if bairro_sel != " Mostrar Todos os Bairros ":
+                    df_total = df_total[df_total['Bairro'] == bairro_sel]
+            st.session_state.dados_grafico = df_total
+        except Exception as e:
+            st.error(f"⚠️ Erro de performance: {str(e)}")
 
-                df_relatorio = pd.DataFrame(lista_tabela)
-                st.dataframe(
-                    df_relatorio, use_container_width=True, hide_index=True)
-            else:
-                st.write(
-                    "ℹ️ Nenhuma demanda pendente registrada para a região selecionada.")
-        except:
-            st.error(
-                "⚠️ Falha ao carregar a matriz de dados do banco. Verifique a conexão.")
+        if st.session_state.dados_grafico is not None and not st.session_state.dados_grafico.empty:
+            df = st.session_state.dados_grafico
+            dict_nichos = {"comerciante": ["📦 Varejo", "🎯 Marketplace Reverso"], "saude": ["📦 Saúde", "🎯 Marketplace Reverso"], "petshop": ["📦 Pet", "🎯 Marketplace Reverso"], "beleza": [
+                "📦 Estética", "🎯 Marketplace Reverso"], "investidor": ["💼 Novos Negócios"], "jornalista": ["🏛️ Infraestrutura", "💼 Novos Negócios"]}
+            n_abas = dict_nichos.get(p_cli, ["🏛️ Infraestrutura"])
+
+            abas_st = st.tabs(n_abas)
+            for num_aba, n_aba_atv in enumerate(n_abas):
+                with abas_st[num_aba]:
+                    fr_atv = "Infra" if "Infra" in n_aba_atv else (
+                        "Services" if "Negócios" in n_aba_atv else "Varejo")
+                    is_rev = "Marketplace Reverso" in n_aba_atv
+                    st.session_state["is_rev"] = is_rev
+
+                    df_f_aba = df
+                    if fr_atv == "Infra":
+                        df_f_aba = df[df['Categoria'] ==
+                                      "Serviço Público / Infraestrutura"]
+                    elif fr_atv == "Services":
+                        df_f_aba = df[df['Categoria'] ==
+                                      "Serviço Local / Novo Estabelecimento"]
+                    elif fr_atv == "Varejo":
+                        map_filtros = {"comerciante": "Supermercado|Geral",
+                                       "saude": "Saude|Saúde", "petshop": "Pet", "beleza": "Beleza"}
+                        df_f_aba = df[df['SubSegmento'].str.contains(
+                            map_filtros.get(p_cli, "Geral"), case=False, na=False)]
+
+                    if termo_busca:
+                        df_f_aba = df_f_aba[df_f_aba['O que Falta'].str.contains(
+                            termo_busca, case=False) | df_f_aba['Local/Referência'].str.contains(termo_busca, case=False)]
+
+                    if not df_f_aba.empty:
+                        df_f_aba['É_Minha_Loja'] = df_f_aba['Local/Referência'].apply(
+                            lambda x: 1 if x == loja_alvo_prioridade else 0)
+
+                        # 📄 IMPRESSÃO REAL: Exportação estável de dados com correção de contraste visual
+                        dados_relatorio = converter_dados_para_relatorio(
+                            df_f_aba)
+                        if dados_relatorio:
+                            # Injeção de estilo local para fixar o fundo cinza e a fonte branca visível
+                            st.markdown("""
+                                    <style>
+                                    div.stDownloadButton > button {
+                                        background-color: #262626 !important;
+                                        color: #FFFFFF !important;
+                                        border: 1px solid #404040 !important;
+                                        border-radius: 8px !important;
+                                    }
+                                    div.stDownloadButton > button:hover {
+                                        background-color: #404040 !important;
+                                        color: #FFFFFF !important;
+                                        border-color: #00803B !important;
+                                    }
+                                    </style>
+                                """, unsafe_allow_html=True)
+
+                            st.download_button(
+                                label="📄 Imprimir Relatório de Demandas (Planilha/CSV)",
+                                data=dados_relatorio,
+                                file_name="demandas_quarteirao.csv",
+                                mime="text/csv",
+                                key=f"btn_relat_real_{num_aba}"
+                            )
+
+                        total_sua = len(
+                            df_f_aba[df_f_aba['Local/Referência'] == loja_alvo_prioridade]) if not is_rev else 0
+                        st.markdown(
+                            f"<div style='text-align: right; font-size: 14px; font-weight: bold; color: #00803B; margin-top: 5px; margin-bottom: 15px;'>Sua Loja: {total_sua} • Concorrência: {len(df_f_aba) - total_sua} • Total: {len(df_f_aba)}</div>", unsafe_allow_html=True)
+
+                        df_agr = df_f_aba.groupby(["O que Falta", "Categoria"]).agg(V_Total=("ID", "count"), M_Idade=(
+                            "Dias", "min"), F_Dono=("É_Minha_Loja", "max")).sort_values(by="V_Total", ascending=False).reset_index()
+                        for _, linha in df_agr.iterrows():
+                            i_nome, s_alvo = linha['O que Falta'], int(
+                                linha['F_Dono'])
+                            c_tag, l_tag = ("tag-calor-media", "🎯 REVERSO") if is_rev else (
+                                ("tag-calor-alta", "🎯 SEU MERCADO") if s_alvo == 1 else ("tag-calor-baixa", "🌍 CONCORRÊNCIA"))
+                            st.markdown(
+                                f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
+
+                            for _, s_l in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["ID"]).iterrows():
+                                desenhar_morador(
+                                    s_l, i_nome, num_aba, supabase, loja_alvo_prioridade)
+                    else:
+                        st.info(
+                            "ℹ️ Nenhum registro ativo encontrado para esta aba.")
