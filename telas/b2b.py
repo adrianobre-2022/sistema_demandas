@@ -63,8 +63,8 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
 
 def renderizar(supabase):
     def renderizar(supabase):  # Ou o nome exato da sua função inicial
-    # 🎨 COLADO AQUI (Apenas adicione este bloco abaixo)
-    st.markdown("""
+        # 🎨 COLADO AQUI (Apenas adicione este bloco abaixo)
+        st.markdown("""
         <style>
         div[data-baseweb="popover"] ul {
             background-color: #1A1A1A !important;
