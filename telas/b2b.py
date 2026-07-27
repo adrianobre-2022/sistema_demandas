@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import urllib.parse
+import time
 
 # 📄 SOLUÇÃO REAL: GERADOR DE RELATÓRIO VIA CSV COMPATÍVEL COM IMPRESSÃO EXCEL/PDF
 
@@ -54,7 +55,6 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
                 supabase.table("relatos_escassez").update(
                     {"status": "Atendido"}).eq("id", sub_id).execute()
                 st.success("🎉 Concluído!")
-                import time
                 time.sleep(0.5)
                 st.session_state[id_conf] = False
                 st.session_state.busca_ativa = False
@@ -62,9 +62,8 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
 
 
 def renderizar(supabase):
-    def renderizar(supabase):  # Ou o nome exato da sua função inicial
-        # 🎨 COLADO AQUI (Apenas adicione este bloco abaixo)
-        st.markdown("""
+    # 🎨 INJEÇÃO DE CSS: Força as caixas de seleção (selectbox) a respeitarem o fundo escuro do tema
+    st.markdown("""
         <style>
         div[data-baseweb="popover"] ul {
             background-color: #1A1A1A !important;
@@ -80,10 +79,7 @@ def renderizar(supabase):
         </style>
     """, unsafe_allow_html=True)
 
-    # O restando do seu código original continua aqui para baixo...
-
     loja_alvo_prioridade = "Mercadinho Do Bairro"
-    termo_busca = st.session_state.get("termo_busca_temp", "")
     p_cli = st.session_state.perfil_cliente
 
     # ⬅️ BARRA NATIVA DE DESCONEXÃO (LOGOFF)
@@ -97,12 +93,12 @@ def renderizar(supabase):
             st.session_state.dados_grafico = None
             st.rerun()
 
-    st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 Sistema de Demandas</h1>",
-                unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; font-weight: 900; margin-bottom: 0px;'>🔍 Sistema de Demandas</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 16px; font-style: italic; color: #aaaaaa; margin-top: 5px; margin-bottom: 25px;'>O termômetro de carências da nossa região.</p>", unsafe_allow_html=True)
     st.write("---")
+
     termo_busca = st.text_input(label="Refinar por palavra-chave:",
-                                placeholder="Digite para filtrar...", key="input_busca_painel")
+                                placeholder="Digite para filtrar...", key="input_busca_painel").strip()
 
     # 🛠️ MÓDULO EXCLUSIVO DO ADMIN MESTRE
     if p_cli == "admin":
@@ -123,7 +119,6 @@ def renderizar(supabase):
                         supabase.table("clientes_b2b").insert({"nome_estabelecimento": n_c, "perfil_segmento": perfil_novo, "regiao_atuacao": r_c,
                                                                "status_pagamento": "Ativo", "recurso_marketplace_reverso": True, "recurso_whatsapp": True, "recurso_pdf": True}).execute()
                         st.success("🎉 Cadastrado!")
-                        import time
                         time.sleep(0.5)
                         st.rerun()
                     except Exception as err:
@@ -135,27 +130,40 @@ def renderizar(supabase):
             resposta_clientes = supabase.table("clientes_b2b").select(
                 "*").order("created_at", desc=True).execute()
             if resposta_clientes.data:
-                for cli in resposta_clientes.data:
-                    c_id = cli["id"]
-                    with st.expander(f"🏢 {cli['nome_estabelecimento']}"):
-                        st.text_input(
-                            "🔑 Token Completo:", value=cli['token_acesso'], disabled=True, key=f"tk_full_{c_id}")
-                        col_status, col_plan = st.columns(2)
-                        with col_status:
-                            status_pag = st.selectbox("Status de Pagamento:", ["Ativo", "Inadimplente", "Cancelado"], index=[
-                                                      "Ativo", "Inadimplente", "Cancelado"].index(cli.get("status_pagamento", "Ativo")), key=f"pay_{c_id}")
-                        with col_plan:
-                            plano_cont = st.selectbox("Plano Contratado:", ["Bronze", "Prata", "Ouro"], index=[
-                                                      "Bronze", "Prata", "Ouro"].index(cli.get("plano_contratado", "Ouro")), key=f"plan_{c_id}")
-                        if st.button("💾 Salvar Alterações", key=f"save_{c_id}"):
-                            supabase.table("clientes_b2b").update(
-                                {"status_pagamento": status_pag, "plano_contratado": plano_cont}).eq("id", c_id).execute()
-                            st.success("🔒 Sincronizado!")
-                            import time
-                            time.sleep(0.5)
-                            st.rerun()
+                df_clientes = pd.DataFrame(resposta_clientes.data)
+
+                # 🔥 CONEXÃO DA FIAÇÃO DO FILTRO (Filtra a lista do ERP Admin por palavra-chave)
+                if termo_busca:
+                    filtro_admin = df_clientes["nome_estabelecimento"].str.contains(termo_busca, case=False, na=False) | \
+                        df_clientes["perfil_segmento"].str.contains(
+                            termo_busca, case=False, na=False)
+                    df_clientes = df_clientes[filtro_admin]
+
+                if not df_clientes.empty:
+                    for _, cli in df_clientes.iterrows():
+                        c_id = cli["id"]
+                        with st.expander(f"🏢 {cli['nome_estabelecimento']}"):
+                            st.text_input(
+                                "🔑 Token Completo:", value=cli['token_acesso'], disabled=True, key=f"tk_full_{c_id}")
+                            col_status, col_plan = st.columns(2)
+                            with col_status:
+                                status_pag = st.selectbox("Status de Pagamento:", ["Ativo", "Inadimplente", "Cancelado"], index=[
+                                                          "Ativo", "Inadimplente", "Cancelado"].index(cli.get("status_pagamento", "Ativo")), key=f"pay_{c_id}")
+                            with col_plan:
+                                plano_cont = st.selectbox("Plano Contratado:", ["Bronze", "Prata", "Ouro"], index=[
+                                                          "Bronze", "Prata", "Ouro"].index(cli.get("plano_contratado", "Ouro")), key=f"plan_{c_id}")
+                            if st.button("💾 Salvar Alterações", key=f"save_{c_id}"):
+                                supabase.table("clientes_b2b").update(
+                                    {"status_pagamento": status_pag, "plano_contratado": plano_cont}).eq("id", c_id).execute()
+                                st.success("🔒 Sincronizado!")
+                                time.sleep(0.5)
+                                st.rerun()
+                else:
+                    st.write(
+                        "ℹ️ Nenhum estabelecimento correspondente encontrado para a palavra-chave.")
         except:
             pass
+    # 🏪 PERFIS DE VAREJO / COMERCIANTES GERAIS
     else:
         try:
             resposta_bruta = supabase.table("relatos_escassez").select(
@@ -241,7 +249,7 @@ def renderizar(supabase):
                     fr_atv = "Infra" if "Infra" in n_aba_atv else (
                         "Services" if "Negócios" in n_aba_atv else "Varejo")
                     is_rev = "Marketplace Reverso" in n_aba_atv
-                    st.session_state["is_rev"] = is_rev
+                    st.session_state["is_marketplace_reverso"] = is_rev
 
                     df_f_aba = df
                     if fr_atv == "Infra":
@@ -268,7 +276,6 @@ def renderizar(supabase):
                         dados_relatorio = converter_dados_para_relatorio(
                             df_f_aba)
                         if dados_relatorio:
-                            # Injeção de estilo local para fixar o fundo cinza e a fonte branca visível
                             st.markdown("""
                                     <style>
                                     div.stDownloadButton > button {
