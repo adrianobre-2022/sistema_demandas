@@ -30,6 +30,15 @@ supabase = inicializar_supabase()
 st.set_page_config(page_title="Sistema de Demandas",
                    page_icon="🔍", layout="centered")
 
+# 🔍 LOGALIZE O INÍCIO DO SEU APP.PY E ADICIONE ESTE BLOCO:
+
+# Verifica se o link atual na internet é o de testes
+if "sistemademandas-nfrdlfqwrkrhhlidjd5gyj" in st.experimental_user.to_dict().get("origin", "") or "localhost" in st.experimental_user.to_dict().get("origin", ""):
+    st.markdown("""
+        <div style='background-color: #7A5200; padding: 0.4rem; text-align: center; border-radius: 5px; margin-bottom: 20px;'>
+            <span style='color: white; font-weight: bold; font-size: 13px;'>⚠️ AMBIENTE DE TESTES (HOMOLOGAÇÃO) — ALTERAÇÕES NÃO AFETAM O CLIENTE</span>
+        </div>
+    """, unsafe_allow_html=True)
 
 # --- INJEÇÃO DO DESIGN VISUAL MESTRE VERDE ---
 try:
