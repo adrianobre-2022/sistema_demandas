@@ -4,7 +4,6 @@ import hashlib
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-
 def inicializar_supabase():
     caminho_atual = os.path.dirname(
         os.path.abspath(__file__)

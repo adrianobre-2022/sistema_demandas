@@ -4,7 +4,6 @@ import time
 import random  # 🔀 NOVO: Biblioteca para embaralhar os registros
 from core.database import obter_pegada_digital
 
-
 def renderizar(supabase):
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:

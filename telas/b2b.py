@@ -36,7 +36,8 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
     if is_ok_w:
         msg_enc = urllib.parse.quote(
             f"Olá! Temos {nm} disponível no quarteirão!")
-        html_wa = f'<a href="https://whatsapp.com{c_morador_s}&text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
+        # 🔥 API WA.ME ATIVADA VISUALMENTE
+        html_wa = f'<a href="https://wa.me{c_morador_s}?text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
         st.markdown(html_wa, unsafe_allow_html=True)
     else:
         st.markdown(
@@ -316,8 +317,9 @@ def renderizar(supabase):
                                 f'<div class="bloco-lista-premium"><span class="{c_tag}">{l_tag} • {int(linha["V_Total"])} Pedidos</span><b style="color: #FFFFFF; font-size: 16px;">📦 {i_nome}</b><div style="margin-top: 0.5rem; color: #aaaaaa; font-size: 13px;">⏱️ Alerta ativo há {linha["M_Idade"]} dias</div></div>', unsafe_allow_html=True)
 
                             for _, s_l in df_f_aba[df_f_aba['O que Falta'] == i_nome].drop_duplicates(subset=["ID"]).iterrows():
+                                idx_tab_geral = num_aba
                                 desenhar_morador(
-                                    s_l, i_nome, num_aba, supabase, loja_alvo_prioridade)
+                                    s_l, i_nome, idx_tab_geral, supabase, loja_alvo_prioridade)
                     else:
                         st.info(
                             "ℹ️ Nenhum registro ativo encontrado para esta aba.")
