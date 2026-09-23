@@ -37,7 +37,9 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
         msg_enc = urllib.parse.quote(
             f"Olá! Temos {nm} disponível no quarteirão!")
         # 🔥 API WA.ME ATIVADA VISUALMENTE
-        html_wa = f'<a href="https://wa.me{c_morador_s}?text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
+        # 🔥 ANTES ESTAVA: https://wa.me{c_morador_s}
+        # 🔥 TROQUE POR ESTA VERSÃO COM A BARRA E O 55 DO BRASIL:
+        html_wa = f'<a href="https://wa.me55{c_morador_s}?text={msg_enc}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
         st.markdown(html_wa, unsafe_allow_html=True)
     else:
         st.markdown(
