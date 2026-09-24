@@ -34,12 +34,13 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
     is_ok_w = c_morador_s != "" and c_morador_s != "None"
 
     if is_ok_w:
-        msg_enc = urllib.parse.quote(
-            f"Olá! Temos {nm} disponível no quarteirão!")
-        # 🔥 FIAÇÃO BLINDADA: Garante a barra e o DDI 55 de forma obrigatória contra erros do Firefox
-        link_final_wa = f"https://wa.me{c_morador_s}?text={msg_enc}"
-        html_wa = f'<a href="{link_final_wa}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
+        msg_enc_nova = urllib.parse.quote(f"Olá! Temos {nm} disponível no quarteirão!")
+        # 🔥 FORÇANDO A BARRA E O DDI DO BRASIL DIRETO NO LINK TEXTUAL
+        url_whatsapp_blindada = f"https://wa.me{c_morador_s}?text={msg_enc_nova}"
+        
+        html_wa = f'<a href="{url_whatsapp_blindada}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
         st.markdown(html_wa, unsafe_allow_html=True)
+        
     else:
         st.markdown(
             "<div class='botao-contato-vazio-v'>⚠️ sem número de contato</div>", unsafe_allow_html=True)
