@@ -37,6 +37,7 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
         msg_enc_nova = urllib.parse.quote(f"Olá! Temos {nm} disponível no quarteirão!")
         # 🔥 FORÇANDO A BARRA E O DDI DO BRASIL DIRETO NO LINK TEXTUAL
         url_whatsapp_blindada = f"https://wa.me/{c_morador_s}?text={msg_enc_nova}"
+        # url_whatsapp_blindada = f"https://wa.me{c_morador_s}?text={msg_enc_nova}"
         
         html_wa = f'<a href="{url_whatsapp_blindada}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
         st.markdown(html_wa, unsafe_allow_html=True)
