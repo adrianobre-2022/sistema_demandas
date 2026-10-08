@@ -36,7 +36,7 @@ def desenhar_morador(s_l, nm, num_aba, supabase, loja_alvo):
     if is_ok_w:
         msg_enc = urllib.parse.quote(
             f"Olá! Temos {nm} disponível no quarteirão!")
-        # 🔥 FIAÇÃO BLINDADA: Garante a barra e o DDI 55 de forma obrigatória contra erros do Firefox
+        # 🔥 API WA.ME BLINDADA E SEPARADA POR BARRAS
         link_final_wa = f"https://wa.me{c_morador_s}?text={msg_enc}"
         html_wa = f'<a href="{link_final_wa}" target="_blank"><button style="background-color: #25D366 !important; color: white !important; font-weight: bold !important; border: none !important; padding: 0.5rem 1rem !important; border-radius: 8px !important; width: auto !important; margin-bottom: 10px; font-size: 14px; cursor: pointer;">📱 Falar no WhatsApp</button></a>'
         st.markdown(html_wa, unsafe_allow_html=True)
@@ -154,12 +154,43 @@ def renderizar(supabase):
                             with col_plan:
                                 plano_cont = st.selectbox("Plano Contratado:", ["Bronze", "Prata", "Ouro"], index=[
                                                           "Bronze", "Prata", "Ouro"].index(cli.get("plano_contratado", "Ouro")), key=f"plan_{c_id}")
-                            if st.button("💾 Salvar Alterações", key=f"save_{c_id}"):
+
+                            # 💾 SALVAR ALTERAÇÕES ORIGINAL (ALINHADO)
+                            if st.button("💾 Salvar Alterações", key=f"save_{c_id}", use_container_width=True):
                                 supabase.table("clientes_b2b").update(
                                     {"status_pagamento": status_pag, "plano_contratado": plano_cont}).eq("id", c_id).execute()
                                 st.success("🔒 Sincronizado!")
                                 time.sleep(0.5)
                                 st.rerun()
+
+                            st.write("")  # Espaçador
+
+                            # 🗑️ NOVO: BOTÃO DE EXCLUSÃO DOUBLE-CHECK PERFEITAMENTE INDENTADO NO FLUXO
+                            id_conf_del = f"confirma_del_{c_id}"
+                            if id_conf_del not in st.session_state:
+                                st.session_state[id_conf_del] = False
+
+                            if not st.session_state[id_conf_del]:
+                                if st.button(f"🗑️ Remover {cli['nome_estabelecimento']}", key=f"btn_pre_del_{c_id}", use_container_width=True):
+                                    st.session_state[id_conf_del] = True
+                                    st.rerun()
+                            else:
+                                st.markdown(
+                                    "<p style='color: #ff3333; font-weight: bold; text-align: center;'>⚠️ Tem certeza? Esta ação apagará o lojista e o token permanentemente do banco!</p>", unsafe_allow_html=True)
+                                col_del1, col_del2 = st.columns(2)
+                                with col_del1:
+                                    if st.button("🚨 SIM, EXCLUIR", key=f"btn_real_del_{c_id}", use_container_width=True):
+                                        supabase.table("clientes_b2b").delete().eq(
+                                            "id", c_id).execute()
+                                        st.success(
+                                            "💥 Estabelecimento removido da base!")
+                                        time.sleep(0.5)
+                                        st.session_state[id_conf_del] = False
+                                        st.rerun()
+                                with col_del2:
+                                    if st.button("❌ Cancelar", key=f"btn_cancel_del_{c_id}", use_container_width=True):
+                                        st.session_state[id_conf_del] = False
+                                        st.rerun()
                 else:
                     st.write(
                         "ℹ️ Nenhum estabelecimento correspondente encontrado para a palavra-chave.")
@@ -290,6 +321,7 @@ def renderizar(supabase):
                                         background-color: #404040 !important;
                                         color: #FFFFFF !important;
                                         border-color: #00803B !important;
+                                        color: #FFFFFF !important;
                                     }
                                     </style>
                                 """, unsafe_allow_html=True)
